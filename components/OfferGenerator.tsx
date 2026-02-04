@@ -930,7 +930,11 @@ export const OfferGenerator: React.FC = () => {
                         <div className="p-20 flex flex-col h-full">
                             <div className="flex justify-center mb-24"><img src={images.logo} alt="Starter Home" className="h-12 w-auto object-contain" /></div>
                             <div className="mb-16 text-center">
-                                <span className="inline-block bg-[#f7faf3] text-[#6E8809] font-bold px-6 py-2 uppercase tracking-widest text-sm mb-8 border border-[#e2e8da] rounded-full">{selectedHouse.id === 'individual_house' ? 'Szczegóły projektu indywidualnego' : `Szczegóły Projektu ${selectedHouse.name.replace(\' HOUSE\', \'\')}`}</span>
+								<span className="inline-block bg-[#f7faf3] text-[#6E8809] font-bold px-6 py-2 uppercase tracking-widest text-sm mb-8 border border-[#e2e8da] rounded-full">
+									{selectedHouse.id === 'individual_house'
+										? 'Szczegóły projektu indywidualnego'
+										: `Szczegóły Projektu ${selectedHouse.name.replace(' HOUSE', '')}`}
+								</span>
                                 <h1 className="text-6xl font-black text-gray-900 leading-tight mb-6">Spersonalizowana <br/>Oferta</h1>
                                 {clientName && (<h2 className="text-2xl text-gray-400 font-light mt-4">Dla: <span className="text-gray-900 font-bold">{clientName}</span></h2>)}
                             </div>
