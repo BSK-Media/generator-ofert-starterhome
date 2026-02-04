@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { HOUSES, getOfferItemsForHouse } from '../constants';
-import { House, OfferItem, OfferItemOption } from '../types';
+import { House, OfferItem } from '../types';
 import { 
     Printer, 
     Check, 
@@ -102,28 +102,6 @@ const ICON_LABELS_PL: Record<string, string> = {
     Tv: 'RTV / Salon',
     Circle: 'Kropka (Domyślna)'
 };
-// --- INDYWIDUALNY PROJEKT (CUSTOM SECTIONS) ---
-type CustomSection = {
-    id: string;
-    title: string;
-    description: string;
-    text: string;
-    price: number; // netto PLN (modyfikacja ceny)
-};
-
-const buildDefaultCustomSections = (): CustomSection[] => {
-    // Bazujemy na standardowych sekcjach z pierwszego dostępnego domu, ale zerujemy ceny i zamieniamy na pola tekstowe.
-    const templateHouse = HOUSES.find(h => h.id === 'skyline_house') || HOUSES[0];
-    const template = getOfferItemsForHouse(templateHouse);
-    return template.map((it) => ({
-        id: it.code,
-        title: it.name,
-        description: it.description || '',
-        text: '',
-        price: 0
-    }));
-};
-
 
 // --- REAL IMAGE OPTIMIZATION LOGIC ---
 const bytesToMB = (bytes: number) => bytes / (1024 * 1024);
@@ -357,51 +335,20 @@ export const OfferGenerator: React.FC = () => {
     // -- STATES --
     const [openSection, setOpenSection] = useState<string>('config');
     const [clientName, setClientName] = useState('');
-    <div className="space-y-6">
-                            <div className="flex items-center justify-between gap-3">
-                                <div className="text-xs text-gray-500">
-                                    {selectedHouse.id === 'individual_house' ? 'Tryb: Projekt indywidualny' : 'Tryb: Standardowy'}
-                                </div>
-                                <button onClick={() => setIsEditMode(v => !v)} className={`px-3 py-1.5 text-xs font-bold uppercase border ${isEditMode ? 'border-[#6E8809] text-[#6E8809] bg-[#f7faf3]' : 'border-gray-200 text-gray-500'}`}>
-                                    {isEditMode ? 'Zakończ edycję' : 'Edytuj'}
-                                </button>
-                            </div>
+    const [selectedHouse, setSelectedHouse] = useState<House>(HOUSES[1]); 
+    const [isDeveloperState, setIsDeveloperState] = useState(false); 
+    // TRYB EDYCJI (dla wszystkich domów)
+    const [isEditMode, setIsEditMode] = useState(false);
+    // Nadpisania (edytowalne nazwy/opcje/ceny) per dom
+    const [itemsByHouse, setItemsByHouse] = useState<Record<string, OfferItem[]>>({});
+    const [basePricesByHouse, setBasePricesByHouse] = useState<Record<string, { surowy: number; deweloperski: number }>>({});
+    // Projekt indywidualny - sekcje opisowe + cena
+    const [customSections, setCustomSections] = useState<Array<{ id: string; title: string; text: string; price: number }>>([
+        { id: 'sec-1', title: 'Zakres / opis', text: '', price: 0 },
+    ]);
 
-                            {isEditMode && (
-                                <div className="grid grid-cols-2 gap-3 p-3 border border-gray-200 rounded bg-gray-50">
-                                    <div>
-                                        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Cena bazowa (Surowy) netto</div>
-                                        <input type="number" className="w-full text-xs p-2 border border-gray-200 bg-white" value={selectedHouse.basePrice} onChange={(e) => updateHousePrice(selectedHouse.id, 'basePrice', Number(e.target.value))} />
-                                    </div>
-                                    <div>
-                                        <div className="text-[10px] uppercase tracking-wider text-gray-500 mb-1">Cena bazowa (Deweloperski) netto</div>
-                                        <input type="number" className="w-full text-xs p-2 border border-gray-200 bg-white" value={selectedHouse.developerPrice} onChange={(e) => updateHousePrice(selectedHouse.id, 'developerPrice', Number(e.target.value))} />
-                                    </div>
-                                </div>
-                            )}
 
-                            {selectedHouse.id === 'individual_house' ? (
-                                <div className="space-y-4">
-                                    {customSections.map((sec) => (
-                                        <div key={sec.id} className="border border-gray-200 rounded p-3">
-                                            <div className="flex items-start gap-2">
-                                                <div className="flex-1 space-y-2">
-                                                    <input className="w-full text-xs font-bold p-2 border border-gray-200" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value })} />
-                                                    <input className="w-full text-xs p-2 border border-gray-200" placeholder="Opis (opcjonalnie)" value={sec.description} onChange={(e) => updateCustomSection(sec.id, { description: e.target.value })} />
-                                                    <textarea rows={3} className="w-full text-xs p-2 border border-gray-200" placeholder="Wpisz szczegóły do oferty..." value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value })} />
-                                                </div>
-                                                <div className="w-32 shrink-0 space-y-2">
-                                                    <div className="text-[10px] uppercase tracking-wider text-gray-500">Cena netto</div>
-                                                    <input type="number" className="w-full text-xs p-2 border border-gray-200" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) })} />
-                                                    <button onClick={() => removeCustomSection(sec.id)} className="w-full text-[10px] font-bold uppercase border border-gray-200 py-2 text-gray-500 hover:text-red-600 hover:border-red-200">Usuń</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button onClick={addCustomSection} className="w-full py-2 text-xs font-bold uppercase border border-gray-200 text-gray-600 hover:border-gray-300">+ Dodaj sekcję</button>
-                                </div>
-                            ) : (
-                            {availableItems.map// MEDIA
+    // MEDIA
     const [images, setImages] = useState({
         main: selectedHouse.image,
         gallery1: selectedHouse.image,
@@ -427,28 +374,114 @@ export const OfferGenerator: React.FC = () => {
         }));
         setIsCompressed(false);
         setCompressionStatus('idle');
-    }, [selectedHouse.id]);
+    }, [selectedHouse]);
 
     // CONFIG STATE - Updated to handle Radio/Number/Checkbox
     const [offerConfig, setOfferConfig] = useState<Record<string, any>>({});
 
     useEffect(() => {
+        // Dla projektu indywidualnego konfiguracja opcji nie jest potrzebna
         if (selectedHouse.id === 'individual_house') {
             setOfferConfig({});
-            setCustomSections(buildDefaultCustomSections());
             return;
         }
-        const items = offerItemsByHouse[selectedHouse.id] || getOfferItemsForHouse(selectedHouse);
+        const items = getOfferItemsForHouse(selectedHouse);
         const newConfig: Record<string, any> = {};
         items.forEach((item) => {
             newConfig[item.code] = item.defaultValue;
         });
         setOfferConfig(newConfig);
-    }, [selectedHouse.id, offerItemsByHouse]);
+    }, [selectedHouse]);
+
+    // Inicjalizacja edytowalnych danych per dom (pierwsze wejście)
+    useEffect(() => {
+        setItemsByHouse((prev) => {
+            if (prev[selectedHouse.id]) return prev;
+            const cloned = JSON.parse(JSON.stringify(getOfferItemsForHouse(selectedHouse))) as OfferItem[];
+            return { ...prev, [selectedHouse.id]: cloned };
+        });
+        setBasePricesByHouse((prev) => {
+            if (prev[selectedHouse.id]) return prev;
+            return { ...prev, [selectedHouse.id]: { surowy: selectedHouse.basePrice, deweloperski: selectedHouse.developerPrice } };
+        });
+    }, [selectedHouse]);
+
 
     const handleConfigChange = (code: string, value: any) => {
         setOfferConfig(prev => ({ ...prev, [code]: value }));
     };
+
+    // --- EDYCJA OPcji i CEN ---
+    const updateBasePrice = (field: 'surowy' | 'deweloperski', value: number) => {
+        setBasePricesByHouse(prev => ({
+            ...prev,
+            [selectedHouse.id]: {
+                surowy: prev[selectedHouse.id]?.surowy ?? selectedHouse.basePrice,
+                deweloperski: prev[selectedHouse.id]?.deweloperski ?? selectedHouse.developerPrice,
+                [field]: value,
+            }
+        }));
+    };
+
+    const updateItem = (code: string, patch: Partial<OfferItem>) => {
+        setItemsByHouse(prev => ({
+            ...prev,
+            [selectedHouse.id]: (prev[selectedHouse.id] ?? []).map(it => it.code === code ? { ...it, ...patch } : it)
+        }));
+    };
+
+    const updateOption = (code: string, optId: string, patch: { name?: string; price?: number }) => {
+        setItemsByHouse(prev => ({
+            ...prev,
+            [selectedHouse.id]: (prev[selectedHouse.id] ?? []).map(it => {
+                if (it.code !== code || !it.options) return it;
+                return {
+                    ...it,
+                    options: it.options.map(o => o.id === optId ? { ...o, ...patch } : o)
+                };
+            })
+        }));
+    };
+
+    const addRadioOption = (code: string) => {
+        setItemsByHouse(prev => ({
+            ...prev,
+            [selectedHouse.id]: (prev[selectedHouse.id] ?? []).map(it => {
+                if (it.code !== code) return it;
+                const nextId = `opt_${Date.now()}`;
+                const opts = it.options ? [...it.options] : [];
+                opts.push({ id: nextId, name: 'Nowa opcja', price: 0 });
+                return { ...it, options: opts };
+            })
+        }));
+    };
+
+    const removeRadioOption = (code: string, optId: string) => {
+        setItemsByHouse(prev => ({
+            ...prev,
+            [selectedHouse.id]: (prev[selectedHouse.id] ?? []).map(it => {
+                if (it.code !== code || !it.options) return it;
+                const opts = it.options.filter(o => o.id !== optId);
+                // jeśli usunęliśmy aktualnie wybraną opcję, ustaw 'none'
+                if (offerConfig[code] === optId) {
+                    setOfferConfig(cfg => ({ ...cfg, [code]: 'none' }));
+                }
+                return { ...it, options: opts };
+            })
+        }));
+    };
+
+    // --- Projekt indywidualny: sekcje ---
+    const addCustomSection = () => {
+        setCustomSections(prev => [...prev, { id: `sec-${Date.now()}`, title: 'Nowa sekcja', text: '', price: 0 }]);
+    };
+    const removeCustomSection = (id: string) => {
+        setCustomSections(prev => prev.length <= 1 ? prev : prev.filter(s => s.id !== id));
+    };
+    const updateCustomSection = (id: string, patch: Partial<{ title: string; text: string; price: number }>) => {
+        setCustomSections(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
+    };
+
 
     // NEEDS (Page 2)
     const [needs, setNeeds] = useState([
@@ -535,28 +568,30 @@ export const OfferGenerator: React.FC = () => {
         reader.readAsDataURL(file);
     };
 
-    const basePrice = isDeveloperState ? selectedHouse.developerPrice : selectedHouse.basePrice;
+    const basePrice = useMemo(() => {
+        const bp = basePricesByHouse[selectedHouse.id];
+        const surowy = bp?.surowy ?? selectedHouse.basePrice;
+        const deweloperski = bp?.deweloperski ?? selectedHouse.developerPrice;
+        return isDeveloperState ? deweloperski : surowy;
+    }, [selectedHouse, isDeveloperState, basePricesByHouse]);
     
     // --- CALCULATE PRICES ---
     const availableItems = useMemo(() => {
-        return offerItemsByHouse[selectedHouse.id] || getOfferItemsForHouse(selectedHouse);
-    }, [selectedHouse.id, offerItemsByHouse, selectedHouse]);
+        return itemsByHouse[selectedHouse.id] ?? getOfferItemsForHouse(selectedHouse);
+    }, [selectedHouse, itemsByHouse]);
     
     const { totalNetPrice, selectedItemsList } = useMemo(() => {
-        // Projekt indywidualny: wszystkie pozycje jako ręcznie uzupełniane pola tekstowe + cena
+        // Projekt indywidualny: suma = cena bazowa + ceny sekcji
         if (selectedHouse.id === 'individual_house') {
-            const list: { name: string; variant?: string; price: number }[] = customSections.map(sec => ({
-                name: sec.title,
-                variant: sec.text?.trim() ? sec.text.trim() : undefined,
-                price: Number(sec.price) || 0
-            }));
-            const sum = basePrice + list.reduce((acc, it) => acc + (it.price || 0), 0);
-            return { totalNetPrice: sum, selectedItemsList: list };
+            const sumSections = customSections.reduce((acc, s) => acc + (Number(s.price) || 0), 0);
+            const list = customSections
+                .filter(s => (s.title?.trim() || s.text?.trim() || (Number(s.price) || 0) !== 0))
+                .map(s => ({ name: s.title || 'Sekcja', variant: s.text ? s.text.slice(0, 80) + (s.text.length > 80 ? '…' : '') : undefined, price: Number(s.price) || 0 }));
+            return { totalNetPrice: basePrice + sumSections, selectedItemsList: list };
         }
-
         let sum = basePrice;
         const list: { name: string; variant?: string; price: number }[] = [];
-
+        
         availableItems.forEach(item => {
             const val = offerConfig[item.code];
             if (item.type === 'checkbox' && val) {
@@ -567,8 +602,6 @@ export const OfferGenerator: React.FC = () => {
                 if (opt && opt.price > 0) {
                     sum += opt.price;
                     list.push({ name: item.name, variant: opt.name, price: opt.price });
-                } else if (opt) {
-                    list.push({ name: item.name, variant: opt.name, price: 0 });
                 }
             } else if (item.type === 'number' && typeof val === 'number' && val > 0) {
                 const cost = val * (item.price || 0);
@@ -577,91 +610,12 @@ export const OfferGenerator: React.FC = () => {
             }
         });
         return { totalNetPrice: sum, selectedItemsList: list };
-    }, [basePrice, offerConfig, availableItems, customSections, selectedHouse.id]);
+    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections]);
 
     const totalVat = totalNetPrice * 0.08;
     const totalGross = totalNetPrice + totalVat;
 
     // Helpers for UI
-
-    // --- EDIT HELPERS (panel) ---
-    const updateHousePrice = (houseId: string, field: 'basePrice' | 'developerPrice', value: number) => {
-        setHouses(prev => prev.map(h => h.id === houseId ? { ...h, [field]: value } : h));
-    };
-
-    const updateOfferItem = (houseId: string, code: string, patch: Partial<OfferItem>) => {
-        setOfferItemsByHouse(prev => {
-            const items = prev[houseId] || [];
-            return {
-                ...prev,
-                [houseId]: items.map(it => it.code === code ? { ...it, ...patch } : it)
-            };
-        });
-    };
-
-    const updateOfferOption = (houseId: string, code: string, optionId: string, patch: Partial<OfferItemOption>) => {
-        setOfferItemsByHouse(prev => {
-            const items = prev[houseId] || [];
-            return {
-                ...prev,
-                [houseId]: items.map(it => {
-                    if (it.code !== code) return it;
-                    return {
-                        ...it,
-                        options: (it.options || []).map(o => o.id === optionId ? { ...o, ...patch } : o)
-                    };
-                })
-            };
-        });
-    };
-
-    const addOfferOption = (houseId: string, code: string) => {
-        setOfferItemsByHouse(prev => {
-            const items = prev[houseId] || [];
-            return {
-                ...prev,
-                [houseId]: items.map(it => {
-                    if (it.code !== code) return it;
-                    const nextId = `opt_${Math.random().toString(36).slice(2, 8)}`;
-                    return {
-                        ...it,
-                        options: [...(it.options || []), { id: nextId, name: 'Nowa opcja', price: 0 }]
-                    };
-                })
-            };
-        });
-    };
-
-    const removeOfferOption = (houseId: string, code: string, optionId: string) => {
-        setOfferItemsByHouse(prev => {
-            const items = prev[houseId] || [];
-            return {
-                ...prev,
-                [houseId]: items.map(it => {
-                    if (it.code !== code) return it;
-                    return {
-                        ...it,
-                        options: (it.options || []).filter(o => o.id !== optionId)
-                    };
-                })
-            };
-        });
-    };
-
-    const updateCustomSection = (id: string, patch: Partial<CustomSection>) => {
-        setCustomSections(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
-    };
-
-    const addCustomSection = () => {
-        setCustomSections(prev => ([
-            ...prev,
-            { id: `custom_${Math.random().toString(36).slice(2, 8)}`, title: 'Nowa sekcja', description: '', text: '', price: 0 }
-        ]));
-    };
-
-    const removeCustomSection = (id: string) => {
-        setCustomSections(prev => prev.filter(s => s.id !== id));
-    };
     const toggleAccordion = (section: string) => setOpenSection(openSection === section ? '' : section);
     const updateText = (key: keyof typeof customTexts, value: string) => setCustomTexts(prev => ({ ...prev, [key]: value }));
     const updateNeed = (id: string, field: 'icon' | 'text', value: string) => setNeeds(needs.map(n => n.id === id ? { ...n, [field]: value } : n));
@@ -686,125 +640,79 @@ export const OfferGenerator: React.FC = () => {
                     <AccordionItem title="1. Dane i Model" icon={User} isOpen={openSection === 'data'} onToggle={() => toggleAccordion('data')}>
                         <div className="space-y-4">
                             <input type="text" placeholder="Imię i Nazwisko" className="w-full p-3 border border-gray-200 text-sm" value={clientName} onChange={(e) => setClientName(e.target.value)} />
-                            <div className="grid grid-cols-2 gap-2">{houses.map(house => (<button key={house.id} onClick={() => setSelectedHouseId(house.id)} className={`p-2 border text-xs font-bold uppercase ${selectedHouse.id === house.id ? 'border-[#6E8809] bg-[#f7faf3] text-[#6E8809]' : 'border-gray-200 text-gray-500'}`}>{house.name}</button>))}</div>
+                            <div className="grid grid-cols-2 gap-2">{HOUSES.map(house => (<button key={house.id} onClick={() => setSelectedHouse(house)} className={`p-2 border text-xs font-bold uppercase ${selectedHouse.id === house.id ? 'border-[#6E8809] bg-[#f7faf3] text-[#6E8809]' : 'border-gray-200 text-gray-500'}`}>{house.name}</button>))}</div>
                             <div className="flex border border-gray-200"><button onClick={() => setIsDeveloperState(false)} className={`flex-1 py-2 text-xs font-bold uppercase ${!isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Surowy</button><button onClick={() => setIsDeveloperState(true)} className={`flex-1 py-2 text-xs font-bold uppercase ${isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Deweloperski</button></div>
+                            <div className="flex items-center justify-between">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditMode((v) => !v)}
+                                    className={`px-3 py-2 text-xs font-bold uppercase border ${isEditMode ? 'border-[#6E8809] text-[#6E8809] bg-[#f7faf3]' : 'border-gray-200 text-gray-600 bg-white'}`}
+                                >
+                                    {isEditMode ? 'Zakończ edycję' : 'Edytuj'}
+                                </button>
+                                {isEditMode && <span className="text-[11px] text-gray-500">Możesz edytować nazwy opcji i ceny (także bazowe).</span>}
+                            </div>
+                            {isEditMode && (
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="border border-gray-200 p-3">
+                                        <div className="text-[11px] text-gray-500 mb-1">Cena bazowa — Surowy</div>
+                                        <input
+                                            type="number"
+                                            className="w-full p-2 border border-gray-200 text-sm"
+                                            value={(basePricesByHouse[selectedHouse.id]?.surowy ?? selectedHouse.basePrice)}
+                                            onChange={(e) => updateBasePrice('surowy', Number(e.target.value))}
+                                        />
+                                    </div>
+                                    <div className="border border-gray-200 p-3">
+                                        <div className="text-[11px] text-gray-500 mb-1">Cena bazowa — Deweloperski</div>
+                                        <input
+                                            type="number"
+                                            className="w-full p-2 border border-gray-200 text-sm"
+                                            value={(basePricesByHouse[selectedHouse.id]?.deweloperski ?? selectedHouse.developerPrice)}
+                                            onChange={(e) => updateBasePrice('deweloperski', Number(e.target.value))}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </AccordionItem>
                     
                     {/* CONFIGURATION - Dynamic based on selected House */}
                     <AccordionItem title="2. Konfiguracja i Ceny" icon={Settings} isOpen={openSection === 'config'} onToggle={() => toggleAccordion('config')}>
                         <div className="space-y-6">
-                            <div className="flex items-center justify-between gap-3">
-                                <div className="text-xs text-gray-500">
-                                    {selectedHouse.id === 'individual_house' ? 'Tryb: Projekt indywidualny' : 'Tryb: Standardowy'}
-                                </div>
-                                <button
-                                    onClick={() => setIsEditMode(v => !v)}
-                                    className={`px-3 py-1.5 text-xs font-bold uppercase border ${isEditMode ? 'bg-[#f7faf3] border-[#6E8809] text-[#6E8809]' : 'bg-white border-gray-200 text-gray-600'}`}
-                                >
-                                    {isEditMode ? 'Zakończ edycję' : 'Edytuj'}
-                                </button>
-                            </div>
-
-                            {isEditMode && (
-                                <div className="grid grid-cols-2 gap-3 bg-gray-50 border border-gray-200 p-3 rounded">
-                                    <div>
-                                        <div className="text-[10px] text-gray-500 mb-1">Cena bazowa (Surowy) - netto</div>
-                                        <input
-                                            type="number"
-                                            className="w-full text-xs p-2 border border-gray-200 bg-white"
-                                            value={selectedHouse.basePrice}
-                                            onChange={(e) => updateHousePrice(selectedHouse.id, 'basePrice', Number(e.target.value) || 0)}
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="text-[10px] text-gray-500 mb-1">Cena bazowa (Deweloperski) - netto</div>
-                                        <input
-                                            type="number"
-                                            className="w-full text-xs p-2 border border-gray-200 bg-white"
-                                            value={selectedHouse.developerPrice}
-                                            onChange={(e) => updateHousePrice(selectedHouse.id, 'developerPrice', Number(e.target.value) || 0)}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
                             {selectedHouse.id === 'individual_house' ? (
-                                <div className="space-y-4">
+                                <div className="space-y-3">
+                                    <div className="text-xs text-gray-500">Wybierz <b>Edytuj</b>, aby zmienić również ceny bazowe w sekcji 1.</div>
                                     {customSections.map((sec) => (
-                                        <div key={sec.id} className="border border-gray-200 rounded p-3">
-                                            <div className="flex gap-2 items-start">
-                                                <div className="flex-1">
-                                                    <input
-                                                        className="w-full text-xs font-bold p-2 border border-gray-200 mb-2"
-                                                        value={sec.title}
-                                                        onChange={(e) => updateCustomSection(sec.id, { title: e.target.value })}
-                                                    />
-                                                    <input
-                                                        className="w-full text-xs p-2 border border-gray-200 mb-2"
-                                                        placeholder="Opis (opcjonalnie)"
-                                                        value={sec.description}
-                                                        onChange={(e) => updateCustomSection(sec.id, { description: e.target.value })}
-                                                    />
-                                                    <textarea
-                                                        rows={2}
-                                                        className="w-full text-xs p-2 border border-gray-200"
-                                                        placeholder="Wpisz szczegóły / zakres / notatki..."
-                                                        value={sec.text}
-                                                        onChange={(e) => updateCustomSection(sec.id, { text: e.target.value })}
-                                                    />
+                                        <div key={sec.id} className="border border-gray-200 p-3 space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value })} placeholder="Tytuł sekcji" />
+                                                <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600" onClick={() => removeCustomSection(sec.id)} title="Usuń">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <textarea rows={3} className="w-full p-2 border border-gray-200 text-xs" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value })} placeholder="Opis / szczegóły" />
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <div className="text-[11px] text-gray-500 mb-1">Cena netto (PLN)</div>
+                                                    <input type="number" className="w-full p-2 border border-gray-200 text-sm" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) })} />
                                                 </div>
-                                                <div className="w-32 shrink-0">
-                                                    <div className="text-[10px] text-gray-500 mb-1">Cena netto</div>
-                                                    <input
-                                                        type="number"
-                                                        className="w-full text-xs p-2 border border-gray-200 bg-white"
-                                                        value={sec.price}
-                                                        onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) || 0 })}
-                                                    />
-                                                    <button
-                                                        onClick={() => removeCustomSection(sec.id)}
-                                                        className="mt-2 w-full text-xs font-bold border border-gray-200 py-2 hover:bg-gray-50 flex items-center justify-center gap-1"
-                                                    >
-                                                        <Trash2 className="w-3 h-3" /> Usuń
-                                                    </button>
-                                                </div>
+                                                <div className="text-[11px] text-gray-400 flex items-end">Ta kwota zostanie doliczona do podsumowania.</div>
                                             </div>
                                         </div>
                                     ))}
-                                    <button
-                                        onClick={addCustomSection}
-                                        className="w-full text-xs font-bold border border-gray-200 py-3 hover:bg-gray-50 flex items-center justify-center gap-2"
-                                    >
-                                        <Plus className="w-4 h-4" /> Dodaj sekcję
-                                    </button>
+                                    <button type="button" onClick={addCustomSection} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj sekcję</button>
                                 </div>
                             ) : (
                                 <>
-                                    {availableItems.map((item) => (((item) => (
+                            {availableItems.map((item) => (
                                 <div key={item.code} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
-                                    <h4 className="font-bold text-gray-800 text-sm mb-1">
-                                        {isEditMode ? (
-                                            <input
-                                                className="w-full text-sm font-bold p-1 border border-gray-200 bg-white"
-                                                value={item.name}
-                                                onChange={(e) => updateOfferItem(selectedHouse.id, item.code, { name: e.target.value })}
-                                            />
-                                        ) : (
-                                            item.name
-                                        )}
-                                    </h4>
-                                    <p className="text-xs text-gray-500 mb-3">
-                                        {isEditMode ? (
-                                            <input
-                                                className="w-full text-xs p-1 border border-gray-200 bg-white"
-                                                value={item.description || ''}
-                                                onChange={(e) => updateOfferItem(selectedHouse.id, item.code, { description: e.target.value })}
-                                            />
-                                        ) : (
-                                            item.description
-                                        )}
-                                    </p>
+                                    {isEditMode ? (
+                                        <input type="text" className="w-full p-2 border border-gray-200 text-sm font-bold" value={item.name} onChange={(e) => updateItem(item.code, { name: e.target.value })} />
+                                    ) : (
+                                        <h4 className="font-bold text-gray-800 text-sm mb-1">{item.name}</h4>
+                                    )}
+                                    <p className="text-xs text-gray-500 mb-3">{item.description}</p>
                                     
                                     {/* RADIO */}
                                     {item.type === 'radio' && item.options && (
@@ -816,52 +724,19 @@ export const OfferGenerator: React.FC = () => {
                                                     </div>
                                                     <input type="radio" className="hidden" name={item.code} checked={offerConfig[item.code] === opt.id} onChange={() => handleConfigChange(item.code, opt.id)} />
                                                     <div className="flex-1">
-                                                        <div className="text-xs font-medium text-gray-700">
-                                                            {isEditMode ? (
-                                                                <input
-                                                                    className="w-full text-xs p-1 border border-gray-200 bg-white"
-                                                                    value={opt.name}
-                                                                    onChange={(e) => updateOfferOption(selectedHouse.id, item.code, opt.id, { name: e.target.value })}
-                                                                />
-                                                            ) : (
-                                                                opt.name
-                                                            )}
-                                                        </div>
-                                                        <div className="text-xs font-bold text-[#6E8809]">
-                                                            {isEditMode ? (
-                                                                <div className="flex items-center gap-1">
-                                                                    <span className="text-[10px] text-gray-400">PLN</span>
-                                                                    <input
-                                                                        type="number"
-                                                                        className="w-24 text-xs p-1 border border-gray-200 bg-white text-gray-900 font-bold"
-                                                                        value={opt.price}
-                                                                        onChange={(e) => updateOfferOption(selectedHouse.id, item.code, opt.id, { price: Number(e.target.value) || 0 })}
-                                                                    />
-                                                                </div>
-                                                            ) : (
-                                                                opt.price === 0 ? '0 zł' : `+ ${opt.price.toLocaleString()} zł`
-                                                            )}
-                                                        </div>
+                                                        {isEditMode ? (
+                                                            <input type="text" className="w-full p-2 border border-gray-200 text-xs font-medium" value={opt.name} onChange={(e) => updateOption(item.code, opt.id, { name: e.target.value })} />
+                                                        ) : (
+                                                            <div className="text-xs font-medium text-gray-700">{opt.name}</div>
+                                                        )}
+                                                        {isEditMode ? (
+                                                            <input type="number" className="w-full p-2 border border-gray-200 text-xs font-bold text-[#6E8809]" value={opt.price} onChange={(e) => updateOption(item.code, opt.id, { price: Number(e.target.value) })} />
+                                                        ) : (
+                                                            <div className="text-xs font-bold text-[#6E8809]">{opt.price === 0 ? '0 zł' : `+ ${opt.price.toLocaleString()} zł`}</div>
+                                                        )}
                                                     </div>
-                                                    {isEditMode && (
-                                                        <button
-                                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeOfferOption(selectedHouse.id, item.code, opt.id); }}
-                                                            className="ml-2 text-gray-300 hover:text-red-500"
-                                                            title="Usuń opcję"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </button>
-                                                    )}
                                                 </label>
                                             ))}
-                                            {isEditMode && (
-                                                <div className="flex items-center justify-between px-2">
-                                                    <button onClick={() => addOfferOption(selectedHouse.id, item.code)} className="text-xs font-bold text-gray-600 hover:text-[#6E8809] flex items-center gap-1">
-                                                        <Plus className="w-3 h-3" /> Dodaj opcję
-                                                    </button>
-                                                    <div className="text-[10px] text-gray-400">Kliknij cenę/nazwę aby edytować</div>
-                                                </div>
-                                            )}
                                             <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
                                                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${offerConfig[item.code] === 'none' || !offerConfig[item.code] ? 'border-gray-300' : 'border-gray-300'}`}>
                                                         {(offerConfig[item.code] === 'none' || !offerConfig[item.code]) && <div className="w-2 h-2 rounded-full bg-gray-300" />}
@@ -882,18 +757,11 @@ export const OfferGenerator: React.FC = () => {
                                                 <span className="text-xs font-bold text-gray-700">Dodaj do oferty</span>
                                                 <input type="checkbox" className="hidden" checked={!!offerConfig[item.code]} onChange={(e) => handleConfigChange(item.code, e.target.checked)} />
                                             </div>
-                                            <span className="text-xs font-bold text-[#6E8809]">
                                             {isEditMode ? (
-                                                <input
-                                                    type="number"
-                                                    className="w-28 text-xs p-1 border border-gray-200 bg-white text-right font-bold"
-                                                    value={item.price || 0}
-                                                    onChange={(e) => updateOfferItem(selectedHouse.id, item.code, { price: Number(e.target.value) || 0 })}
-                                                />
+                                                <input type="number" className="w-28 p-2 border border-gray-200 text-xs font-bold text-[#6E8809]" value={item.price ?? 0} onClick={(e) => e.stopPropagation()} onChange={(e) => updateItem(item.code, { price: Number(e.target.value) })} />
                                             ) : (
-                                                <>+ {item.price?.toLocaleString()} zł</>
+                                                <span className="text-xs font-bold text-[#6E8809]">+ {item.price?.toLocaleString()} zł</span>
                                             )}
-                                        </span>
                                         </label>
                                     )}
 
@@ -906,32 +774,20 @@ export const OfferGenerator: React.FC = () => {
                                                 <button onClick={() => handleConfigChange(item.code, (offerConfig[item.code] || 0) + 1)} className="w-8 h-8 bg-white border border-gray-200 hover:text-[#6E8809] flex items-center justify-center"><Plus className="w-3 h-3" /></button>
                                             </div>
                                             <div className="text-right flex-1">
-                                                <div className="text-xs text-gray-500">
-                                                {isEditMode ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="number"
-                                                            className="w-24 text-xs p-1 border border-gray-200 bg-white"
-                                                            value={item.price || 0}
-                                                            onChange={(e) => updateOfferItem(selectedHouse.id, item.code, { price: Number(e.target.value) || 0 })}
-                                                        />
-                                                        <span className="text-[10px] text-gray-400">zł /</span>
-                                                        <input
-                                                            className="w-20 text-xs p-1 border border-gray-200 bg-white"
-                                                            value={item.unit || ''}
-                                                            onChange={(e) => updateOfferItem(selectedHouse.id, item.code, { unit: e.target.value })}
-                                                        />
-                                                    </div>
+                                                <div className="text-xs text-gray-500">{isEditMode ? (
+                                                    <span className="inline-flex items-center gap-2">
+                                                        <input type="number" className="w-24 p-1 border border-gray-200 text-xs" value={item.price ?? 0} onChange={(e) => updateItem(item.code, { price: Number(e.target.value) })} />
+                                                        <span>zł / {item.unit}</span>
+                                                    </span>
                                                 ) : (
-                                                    <>{item.price?.toLocaleString()} zł / {item.unit}</>
-                                                )}
-                                            </div>
+                                                    <span>{item.price?.toLocaleString()} zł / {item.unit}</span>
+                                                )}</div>
                                                 <div className="text-xs font-bold text-[#6E8809]">Razem: {((offerConfig[item.code] || 0) * (item.price || 0)).toLocaleString()} zł</div>
                                             </div>
                                         </div>
                                     )}
                                 </div>
-                                    ))}
+                            ))}
                                 </>
                             )}
                         </div>
@@ -1074,7 +930,7 @@ export const OfferGenerator: React.FC = () => {
                         <div className="p-20 flex flex-col h-full">
                             <div className="flex justify-center mb-24"><img src={images.logo} alt="Starter Home" className="h-12 w-auto object-contain" /></div>
                             <div className="mb-16 text-center">
-                                <span className="inline-block bg-[#f7faf3] text-[#6E8809] font-bold px-6 py-2 uppercase tracking-widest text-sm mb-8 border border-[#e2e8da] rounded-full">{selectedHouse.id === 'individual_house' ? 'Szczegóły projektu indywidualnego' : `Szczegóły Projektu ${selectedHouse.name.replace(' HOUSE', '')}`}</span>
+                                <span className="inline-block bg-[#f7faf3] text-[#6E8809] font-bold px-6 py-2 uppercase tracking-widest text-sm mb-8 border border-[#e2e8da] rounded-full">{selectedHouse.id === 'individual_house' ? 'Szczegóły projektu indywidualnego' : `Szczegóły Projektu ${selectedHouse.name.replace(\' HOUSE\', \'\')}`}</span>
                                 <h1 className="text-6xl font-black text-gray-900 leading-tight mb-6">Spersonalizowana <br/>Oferta</h1>
                                 {clientName && (<h2 className="text-2xl text-gray-400 font-light mt-4">Dla: <span className="text-gray-900 font-bold">{clientName}</span></h2>)}
                             </div>
