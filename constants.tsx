@@ -287,7 +287,20 @@ export const HOUSES: House[] = [
     description: 'Nowoczesny dom o formie stodoły, 35 m², z praktycznym parterem i antresolą.',
     image: 'https://starterhome.pl/wp-content/uploads/2025/10/ujecie-1-scaled.png',
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Skyline.pdf'
+  },
+
+  { 
+    id: 'individual_house', 
+    name: 'INDYWIDUALNY', 
+    status: 'DRAFT', 
+    basePrice: 0, 
+    developerPrice: 0,
+    area: 'Do ustalenia',
+    details: { builtArea: '—', usableArea: '—', bedrooms: '—' },
+    description: 'Projekt indywidualny – konfiguracja i ceny do uzupełnienia ręcznie.',
+    image: 'https://starterhome.pl/wp-content/uploads/2025/12/G_F_1.png'
   }
+
 ];
 
 export const getIcon = (name: string) => {
