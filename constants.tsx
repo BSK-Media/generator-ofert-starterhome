@@ -288,19 +288,18 @@ export const HOUSES: House[] = [
     image: 'https://starterhome.pl/wp-content/uploads/2025/10/ujecie-1-scaled.png',
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Skyline.pdf'
   },
-
-  { 
-    id: 'individual_house', 
-    name: 'INDYWIDUALNY', 
-    status: 'DRAFT', 
-    basePrice: 0, 
+  {
+    id: 'individual_house',
+    name: 'Indywidualny',
+    status: 'DRAFT',
+    image: 'https://starterhome.pl/wp-content/uploads/2025/09/Nest-House-1-scaled.png',
+    basePrice: 0,
     developerPrice: 0,
     area: 'Do ustalenia',
     details: { builtArea: '—', usableArea: '—', bedrooms: '—' },
-    description: 'Projekt indywidualny – konfiguracja i ceny do uzupełnienia ręcznie.',
-    image: 'https://starterhome.pl/wp-content/uploads/2025/12/G_F_1.png'
+    description: 'Projekt indywidualny — szczegóły i ceny uzupełniasz ręcznie w generatorze.',
+    floorPlanPdf: ''
   }
-
 ];
 
 export const getIcon = (name: string) => {
