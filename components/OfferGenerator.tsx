@@ -1100,7 +1100,7 @@ export const OfferGenerator: React.FC = () => {
                             <div className="flex-1 flex items-center justify-center">
                                 <img
                                     src={resolvePublicAsset(selectedHouse.id === 'nest_house' ? 'rzut-nest-1.webp' : images.floorPlan)}
-                                    className="max-h-full max-w-full object-contain mix-blend-multiply"
+                                    className="w-full h-full object-contain mix-blend-multiply"
                                     alt="Rzut"
                                 />
                             </div>
