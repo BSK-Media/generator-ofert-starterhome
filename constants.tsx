@@ -216,7 +216,7 @@ export const HOUSES: House[] = [
     // Main image (unchanged) used in the first/top section
     image: 'https://starterhome.pl/wp-content/uploads/2023/10/Nest-House-1.jpg',
     // Collage used only in the "Wizualizacja" section
-    visualizationImage: 'kolaz-nest-1.png',
+    images: ['kolaz-nest-1.png'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Nest.pdf'
   },
   { 
