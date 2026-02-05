@@ -215,8 +215,8 @@ export const HOUSES: House[] = [
     description: 'Dom o powierzchni użytkowej 45 m² został zaprojektowany z myślą o funkcjonalności. Posiada dwie sypialnie, salon z aneksem kuchennym oraz łazienkę.',
     // Main image (unchanged) used in the first/top section
     image: 'https://starterhome.pl/wp-content/uploads/2023/10/Nest-House-1.jpg',
-   
-    images: ['kolaz-nest-1.png'],
+    // Collage used only in the "Wizualizacja" section
+    visualizationImage: 'kolaz-nest-1.png',
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Nest.pdf'
   },
   { 

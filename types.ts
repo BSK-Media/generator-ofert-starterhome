@@ -39,13 +39,9 @@ export interface House {
   id: string;
   name: string;
   status: 'COMPLETED' | 'DRAFT';
-
-  /** Główne zdjęcie (hero / góra strony) */
   image: string;
-
-  /** Zdjęcia do sekcji WIZUALIZACJA (grid / kolaż) */
-  images?: string[];
-
+  /** Optional image used specifically in the "Wizualizacja" section (can differ from the main image). */
+  visualizationImage?: string;
   basePrice: number; // Stan surowy zamknięty
   developerPrice: number; // Stan deweloperski
   area: string;
@@ -53,6 +49,7 @@ export interface House {
   description?: string;
   floorPlanPdf?: string;
 }
+
 // New Structure for dynamic pricing
 export interface OfferItemOption {
   id: string;
