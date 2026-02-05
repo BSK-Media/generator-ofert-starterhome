@@ -1097,10 +1097,11 @@ export const OfferGenerator: React.FC = () => {
                         <div className="h-[40%] w-full relative"><img src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)} className="w-full h-full object-cover" alt="Wizualizacja" /><div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">Wizualizacja</div></div>
                         <div className="h-[60%] w-full bg-[#f9f9f9] p-12 flex flex-col relative">
                             <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3"><Layers className="text-[#6E8809]" /> Rzut Techniczny</h3>
-                            <div className="flex-1 flex items-center justify-center">
+                            <div className="flex-1 flex items-start justify-center pt-2 pb-20">
                                 <img
                                     src={resolvePublicAsset(selectedHouse.id === 'nest_house' ? 'rzut-nest-1.webp' : images.floorPlan)}
-                                    className="w-full h-full object-contain mix-blend-multiply"
+                                    className="h-full w-auto object-contain mix-blend-multiply"
+                                    style={selectedHouse.id === 'nest_house' ? { transform: 'translateY(-12px) scale(0.92)', transformOrigin: 'top center' } : undefined}
                                     alt="Rzut"
                                 />
                             </div>
