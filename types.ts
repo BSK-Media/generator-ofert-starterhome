@@ -1,4 +1,3 @@
-
 export enum InputType {
   SELECT = 'SELECT',
   RADIO = 'RADIO',
@@ -18,11 +17,11 @@ export interface ConfigCategory {
   title: string;
   iconName: string;
   inputType: InputType;
-  variants?: OptionVariant[]; // For Select/Radio
-  basePrice?: number; // For Checkbox
-  unitPrice?: number; // For Number input (e.g. per m2)
+  variants?: OptionVariant[];
+  basePrice?: number;
+  unitPrice?: number;
   unitLabel?: string;
-  info?: string; // Additional info (like for AC/PV)
+  info?: string;
 }
 
 export interface UserSelection {
@@ -30,27 +29,30 @@ export interface UserSelection {
 }
 
 export interface HouseDetails {
-  builtArea: string; // Powierzchnia zabudowy
-  usableArea: string; // Powierzchnia użytkowa
-  bedrooms: string | number;  // Liczba sypialni (np. 2 lub "3-4")
+  builtArea: string;
+  usableArea: string;
+  bedrooms: string | number;
 }
 
 export interface House {
   id: string;
   name: string;
   status: 'COMPLETED' | 'DRAFT';
+
+  /** Główne zdjęcie (hero / góra strony) */
   image: string;
-  /** Optional image used specifically in the "Wizualizacja" section (can differ from the main image). */
-  visualizationImage?: string;
-  basePrice: number; // Stan surowy zamknięty
-  developerPrice: number; // Stan deweloperski
+
+  /** Zdjęcia do sekcji WIZUALIZACJA (grid / kolaż) */
+  images?: string[];
+
+  basePrice: number;
+  developerPrice: number;
   area: string;
   details?: HouseDetails;
   description?: string;
   floorPlanPdf?: string;
 }
 
-// New Structure for dynamic pricing
 export interface OfferItemOption {
   id: string;
   name: string;
@@ -62,8 +64,8 @@ export interface OfferItem {
   name: string;
   description?: string;
   type: 'checkbox' | 'radio' | 'number';
-  price?: number; // for checkbox base price or number unit price
-  options?: OfferItemOption[]; // for radio
+  price?: number;
+  options?: OfferItemOption[];
   defaultValue?: string | boolean | number;
-  unit?: string; // for number
+  unit?: string;
 }
