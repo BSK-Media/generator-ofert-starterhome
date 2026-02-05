@@ -1303,3 +1303,13 @@ export const OfferGenerator: React.FC = () => {
         </div>
     );
 };
+
+// added balance rzut mapping
+
+
+// === RZUT TECHNICZNY IMAGES ===
+const TECH_RZUTS: Record<string, string> = {
+  nest: "/rzut-nest-1.webp",
+  haven: "/rzut-haven-1.webp",
+  balance: "/rzut-balance-1.webp",
+};
