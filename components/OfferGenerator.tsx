@@ -1105,20 +1105,25 @@ export const OfferGenerator: React.FC = () => {
                                     const isNest = houseKey.includes('nest');
                                     const isHaven = houseKey.includes('haven');
 
-                                    // Source: per-house override, otherwise fallback to uploaded/default floorPlan
+                                                                        const isBalance = houseKey.includes('balance');
+// Source: per-house override, otherwise fallback to uploaded/default floorPlan
                                     const rawSrc = isNest
                                         ? 'rzut-nest-1.webp'
                                         : isHaven
                                             ? 'rzut-haven-1.webp'
-                                            : images.floorPlan;
+                                            : isBalance
+                                                ? 'rzut-balance-1.webp'
+                                                : images.floorPlan;
 
                                     // Transform: NEST was tuned to avoid bottom cut in the A4 layout.
                                     // Keep the same behavior; HAVEN uses a gentler nudge by default.
                                     const transform = isNest
-                                        ? 'translateY(-12px) scale(0.92)'
+                                        ? 'translateY(-22px) scale(0.86)'
                                         : isHaven
-                                            ? 'translateY(-6px) scale(0.96)'
-                                            : 'none';
+                                            ? 'translateY(-18px) scale(0.86)'
+                                            : isBalance
+                                                ? 'translateY(-18px) scale(0.84)'
+                                                : 'none';
 
                                     const src = resolvePublicAsset(rawSrc || '');
                                     return (
