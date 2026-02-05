@@ -359,6 +359,17 @@ export const OfferGenerator: React.FC = () => {
         { id: 'sec-1', title: 'Zakres / opis', text: '', price: 0 },
     ]);
 
+	// Rzuty techniczne (pliki w /public). Dla starszych definicji domków, które nie mają jeszcze
+	// floorPlanImage w constants, używamy mapowania po id.
+	const floorPlanById: Record<string, string> = {
+		nest_house: '/rzut-nest-1.webp',
+		haven_house: '/rzut-haven-1.webp',
+		balance_house: '/rzut-balance-1.webp',
+		comfort_house: '/rzut-comfort-1.webp',
+	};
+	const resolveFloorPlanImage = (house: House) =>
+		resolvePublicAsset(floorPlanById[house.id] ?? house.floorPlanImage ?? '/rzut-tech-emily.webp');
+
 
     // MEDIA
     const [images, setImages] = useState({
@@ -367,8 +378,8 @@ export const OfferGenerator: React.FC = () => {
         gallery1: selectedHouse.image,
         gallery2: selectedHouse.image,
         interior: 'https://starterhome.pl/wp-content/uploads/2025/10/ujecie-1-scaled.png',
-        // per-model floor plan (served from /public)
-        floorPlan: resolvePublicAsset(selectedHouse.floorPlanImage ?? 'https://howsmart.pl/wp-content/uploads/2025/02/EMILY-RZUT-PL-scaled.jpg'),
+		// per-model floor plan (served from /public)
+		floorPlan: resolveFloorPlanImage(selectedHouse),
         advisor: 'https://i.ibb.co/j9NzkpfG/Krystian.jpg',
         logo: 'https://i.ibb.co/PZJv90w6/logo.png',
         decorLeaf: 'https://starterhome.pl/wp-content/uploads/2025/12/cropped-Favicon.png',
@@ -386,9 +397,7 @@ export const OfferGenerator: React.FC = () => {
             visualization: resolvePublicAsset(selectedHouse.visualizationImage ?? selectedHouse.image),
             gallery1: selectedHouse.image,
             gallery2: selectedHouse.image,
-            floorPlan: resolvePublicAsset(
-                selectedHouse.floorPlanImage ?? 'https://howsmart.pl/wp-content/uploads/2025/02/EMILY-RZUT-PL-scaled.jpg'
-            ),
+	        floorPlan: resolveFloorPlanImage(selectedHouse),
         }));
         setIsCompressed(false);
         setCompressionStatus('idle');
@@ -640,11 +649,11 @@ export const OfferGenerator: React.FC = () => {
     const removeNeed = (id: string) => setNeeds(needs.filter(n => n.id !== id));
     const addNeed = () => setNeeds([...needs, { id: Date.now().toString(), icon: 'Check', text: 'Nowa potrzeba' }]);
 
-    // Floor-plan positioning tweaks (to avoid overlap with the METRAŻ box for some models)
-    const floorPlanKey = `${selectedHouse?.id ?? ''} ${selectedHouse?.name ?? ''}`.toLowerCase();
-    const floorPlanTransform = floorPlanKey.includes('comfort')
-        ? 'translateX(-80px) translateY(-10px) scale(0.92)'
-        : undefined;
+	// Floor-plan positioning tweaks (to avoid overlap with the METRAŻ box / and avoid bottom clipping)
+	const floorPlanKey = `${selectedHouse?.id ?? ''} ${selectedHouse?.name ?? ''}`.toLowerCase();
+	const floorPlanTransform = floorPlanKey.includes('comfort')
+		? 'translateX(-90px) translateY(-25px) scale(0.78)'
+		: undefined;
 
     return (
         <div className="flex h-screen bg-gray-100 font-sans print:block print:h-auto print:overflow-visible">
