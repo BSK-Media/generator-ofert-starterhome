@@ -82,8 +82,6 @@ const AVAILABLE_ICONS: Record<string, React.ElementType> = {
 // Resolve files placed in /public when the app is deployed under a sub-path (e.g. GitHub Pages).
 const resolvePublicAsset = (src: string) => {
     if (!src) return src;
-    // Keep data/blob URLs unchanged.
-    if (/^(data:|blob:)/i.test(src)) return src;
     // Keep absolute URLs (http/https) unchanged.
     if (/^https?:\/\//i.test(src)) return src;
     // For public assets, prefer BASE_URL to support sub-path deployments.
@@ -369,7 +367,8 @@ export const OfferGenerator: React.FC = () => {
         gallery1: selectedHouse.image,
         gallery2: selectedHouse.image,
         interior: 'https://starterhome.pl/wp-content/uploads/2025/10/ujecie-1-scaled.png',
-        floorPlan: 'https://howsmart.pl/wp-content/uploads/2025/02/EMILY-RZUT-PL-scaled.jpg',
+        // per-model floor plan (served from /public)
+        floorPlan: resolvePublicAsset(selectedHouse.floorPlanImage ?? 'https://howsmart.pl/wp-content/uploads/2025/02/EMILY-RZUT-PL-scaled.jpg'),
         advisor: 'https://i.ibb.co/j9NzkpfG/Krystian.jpg',
         logo: 'https://i.ibb.co/PZJv90w6/logo.png',
         decorLeaf: 'https://starterhome.pl/wp-content/uploads/2025/12/cropped-Favicon.png',
@@ -387,6 +386,9 @@ export const OfferGenerator: React.FC = () => {
             visualization: resolvePublicAsset(selectedHouse.visualizationImage ?? selectedHouse.image),
             gallery1: selectedHouse.image,
             gallery2: selectedHouse.image,
+            floorPlan: resolvePublicAsset(
+                selectedHouse.floorPlanImage ?? 'https://howsmart.pl/wp-content/uploads/2025/02/EMILY-RZUT-PL-scaled.jpg'
+            ),
         }));
         setIsCompressed(false);
         setCompressionStatus('idle');
@@ -637,6 +639,12 @@ export const OfferGenerator: React.FC = () => {
     const updateNeed = (id: string, field: 'icon' | 'text', value: string) => setNeeds(needs.map(n => n.id === id ? { ...n, [field]: value } : n));
     const removeNeed = (id: string) => setNeeds(needs.filter(n => n.id !== id));
     const addNeed = () => setNeeds([...needs, { id: Date.now().toString(), icon: 'Check', text: 'Nowa potrzeba' }]);
+
+    // Floor-plan positioning tweaks (to avoid overlap with the METRAŻ box for some models)
+    const floorPlanKey = `${selectedHouse?.id ?? ''} ${selectedHouse?.name ?? ''}`.toLowerCase();
+    const floorPlanTransform = floorPlanKey.includes('comfort')
+        ? 'translateX(-80px) translateY(-10px) scale(0.92)'
+        : undefined;
 
     return (
         <div className="flex h-screen bg-gray-100 font-sans print:block print:h-auto print:overflow-visible">
@@ -959,7 +967,7 @@ export const OfferGenerator: React.FC = () => {
                                 <div className="text-left"><div className="font-black text-3xl text-gray-900 mb-1">Krystian Pogorzelski</div><div className="text-[#6E8809] font-bold text-base uppercase tracking-widest">Obsługa Klienta</div></div>
                             </div>
                             <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
-                                <img src={resolvePublicAsset(selectedHouse.image)} className="w-full h-full object-cover" alt="Zdjęcie główne" />
+                                <img src={images.visualization} className="w-full h-full object-cover" alt="Wizualizacja" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                                 <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{selectedHouse.name}</p></div>
                             </div>
@@ -1096,48 +1104,16 @@ export const OfferGenerator: React.FC = () => {
 
                     {/* PAGE 5: WIZUALIZACJE & RZUTY */}
                     <A4Page className="flex flex-col a4-page">
-                        <div className="h-[40%] w-full relative"><img src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)} className="w-full h-full object-cover" alt="Wizualizacja" /><div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">Wizualizacja</div></div>
+                        <div className="h-[40%] w-full relative"><img src={images.visualization} className="w-full h-full object-cover" alt="Wizualizacja" /><div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">Wizualizacja</div></div>
                         <div className="h-[60%] w-full bg-[#f9f9f9] p-12 flex flex-col relative">
                             <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3"><Layers className="text-[#6E8809]" /> Rzut Techniczny</h3>
-                            <div className="flex-1 flex items-center justify-center pb-10">
-                                {(() => {
-                                    const houseKey = (selectedHouse.name || selectedHouse.id || '').toLowerCase();
-                                    const isNest = houseKey.includes('nest');
-                                    const isHaven = houseKey.includes('haven');
-
-                                                                        const isBalance = houseKey.includes('balance');
-                                    const isComfort = houseKey.includes('comfort');
-// Source: per-house override, otherwise fallback to uploaded/default floorPlan
-                                    const rawSrc = isNest
-                                        ? 'rzut-nest-1.webp'
-                                        : isHaven
-                                            ? 'rzut-haven-1.webp'
-                                            : isBalance
-                                                ? 'rzut-balance-1.webp'
-                                                : isComfort
-                                                    ? 'rzut-comfort-1.webp'
-                                                    : images.floorPlan;
-
-                                    // Transform: NEST was tuned to avoid bottom cut in the A4 layout.
-                                    // Keep the same behavior; HAVEN uses a gentler nudge by default.
-                                    const transform = isNest
-                                        ? 'translateY(-22px) scale(0.86)'
-                                        : isHaven
-                                            ? 'translateY(-18px) scale(0.86)'
-                                            : isBalance
-                                                ? 'translateY(-18px) scale(0.84)'
-                                                : 'none';
-
-                                    const src = resolvePublicAsset(rawSrc || '');
-                                    return (
-                                        <img
-                                            src={src}
-                                            className="w-full h-full object-contain mix-blend-multiply"
-                                            style={{ transform, transformOrigin: 'center center' }}
-                                            alt="Rzut"
-                                        />
-                                    );
-                                })()}
+                            <div className="flex-1 flex items-center justify-center">
+                                <img
+                                    src={images.floorPlan}
+                                    className="max-h-full max-w-full object-contain mix-blend-multiply"
+                                    style={floorPlanTransform ? { transform: floorPlanTransform } : undefined}
+                                    alt="Rzut"
+                                />
                             </div>
                             <div className="absolute bottom-12 right-12 bg-white p-6 border border-gray-100 max-w-xs">
                                  <h4 className="font-bold text-gray-900 border-b pb-2 mb-2 uppercase text-xs tracking-wider">Metraż</h4>
@@ -1310,14 +1286,4 @@ export const OfferGenerator: React.FC = () => {
             </div>
         </div>
     );
-};
-
-// added balance rzut mapping
-
-
-// === RZUT TECHNICZNY IMAGES ===
-const TECH_RZUTS: Record<string, string> = {
-  nest: "/rzut-nest-1.webp",
-  haven: "/rzut-haven-1.webp",
-  balance: "/rzut-balance-1.webp",
 };
