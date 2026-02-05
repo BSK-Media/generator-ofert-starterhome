@@ -957,7 +957,25 @@ export const OfferGenerator: React.FC = () => {
                                 <div className="text-left"><div className="font-black text-3xl text-gray-900 mb-1">Krystian Pogorzelski</div><div className="text-[#6E8809] font-bold text-base uppercase tracking-widest">Obsługa Klienta</div></div>
                             </div>
                             <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
-                                <img src={images.visualization} className="w-full h-full object-cover" alt="Wizualizacja" />
+                                {selectedHouse.images && selectedHouse.images.length > 0 ? (
+  <div className="grid grid-cols-2 gap-2 h-full p-4 bg-white">
+    {selectedHouse.images.map((img, index) => (
+      <img
+        key={index}
+        src={img}
+        alt={`Wizualizacja ${index + 1}`}
+        className="w-full h-full object-cover"
+      />
+    ))}
+  </div>
+) : (
+  <img
+    src={images.visualization}
+    className="w-full h-full object-cover"
+    alt="Wizualizacja"
+  />
+)}
+
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                                 <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{selectedHouse.name}</p></div>
                             </div>
