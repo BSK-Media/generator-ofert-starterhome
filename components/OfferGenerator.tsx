@@ -79,6 +79,18 @@ const AVAILABLE_ICONS: Record<string, React.ElementType> = {
     Circle: ({className}) => <div className={`rounded-full border-2 border-current ${className}`} style={{width: '1em', height: '1em'}} />
 };
 
+// Resolve files placed in /public when the app is deployed under a sub-path (e.g. GitHub Pages).
+const resolvePublicAsset = (src: string) => {
+    if (!src) return src;
+    // Keep absolute URLs (http/https) unchanged.
+    if (/^https?:\/\//i.test(src)) return src;
+    // For public assets, prefer BASE_URL to support sub-path deployments.
+    if (src.startsWith('/')) return `${import.meta.env.BASE_URL}${src.slice(1)}`;
+    return `${import.meta.env.BASE_URL}${src}`;
+};
+
+
+
 const ICON_LABELS_PL: Record<string, string> = {
     Maximize: 'Powiększenie / Metraż',
     BedDouble: 'Sypialnia / Łóżko',
@@ -351,6 +363,7 @@ export const OfferGenerator: React.FC = () => {
     // MEDIA
     const [images, setImages] = useState({
         main: selectedHouse.image,
+        visualization: resolvePublicAsset(selectedHouse.visualizationImage ?? selectedHouse.image),
         gallery1: selectedHouse.image,
         gallery2: selectedHouse.image,
         interior: 'https://starterhome.pl/wp-content/uploads/2025/10/ujecie-1-scaled.png',
@@ -369,6 +382,7 @@ export const OfferGenerator: React.FC = () => {
         setImages(prev => ({
             ...prev,
             main: selectedHouse.image,
+            visualization: resolvePublicAsset(selectedHouse.visualizationImage ?? selectedHouse.image),
             gallery1: selectedHouse.image,
             gallery2: selectedHouse.image,
         }));
@@ -943,7 +957,7 @@ export const OfferGenerator: React.FC = () => {
                                 <div className="text-left"><div className="font-black text-3xl text-gray-900 mb-1">Krystian Pogorzelski</div><div className="text-[#6E8809] font-bold text-base uppercase tracking-widest">Obsługa Klienta</div></div>
                             </div>
                             <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
-                                <img src={images.main} className="w-full h-full object-cover" alt="Wizualizacja" />
+                                <img src={images.visualization} className="w-full h-full object-cover" alt="Wizualizacja" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                                 <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{selectedHouse.name}</p></div>
                             </div>
@@ -1080,7 +1094,7 @@ export const OfferGenerator: React.FC = () => {
 
                     {/* PAGE 5: WIZUALIZACJE & RZUTY */}
                     <A4Page className="flex flex-col a4-page">
-                        <div className="h-[40%] w-full relative"><img src={images.main} className="w-full h-full object-cover" alt="Main View" /><div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">Wizualizacja</div></div>
+                        <div className="h-[40%] w-full relative"><img src={images.visualization} className="w-full h-full object-cover" alt="Wizualizacja" /><div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">Wizualizacja</div></div>
                         <div className="h-[60%] w-full bg-[#f9f9f9] p-12 flex flex-col relative">
                             <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3"><Layers className="text-[#6E8809]" /> Rzut Techniczny</h3>
                             <div className="flex-1 flex items-center justify-center">
