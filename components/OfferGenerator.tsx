@@ -363,7 +363,7 @@ export const OfferGenerator: React.FC = () => {
     // MEDIA
     const [images, setImages] = useState({
         main: selectedHouse.image,
-        visualization: resolvePublicAsset(selectedHouse.visualizationImage ?? selectedHouse.image),
+        visualization: resolveImageSrc(selectedHouse.images?.[0] ?? selectedHouse.image),
         gallery1: selectedHouse.image,
         gallery2: selectedHouse.image,
         interior: 'https://starterhome.pl/wp-content/uploads/2025/10/ujecie-1-scaled.png',
@@ -382,7 +382,7 @@ export const OfferGenerator: React.FC = () => {
         setImages(prev => ({
             ...prev,
             main: selectedHouse.image,
-            visualization: resolvePublicAsset(selectedHouse.visualizationImage ?? selectedHouse.image),
+            visualization: resolveImageSrc(selectedHouse.images?.[0] ?? selectedHouse.image),
             gallery1: selectedHouse.image,
             gallery2: selectedHouse.image,
         }));

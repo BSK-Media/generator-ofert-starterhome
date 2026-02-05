@@ -217,7 +217,7 @@ export const HOUSES: House[] = [
     image: 'https://starterhome.pl/wp-content/uploads/2023/10/Nest-House-1.jpg',
    
     images: ['kolaz-nest-1.png'],
-    // Collage used only in the "Wizualizacja" section    floorPlanPdf: 'https://todybnsadf.cfolks.pl/Nest.pdf'
+    floorPlanPdf: 'https://todybnsadf.cfolks.pl/Nest.pdf'
   },
   { 
     id: 'haven_house', 
