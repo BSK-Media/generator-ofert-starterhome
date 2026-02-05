@@ -1106,6 +1106,7 @@ export const OfferGenerator: React.FC = () => {
                                     const isHaven = houseKey.includes('haven');
 
                                                                         const isBalance = houseKey.includes('balance');
+                                    const isComfort = houseKey.includes('comfort');
 // Source: per-house override, otherwise fallback to uploaded/default floorPlan
                                     const rawSrc = isNest
                                         ? 'rzut-nest-1.webp'
@@ -1113,7 +1114,9 @@ export const OfferGenerator: React.FC = () => {
                                             ? 'rzut-haven-1.webp'
                                             : isBalance
                                                 ? 'rzut-balance-1.webp'
-                                                : images.floorPlan;
+                                                : isComfort
+                                                    ? 'rzut-comfort-1.webp'
+                                                    : images.floorPlan;
 
                                     // Transform: NEST was tuned to avoid bottom cut in the A4 layout.
                                     // Keep the same behavior; HAVEN uses a gentler nudge by default.
