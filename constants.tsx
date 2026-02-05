@@ -202,6 +202,7 @@ export const HOUSES: House[] = [
     details: { builtArea: '35 m²', usableArea: '55 m²', bedrooms: 2 },
     description: 'Zenith House 35 m² łączy elegancję z przytulnością. Duże przeszklenia na bocznej ścianie nadają budynkowi wyjątkowy charakter.',
     image: 'https://starterhome.pl/wp-content/uploads/2025/10/enhanced_ujecie-1-przod-scaled.png',
+    images: ['kolaz-zenith-1.webp'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Zenith.pdf'
   },
   { 
@@ -215,7 +216,7 @@ export const HOUSES: House[] = [
     description: 'Dom o powierzchni użytkowej 45 m² został zaprojektowany z myślą o funkcjonalności. Posiada dwie sypialnie, salon z aneksem kuchennym oraz łazienkę.',
     // Main image (unchanged) used in the first/top section
     image: 'nest-main.webp',
-    images: ['kolaz-zenith-1.webp'],
+    images: ['kolaz-nest-1.png'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Nest.pdf'
   },
   { 
