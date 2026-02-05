@@ -40,8 +40,7 @@ export interface House {
   name: string;
   status: 'COMPLETED' | 'DRAFT';
   image: string;
-  /** Optional image used specifically in the "Wizualizacja" section (can differ from the main image). */
-  visualizationImage?: string;
+  images?: string[]; 
   basePrice: number; // Stan surowy zamknięty
   developerPrice: number; // Stan deweloperski
   area: string;

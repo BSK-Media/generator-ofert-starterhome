@@ -957,7 +957,7 @@ export const OfferGenerator: React.FC = () => {
                                 <div className="text-left"><div className="font-black text-3xl text-gray-900 mb-1">Krystian Pogorzelski</div><div className="text-[#6E8809] font-bold text-base uppercase tracking-widest">Obsługa Klienta</div></div>
                             </div>
                             <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
-                                <img src={images.visualization} className="w-full h-full object-cover" alt="Wizualizacja" />
+                                <img src={resolvePublicAsset(selectedHouse.image)} className="w-full h-full object-cover" alt="Zdjęcie główne" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                                 <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{selectedHouse.name}</p></div>
                             </div>
@@ -1094,7 +1094,7 @@ export const OfferGenerator: React.FC = () => {
 
                     {/* PAGE 5: WIZUALIZACJE & RZUTY */}
                     <A4Page className="flex flex-col a4-page">
-                        <div className="h-[40%] w-full relative"><img src={images.visualization} className="w-full h-full object-cover" alt="Wizualizacja" /><div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">Wizualizacja</div></div>
+                        <div className="h-[40%] w-full relative"><img src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)} className="w-full h-full object-cover" alt="Wizualizacja" /><div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">Wizualizacja</div></div>
                         <div className="h-[60%] w-full bg-[#f9f9f9] p-12 flex flex-col relative">
                             <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3"><Layers className="text-[#6E8809]" /> Rzut Techniczny</h3>
                             <div className="flex-1 flex items-center justify-center">
