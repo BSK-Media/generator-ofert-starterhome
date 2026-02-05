@@ -82,6 +82,8 @@ const AVAILABLE_ICONS: Record<string, React.ElementType> = {
 // Resolve files placed in /public when the app is deployed under a sub-path (e.g. GitHub Pages).
 const resolvePublicAsset = (src: string) => {
     if (!src) return src;
+    // Keep data/blob URLs unchanged.
+    if (/^(data:|blob:)/i.test(src)) return src;
     // Keep absolute URLs (http/https) unchanged.
     if (/^https?:\/\//i.test(src)) return src;
     // For public assets, prefer BASE_URL to support sub-path deployments.
@@ -1097,12 +1099,37 @@ export const OfferGenerator: React.FC = () => {
                         <div className="h-[40%] w-full relative"><img src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)} className="w-full h-full object-cover" alt="Wizualizacja" /><div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">Wizualizacja</div></div>
                         <div className="h-[60%] w-full bg-[#f9f9f9] p-12 flex flex-col relative">
                             <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3"><Layers className="text-[#6E8809]" /> Rzut Techniczny</h3>
-                            <div className="flex-1 flex items-center justify-center">
-                                <img
-                                    src={resolvePublicAsset(selectedHouse.id === 'nest_house' ? 'rzut-nest-1.webp' : selectedHouse.id === 'haven_house' ? 'rzut-haven-1.webp' : images.floorPlan)}
-                                    className="max-h-full max-w-full object-contain mix-blend-multiply"
-                                    alt="Rzut"
-                                />
+                            <div className="flex-1 flex items-center justify-center pb-10">
+                                {(() => {
+                                    const houseKey = (selectedHouse.name || selectedHouse.id || '').toLowerCase();
+                                    const isNest = houseKey.includes('nest');
+                                    const isHaven = houseKey.includes('haven');
+
+                                    // Source: per-house override, otherwise fallback to uploaded/default floorPlan
+                                    const rawSrc = isNest
+                                        ? 'rzut-nest-1.webp'
+                                        : isHaven
+                                            ? 'rzut-haven-1.webp'
+                                            : images.floorPlan;
+
+                                    // Transform: NEST was tuned to avoid bottom cut in the A4 layout.
+                                    // Keep the same behavior; HAVEN uses a gentler nudge by default.
+                                    const transform = isNest
+                                        ? 'translateY(-12px) scale(0.92)'
+                                        : isHaven
+                                            ? 'translateY(-6px) scale(0.96)'
+                                            : 'none';
+
+                                    const src = resolvePublicAsset(rawSrc || '');
+                                    return (
+                                        <img
+                                            src={src}
+                                            className="w-full h-full object-contain mix-blend-multiply"
+                                            style={{ transform, transformOrigin: 'center center' }}
+                                            alt="Rzut"
+                                        />
+                                    );
+                                })()}
                             </div>
                             <div className="absolute bottom-12 right-12 bg-white p-6 border border-gray-100 max-w-xs">
                                  <h4 className="font-bold text-gray-900 border-b pb-2 mb-2 uppercase text-xs tracking-wider">Metraż</h4>
