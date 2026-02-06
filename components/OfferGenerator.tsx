@@ -1157,6 +1157,17 @@ export const OfferGenerator: React.FC = () => {
         <Layers className="text-[#6E8809]" />
         Rzut Techniczny
     </h3>
+<p
+    style={{
+        fontFamily: "Inter, sans-serif",
+        fontSize: "20px",
+        color: "#6E8809",
+        marginBottom: "20px",
+        marginTop: "-10px"
+    }}
+>
+    Układ pomieszczeń może zostać dostosowany do indywidualnych potrzeb klienta.
+</p>
 
     <div className="flex flex-col items-center justify-start w-full gap-8 flex-1">
 
