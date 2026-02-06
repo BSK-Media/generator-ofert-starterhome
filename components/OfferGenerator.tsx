@@ -90,6 +90,23 @@ const resolvePublicAsset = (src: string) => {
 };
 
 
+// --- FLOOR PLAN (RZUT) HELPERS ---
+// Naming convention in /public: rzut-<house>-<index>.webp (e.g., rzut-nest-1.webp)
+const FALLBACK_FLOORPLAN = 'https://howsmart.pl/wp-content/uploads/2025/02/EMILY-RZUT-PL-scaled.jpg';
+const MAX_FLOORPLANS_PER_HOUSE = 20;
+
+const getHouseSlugFromId = (houseId: string) => {
+    if (!houseId) return '';
+    // Remove trailing "_house" and convert remaining underscores to hyphens if any.
+    return houseId.replace(/_house$/i, '').replace(/_/g, '-').toLowerCase();
+};
+
+const getFloorPlanSrc = (houseId: string, index: number) => {
+    const slug = getHouseSlugFromId(houseId);
+    if (!slug || !index || index < 1) return '';
+    return resolvePublicAsset(`/rzut-${slug}-${index}.webp`);
+};
+
 
 const ICON_LABELS_PL: Record<string, string> = {
     Maximize: 'Powiększenie / Metraż',
@@ -367,7 +384,7 @@ export const OfferGenerator: React.FC = () => {
         gallery1: selectedHouse.image,
         gallery2: selectedHouse.image,
         interior: 'https://starterhome.pl/wp-content/uploads/2025/10/ujecie-1-scaled.png',
-        floorPlan: 'https://howsmart.pl/wp-content/uploads/2025/02/EMILY-RZUT-PL-scaled.jpg',
+        floorPlan: getFloorPlanSrc(selectedHouse.id, 1) || FALLBACK_FLOORPLAN,
         advisor: 'https://i.ibb.co/j9NzkpfG/Krystian.jpg',
         logo: 'https://i.ibb.co/PZJv90w6/logo.png',
         decorLeaf: 'https://starterhome.pl/wp-content/uploads/2025/12/cropped-Favicon.png',
@@ -378,6 +395,26 @@ export const OfferGenerator: React.FC = () => {
         techFloor: 'https://starterhome.pl/wp-content/uploads/2025/12/G_F_5.png' // Strop
     });
 
+    // FLOOR PLANS (RZUTY) - loaded dynamically from /public (GitHub Pages safe via BASE_URL)
+    const [floorPlanCandidates, setFloorPlanCandidates] = useState<string[]>([]);
+    const [availableFloorPlans, setAvailableFloorPlans] = useState<string[]>([]);
+    const [activeFloorPlanIndex, setActiveFloorPlanIndex] = useState(0);
+
+    useEffect(() => {
+        const candidates = Array.from({ length: MAX_FLOORPLANS_PER_HOUSE }, (_, i) => getFloorPlanSrc(selectedHouse.id, i + 1)).filter(Boolean);
+        setFloorPlanCandidates(candidates);
+        setAvailableFloorPlans([]);
+        setActiveFloorPlanIndex(0);
+    }, [selectedHouse.id]);
+
+    // Keep the global "floorPlan" image in sync with the first available plan (used by other parts of the generator)
+    useEffect(() => {
+        if (availableFloorPlans.length > 0) {
+            setImages(prev => ({ ...prev, floorPlan: availableFloorPlans[0] }));
+        }
+    }, [availableFloorPlans]);
+
+
     useEffect(() => {
         setImages(prev => ({
             ...prev,
@@ -385,6 +422,8 @@ export const OfferGenerator: React.FC = () => {
             visualization: resolvePublicAsset(selectedHouse.visualizationImage ?? selectedHouse.image),
             gallery1: selectedHouse.image,
             gallery2: selectedHouse.image,
+            // Default floor plan comes from /public using the naming convention.
+            floorPlan: getFloorPlanSrc(selectedHouse.id, 1) || FALLBACK_FLOORPLAN,
         }));
         setIsCompressed(false);
         setCompressionStatus('idle');
@@ -1097,8 +1136,49 @@ export const OfferGenerator: React.FC = () => {
                         <div className="h-[40%] w-full relative"><img src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)} className="w-full h-full object-cover" alt="Wizualizacja" /><div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">Wizualizacja</div></div>
                         <div className="h-[60%] w-full bg-[#f9f9f9] p-12 flex flex-col relative">
                             <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3"><Layers className="text-[#6E8809]" /> Rzut Techniczny</h3>
-                            <div className="flex-1 flex items-center justify-center">
-                                <img src={images.floorPlan} className="max-h-full max-w-full object-contain mix-blend-multiply" alt="Rzut" />
+                            <div className="flex-1 flex flex-col items-center justify-center w-full">
+                                {/* Preload candidates and collect only those that exist */}
+                                <div className="hidden">
+                                    {floorPlanCandidates.map((src) => (
+                                        <img
+                                            key={src}
+                                            src={src}
+                                            alt=""
+                                            onLoad={() => setAvailableFloorPlans(prev => (prev.includes(src) ? prev : [...prev, src]))}
+                                            onError={() => void 0}
+                                        />
+                                    ))}
+                                </div>
+
+                                {availableFloorPlans.length > 0 ? (
+                                    <>
+                                        <div className="flex-1 flex items-center justify-center w-full">
+                                            <img
+                                                src={availableFloorPlans[activeFloorPlanIndex] ?? availableFloorPlans[0]}
+                                                className="max-h-full max-w-full object-contain mix-blend-multiply"
+                                                alt={`Rzut ${activeFloorPlanIndex + 1}`}
+                                            />
+                                        </div>
+
+                                        {availableFloorPlans.length > 1 && (
+                                            <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                                                {availableFloorPlans.map((src, i) => (
+                                                    <button
+                                                        type="button"
+                                                        key={src}
+                                                        onClick={() => setActiveFloorPlanIndex(i)}
+                                                        className={`border bg-white p-1 ${i === activeFloorPlanIndex ? 'border-[#6E8809]' : 'border-gray-200'}`}
+                                                        aria-label={`Pokaż rzut ${i + 1}`}
+                                                    >
+                                                        <img src={src} className="h-16 w-24 object-contain mix-blend-multiply" alt={`Miniatura rzutu ${i + 1}`} />
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <img src={images.floorPlan} className="max-h-full max-w-full object-contain mix-blend-multiply" alt="Rzut" />
+                                )}
                             </div>
                             <div className="absolute bottom-12 right-12 bg-white p-6 border border-gray-100 max-w-xs">
                                  <h4 className="font-bold text-gray-900 border-b pb-2 mb-2 uppercase text-xs tracking-wider">Metraż</h4>
