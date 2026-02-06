@@ -401,7 +401,11 @@ export const OfferGenerator: React.FC = () => {
     const [activeFloorPlanIndex, setActiveFloorPlanIndex] = useState(0);
 
     useEffect(() => {
-        const candidates = Array.from({ length: MAX_FLOORPLANS_PER_HOUSE }, (_, i) => getFloorPlanSrc(selectedHouse.id, i + 1)).filter(Boolean);
+        const isIndividual = selectedHouse?.id === "individual_house" || selectedHouse?.name === "Projekt Indywidualny";
+        // For the individual project, reuse Nest floor plan (rzut-nest-1.webp) as requested.
+        const candidates = isIndividual
+            ? [getFloorPlanSrc("nest_house", 1)].filter(Boolean)
+            : Array.from({ length: MAX_FLOORPLANS_PER_HOUSE }, (_, i) => getFloorPlanSrc(selectedHouse.id, i + 1)).filter(Boolean);
         setFloorPlanCandidates(candidates);
         setAvailableFloorPlans([]);
         setActiveFloorPlanIndex(0);
@@ -1147,7 +1151,6 @@ export const OfferGenerator: React.FC = () => {
 
 
 {/* PAGE 6: RZUT TECHNICZNY */}
-{selectedHouse?.name !== "Projekt Indywidualny" && (
 <A4Page className="flex flex-col a4-page bg-[#f9f9f9] p-12">
 
     <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
@@ -1191,7 +1194,6 @@ export const OfferGenerator: React.FC = () => {
     </div>
 
 </A4Page>
-)}
 
                     {/* PAGE 6: TABELA STANÓW (COMPARISON) & ZAKRES (NEW) */}
                     <A4Page className="flex flex-col p-12 a4-page">
