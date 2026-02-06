@@ -1132,61 +1132,64 @@ export const OfferGenerator: React.FC = () => {
                     </A4Page>
 
                     {/* PAGE 5: WIZUALIZACJE & RZUTY */}
-                    <A4Page className="flex flex-col a4-page">
-                        <div className="h-[40%] w-full relative"><img src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)} className="w-full h-full object-cover" alt="Wizualizacja" /><div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">Wizualizacja</div></div>
-                        <div className="h-[60%] w-full bg-[#f9f9f9] p-12 flex flex-col relative">
-                            <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3"><Layers className="text-[#6E8809]" /> Rzut Techniczny</h3>
-                            <div className="flex-1 flex flex-col items-center justify-center w-full">
-                                {/* Preload candidates and collect only those that exist */}
-                                <div className="hidden">
-                                    {floorPlanCandidates.map((src) => (
-                                        <img
-                                            key={src}
-                                            src={src}
-                                            alt=""
-                                            onLoad={() => setAvailableFloorPlans(prev => (prev.includes(src) ? prev : [...prev, src]))}
-                                            onError={() => void 0}
-                                        />
-                                    ))}
-                                </div>
+                   <A4Page className="flex flex-col a4-page">
+    <div className="h-full w-full relative">
+        <img
+            src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
+            className="w-full h-full object-cover"
+            alt="Wizualizacja"
+        />
+        <div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">
+            Wizualizacja
+        </div>
+    </div>
+</A4Page>
 
-                                {availableFloorPlans.length > 0 ? (
-                                    <>
-                                        <div className="flex-1 flex items-center justify-center w-full">
-                                            <img
-                                                src={availableFloorPlans[activeFloorPlanIndex] ?? availableFloorPlans[0]}
-                                                className="max-h-full max-w-full object-contain mix-blend-multiply"
-                                                alt={`Rzut ${activeFloorPlanIndex + 1}`}
-                                            />
-                                        </div>
 
-                                        {availableFloorPlans.length > 1 && (
-                                            <div className="mt-6 flex flex-wrap gap-3 justify-center">
-                                                {availableFloorPlans.map((src, i) => (
-                                                    <button
-                                                        type="button"
-                                                        key={src}
-                                                        onClick={() => setActiveFloorPlanIndex(i)}
-                                                        className={`border bg-white p-1 ${i === activeFloorPlanIndex ? 'border-[#6E8809]' : 'border-gray-200'}`}
-                                                        aria-label={`Pokaż rzut ${i + 1}`}
-                                                    >
-                                                        <img src={src} className="h-16 w-24 object-contain mix-blend-multiply" alt={`Miniatura rzutu ${i + 1}`} />
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <img src={images.floorPlan} className="max-h-full max-w-full object-contain mix-blend-multiply" alt="Rzut" />
-                                )}
-                            </div>
-                            <div className="absolute bottom-12 right-12 bg-white p-6 border border-gray-100 max-w-xs">
-                                 <h4 className="font-bold text-gray-900 border-b pb-2 mb-2 uppercase text-xs tracking-wider">Metraż</h4>
-                                 <div className="flex justify-between mb-1"><span className="text-gray-500 text-sm">Zabudowy</span><span className="font-bold">{selectedHouse.details?.builtArea}</span></div>
-                                 <div className="flex justify-between"><span className="text-gray-500 text-sm">Użytkowa</span><span className="font-bold text-[#6E8809]">{selectedHouse.details?.usableArea}</span></div>
-                            </div>
-                        </div>
-                    </A4Page>
+{/* PAGE 6: RZUT TECHNICZNY */}
+<A4Page className="flex flex-col a4-page bg-[#f9f9f9] p-12">
+
+    <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+        <Layers className="text-[#6E8809]" />
+        Rzut Techniczny
+    </h3>
+
+    <div className="flex flex-col items-center justify-start w-full gap-8 flex-1">
+
+        <div className="hidden">
+            {floorPlanCandidates.map((src) => (
+                <img
+                    key={src}
+                    src={src}
+                    onLoad={() =>
+                        setAvailableFloorPlans(prev =>
+                            prev.includes(src) ? prev : [...prev, src]
+                        )
+                    }
+                />
+            ))}
+        </div>
+
+        {availableFloorPlans.length > 0 ? (
+            availableFloorPlans.map((src, i) => (
+                <img
+                    key={src}
+                    src={src}
+                    className="max-w-full max-h-[1200px] object-contain mix-blend-multiply"
+                    alt={`Rzut ${i + 1}`}
+                />
+            ))
+        ) : (
+            <img
+                src={images.floorPlan}
+                className="max-w-full object-contain"
+                alt="Rzut"
+            />
+        )}
+
+    </div>
+
+</A4Page>
 
                     {/* PAGE 6: TABELA STANÓW (COMPARISON) & ZAKRES (NEW) */}
                     <A4Page className="flex flex-col p-12 a4-page">
