@@ -1147,6 +1147,7 @@ export const OfferGenerator: React.FC = () => {
 
 
 {/* PAGE 6: RZUT TECHNICZNY */}
+{selectedHouse?.name !== "Projekt Indywidualny" && (
 <A4Page className="flex flex-col a4-page bg-[#f9f9f9] p-12">
 
     <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
@@ -1190,6 +1191,7 @@ export const OfferGenerator: React.FC = () => {
     </div>
 
 </A4Page>
+)}
 
                     {/* PAGE 6: TABELA STANÓW (COMPARISON) & ZAKRES (NEW) */}
                     <A4Page className="flex flex-col p-12 a4-page">
