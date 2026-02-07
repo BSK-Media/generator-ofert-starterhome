@@ -1244,7 +1244,7 @@ export const OfferGenerator: React.FC = () => {
                           It replaces the previous "Po naszej stronie / Po stronie klienta" boxes.
                         */}
                         <div className="flex-1 flex items-center justify-center">
-                            <div className= -mt-16"transform scale-75 origin-center">
+                            <div className="transform scale-75 origin-center -mt-16">
                             <div className="overflow-hidden rounded-xl border border-gray-200">
                                 <div className="bg-[#6e8809] text-white px-5 py-4">
                                     <div className="text-xl font-bold tracking-tight">Koszty związane z budową</div>
