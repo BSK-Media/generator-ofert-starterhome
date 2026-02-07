@@ -1239,14 +1239,88 @@ export const OfferGenerator: React.FC = () => {
                             </table>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-8 mt-auto">
-                            <div className="bg-[#f7faf3] p-6 border border-[#e2e8da]">
-                                <h4 className="font-bold text-[#6E8809] uppercase tracking-wider mb-4 flex items-center gap-2" style={{ fontSize: `${12 * fontScale}px` }}><Briefcase className="w-4 h-4" /> Po naszej stronie</h4>
-                                <p className="text-gray-700 whitespace-pre-line leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.scopeOurSide}</p>
-                            </div>
-                            <div className="bg-gray-50 p-6 border border-gray-200">
-                                <h4 className="font-bold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2" style={{ fontSize: `${12 * fontScale}px` }}><User className="w-4 h-4" /> Po stronie klienta</h4>
-                                <p className="text-gray-600 whitespace-pre-line leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.scopeClientSide}</p>
+                        {/*
+                          NOTE: This section is purely visual in the configurator.
+                          It replaces the previous "Po naszej stronie / Po stronie klienta" boxes.
+                        */}
+                        <div className="mt-auto">
+                            <div className="overflow-hidden rounded-xl border border-gray-200">
+                                <div className="bg-[#6e8809] text-white px-5 py-4">
+                                    <div className="text-xl font-bold tracking-tight">Koszty związane z budową</div>
+                                </div>
+
+                                <div className="divide-y divide-gray-100">
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
+                                        <div className="min-w-0">
+                                            <div className="text-base font-bold text-gray-900 leading-snug">Zlecenie mapy do celów projektowych</div>
+                                            <div className="text-[13px] text-gray-500 mt-0.5">(lokalny geodeta)</div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="font-bold text-gray-900">800 – 1200 zł</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-white">
+                                        <div className="min-w-0">
+                                            <div className="text-base font-bold text-gray-900 leading-snug">Wytyczenie budynku na działce</div>
+                                            <div className="text-[13px] text-gray-500 mt-0.5">(lokalny geodeta)</div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="font-bold text-gray-900">1000 – 2000 zł</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
+                                        <div className="min-w-0">
+                                            <div className="text-base font-bold text-gray-900 leading-snug">Zatrudnienie kierownika budowy</div>
+                                            <div className="text-[13px] text-gray-500 mt-0.5">(najlepiej lokalnego)</div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="font-bold text-gray-900">3000 – 5000 zł</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-white">
+                                        <div className="min-w-0">
+                                            <div className="text-base leading-snug text-gray-900">
+                                                <span className="font-bold">Przyłącza i Media</span>
+                                                <span className="font-normal"> - </span>
+                                                <span className="font-normal">Doprowadzenie prądu i wody do stawianego budynku</span>
+                                            </div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="text-gray-400">nasz koszt to <span className="font-bold text-gray-900">150zł/mb</span></span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
+                                        <div className="min-w-0">
+                                            <div className="text-base leading-snug text-gray-900">
+                                                <span className="font-bold">Ogrzewanie</span>
+                                                <span className="font-normal"> - </span>
+                                                <span className="font-normal">Wybór systemu ogrzewania</span>
+                                            </div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="text-gray-400 font-medium">sprawdź nasz konfigurator</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="px-6 py-6 bg-white">
+                                    <div className="bg-[#f7faf3] border border-[#e2e8da] px-5 py-4 text-[15px] text-gray-900">
+                                        <span className="font-bold">To należy do obowiązków</span> <span className="font-normal">inwestora</span>, <span className="font-normal">lecz możemy zrobić</span> <span className="font-bold">to za Ciebie</span>
+                                    </div>
+
+                                    <div className="mt-6">
+                                        <div className="text-2xl font-bold text-gray-900">Zero ukrytych kosztów:</div>
+                                        <div className="text-gray-700 mt-2 leading-relaxed">
+                                            Pokazujemy realne wydatki, nawet jeśli nie płacisz nam.
+                                            <br />
+                                            Chcemy, abyś wiedział, na co przygotować budżet.
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <OfferFooter />
