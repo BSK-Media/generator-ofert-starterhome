@@ -676,6 +676,48 @@ export const OfferGenerator: React.FC = () => {
         printWindow.document.close();
     };
 
+    const loadHtml2Pdf = () => {
+        return new Promise<void>((resolve, reject) => {
+            if ((window as any).html2pdf) return resolve();
+            const existing = document.getElementById('html2pdf-cdn');
+            if (existing) {
+                existing.addEventListener('load', () => resolve());
+                existing.addEventListener('error', () => reject(new Error('Nie udało się załadować html2pdf.')));
+                return;
+            }
+            const script = document.createElement('script');
+            script.id = 'html2pdf-cdn';
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Nie udało się załadować html2pdf.'));
+            document.body.appendChild(script);
+        });
+    };
+
+    const handleSavePdf = async () => {
+        try {
+            if (!previewRef.current) return;
+            await loadHtml2Pdf();
+            const filenameBase = clientName?.trim() ? clientName.trim().replace(/\s+/g, '_') : 'oferta';
+            const filename = `${filenameBase}.pdf`;
+
+            const opt = {
+                margin: 0,
+                filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            (window as any).html2pdf().set(opt).from(previewRef.current).save();
+        } catch (e) {
+            console.error(e);
+            alert('Nie udało się zapisać PDF. Sprawdź połączenie z internetem i spróbuj ponownie.');
+        }
+    };
+
+
     const handleImageUpload = async (key: keyof typeof images, file: File) => {
         if (!file) return;
         const reader = new FileReader();
@@ -1031,7 +1073,7 @@ export const OfferGenerator: React.FC = () => {
                 <div className="p-4 border-t border-gray-200 bg-white space-y-3">
                     <div className="flex justify-between items-end mb-2"><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Brutto</span><span className="text-3xl font-black text-[#6E8809] tracking-tight"><CountUp value={totalGross} /> zł</span></div>
                     <button onClick={handlePrint} className={`w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs bg-gray-900 text-white hover:bg-black cursor-pointer`}><FileOutput className="w-4 h-4" /> Drukuj Ofertę</button>
-                    <a href="https://www.ilovepdf.com/compress_pdf" target="_blank" rel="noopener noreferrer" className="w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200"><ExternalLink className="w-4 h-4" /> Tu kompresuj PDF</a>
+                    <button onClick={handleSavePdf} className="w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300"><FileDown className="w-4 h-4" /> Zapisz jako PDF</button>
                 </div>
             </div>
 
