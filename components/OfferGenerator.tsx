@@ -1209,19 +1209,48 @@ export const OfferGenerator: React.FC = () => {
                          <OfferFooter />
                     </A4Page>
 
-                    {/* PAGE 5: WIZUALIZACJE & RZUTY */}
-                   <A4Page className="flex flex-col a4-page">
-    <div className="h-full w-full relative">
-        <img
-            src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
-            className="w-full h-full object-cover"
-            alt="Wizualizacja"
-        />
-        <div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">
-            Wizualizacja
-        </div>
-    </div>
-</A4Page>
+                    {/* PAGE 5: WIZUALIZACJE */}
+                    <A4Page className="flex flex-col a4-page bg-white">
+                        {/* Kolaż wizualizacji */}
+                        <div className="w-full relative px-12 pt-12">
+                            <div className="relative w-full">
+                                <img
+                                    src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
+                                    className="w-full h-auto object-contain"
+                                    style={{ maxHeight: '640px' }}
+                                    alt="Wizualizacja"
+                                />
+                                <div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">
+                                    Wizualizacja
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tekst pod kolażem */}
+                        <div className="px-12 pt-8">
+                            <div
+                                style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontSize: '24px',
+                                    fontWeight: 700,
+                                    color: 'rgb(17, 24, 39)'
+                                }}
+                            >
+                                Wizualizacja
+                            </div>
+                            <div
+                                style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontSize: '20px',
+                                    fontWeight: 400,
+                                    color: '#6e8809',
+                                    marginTop: '8px'
+                                }}
+                            >
+                                Zdjęcia mają charakter podglądowy
+                            </div>
+                        </div>
+                    </A4Page>
 
 
 {/* PAGE 6: RZUT TECHNICZNY */}
