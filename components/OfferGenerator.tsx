@@ -641,11 +641,6 @@ export const OfferGenerator: React.FC = () => {
         techFloorTitle: "Przekrój Stropu",
         techFloorDesc: "Konstrukcja Międzykondygnacyjna U = 0.20 W/m²K. Wykończenie góra: Panele 8mm. Poszycie nośne: Płyta OSB 22mm. Konstrukcja drewniana C24. Izolacja akustyczna: Wełna. Wykończenie dół: Ruszt + GK."
     });
-
-    // Dodatkowa pozycja niestandardowa (np. transport) dodawana ręcznie do podsumowania
-    const [customExtraLabel, setCustomExtraLabel] = useState<string>('');
-    const [customExtraPrice, setCustomExtraPrice] = useState<number>(0);
-
     // -- LOGIC --
     const openCompressionModal = () => { setIsCompressionModalOpen(true); setCompressionStatus('idle'); setCompressionLogs([]); setCompressionProgress(0); setCurrentProcessingFile(''); setProcessingDetail(''); setCompressionStats({ original: 0, compressed: 0 }); };
     const handleCancelCompression = () => { abortRef.current = true; setCompressionStatus('idle'); setIsCompressionModalOpen(false); };
@@ -701,27 +696,33 @@ export const OfferGenerator: React.FC = () => {
     }, [selectedHouse, itemsByHouse]);
     
     const { totalNetPrice, selectedItemsList } = useMemo(() => {
-        const extras = customExtras || [];
-        
-        // Projekt indywidualny: suma = cena bazowa + ceny sekcji
+        const extras = (customExtras || []).map(e => ({
+            label: (e.label || '').trim(),
+            price: Number(e.price) || 0,
+        })).filter(e => e.label || e.price !== 0);
+
+        const extrasTotal = extras.reduce((acc, e) => acc + e.price, 0);
+
+        // Projekt indywidualny: suma = cena bazowa + ceny sekcji + dodatki
         if (selectedHouse.id === 'individual_house') {
             const sumSections = customSections.reduce((acc, s) => acc + (Number(s.price) || 0), 0);
+
             const list = customSections
                 .filter(s => (s.title?.trim() || s.text?.trim() || (Number(s.price) || 0) !== 0))
-                .map(s => ({ name: s.title || 'Sekcja', variant: s.text ? s.text.slice(0, 80) + (s.text.length > 80 ? '…' : '') : undefined, price: Number(s.price) || 0 }));
-            extras.forEach(extra => {
-            const label = (extra.label || '').trim();
-            const price = Number(extra.price) || 0;
-            if (label || price !== 0) {
-                sum += price;
-                list.push({ name: label || 'Pozycja niestandardowa', variant: '-', price });
-            }
-        });
-            return { totalNetPrice: basePrice + sumSections + extraPrice, selectedItemsList: list };
+                .map(s => ({
+                    name: s.title || 'Sekcja',
+                    variant: s.text ? s.text.slice(0, 80) + (s.text.length > 80 ? '…' : '') : undefined,
+                    price: Number(s.price) || 0
+                }));
+
+            extras.forEach(e => list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price }));
+
+            return { totalNetPrice: basePrice + sumSections + extrasTotal, selectedItemsList: list };
         }
+
         let sum = basePrice;
         const list: { name: string; variant?: string; price: number }[] = [];
-        
+
         availableItems.forEach(item => {
             const val = offerConfig[item.code];
             if (item.type === 'checkbox' && val) {
@@ -740,17 +741,13 @@ export const OfferGenerator: React.FC = () => {
             }
         });
 
-        extras.forEach(extra => {
-            const label = (extra.label || '').trim();
-            const price = Number(extra.price) || 0;
-            if (label || price !== 0) {
-                sum += price;
-                list.push({ name: label || 'Pozycja niestandardowa', variant: '-', price });
-            }
+        extras.forEach(e => {
+            sum += e.price;
+            list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price });
         });
 
         return { totalNetPrice: sum, selectedItemsList: list };
-    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections, customExtraLabel, customExtraPrice]);
+    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections, customExtras]);
 
     const totalVat = totalNetPrice * 0.08;
     const totalGross = totalNetPrice + totalVat;
@@ -1020,7 +1017,43 @@ export const OfferGenerator: React.FC = () => {
                          <div className="space-y-4">
                              {customExtras.map((extra, index) => (
                                  <div key={index} className="border border-gray-200 p-2">
-                                     <label className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa</label>
+                                     <div className="flex items-center justify-between mb-2">
+                                         <div className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa</div>
+                                         <button
+                                             type="button"
+                                             title="Usuń pozycję"
+                                             onClick={() => {
+                                                 if (customExtras.length === 1) {
+                                                     setCustomExtras([{ label: '', price: 0 }]);
+                                                     return;
+                                                 }
+                                                 const updated = customExtras.filter((_, i) => i !== index);
+                                                 setCustomExtras(updated);
+                                             }}
+                                             className="p-1 text-gray-400 hover:text-gray-900"
+                                         >
+                                             <Trash2 className="w-4 h-4" />
+                                         </button>
+                                     </div>
+                                     <div className="flex items-center justify-between mb-2">
+                                         <div className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa</div>
+                                         <button
+                                             type="button"
+                                             title="Usuń pozycję"
+                                             onClick={() => {
+                                                 if (customExtras.length === 1) {
+                                                     setCustomExtras([{ label: '', price: 0 }]);
+                                                     return;
+                                                 }
+                                                 const updated = customExtras.filter((_, i) => i !== index);
+                                                 setCustomExtras(updated);
+                                             }}
+                                             className="p-1 text-gray-400 hover:text-gray-900"
+                                         >
+                                             <Trash2 className="w-4 h-4" />
+                                         </button>
+                                     </div>
+                                     
                                      <input
                                          type="text"
                                          placeholder="Np. Transport"
