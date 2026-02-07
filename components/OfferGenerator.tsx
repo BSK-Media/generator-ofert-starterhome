@@ -1057,7 +1057,6 @@ export const OfferGenerator: React.FC = () => {
                                     <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Proste i zrozumiałe warunki współpracy.</p>
                                 </div>
                             </div>
-                            </div>
                         </div>
                         <OfferFooter />
                     </A4Page>
@@ -1246,7 +1245,7 @@ export const OfferGenerator: React.FC = () => {
                         */}
                         <div className="flex-1 flex items-center justify-center">
                             <div className="transform scale-75 origin-center">
-                                <div className="overflow-hidden rounded-xl border border-gray-200">
+                            <div className="overflow-hidden rounded-xl border border-gray-200">
                                 <div className="bg-[#6e8809] text-white px-5 py-4">
                                     <div className="text-xl font-bold tracking-tight">Koszty związane z budową</div>
                                 </div>
