@@ -1113,7 +1113,7 @@ const ProcessFlowTable = ({ type }: { type: ProcessClientType }) => {
                             <div className="flex-1 flex justify-center">
                                 <ProcessFlowTable type={processClientType} />
                             </div>
-                         </div>y-100 rounded-xl">
+                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
                                 <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
                                      <LayoutTemplate className="w-7 h-7" />
                                 </div>
