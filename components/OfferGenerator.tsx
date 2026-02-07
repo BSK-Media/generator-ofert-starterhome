@@ -1058,9 +1058,6 @@ export const OfferGenerator: React.FC = () => {
                                 </div>
 	                            </div>
 	                            </div>
-	                            </div>
-	                        </div>
-	                    </div>
 	                        <OfferFooter />
                     </A4Page>
 
