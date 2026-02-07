@@ -1056,12 +1056,10 @@ export const OfferGenerator: React.FC = () => {
                                     <h4 className="font-bold text-gray-900 text-lg">Przejrzysta umowa</h4>
                                     <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Proste i zrozumiałe warunki współpracy.</p>
                                 </div>
-	                            </div>
-
-	                            {/* zamknięcie siatki USPs */}
-	                        </div>
-
-	                        <OfferFooter />
+                            </div>
+                            </div>
+                        </div>
+                        <OfferFooter />
                     </A4Page>
 
                     {/* PAGE 3: 6 KROKÓW (NEW) */}
@@ -1246,27 +1244,23 @@ export const OfferGenerator: React.FC = () => {
                           NOTE: This section is purely visual in the configurator.
                           It replaces the previous "Po naszej stronie / Po stronie klienta" boxes.
                         */}
-	                        <div className="mt-auto">
-	                            {/*
-	                              NOTE: Visual-only block (configurator).
-	                              Scaled to 75% to ensure it fits inside the A4 preview/PDF without being clipped.
-	                            */}
-	                            <div className="scale-75 origin-top-left">
-	                                <div className="overflow-hidden rounded-xl border border-gray-200">
+                        <div className="flex flex-col justify-center items-center flex-1">
+                            <div className="transform scale-75 origin-center">
+                            <div className="overflow-hidden rounded-xl border border-gray-200">
                                 <div className="bg-[#6e8809] text-white px-5 py-4">
                                     <div className="text-xl font-bold tracking-tight">Koszty związane z budową</div>
                                 </div>
 
                                 <div className="divide-y divide-gray-100">
-	                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
-	                                        <div className="min-w-0">
-	                                            <div className="text-base font-bold text-gray-900 leading-snug">Zlecenie mapy do celów projektowych</div>
-	                                            <div className="text-[13px] text-gray-500 mt-0.5">(lokalny geodeta)</div>
-	                                        </div>
-	                                        <div className="shrink-0 text-base whitespace-nowrap">
-	                                            <span className="font-bold text-gray-900">800 – 1200 zł</span>
-	                                        </div>
-	                                    </div>
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
+                                        <div className="min-w-0">
+                                            <div className="text-base font-bold text-gray-900 leading-snug">Zlecenie mapy do celów projektowych</div>
+                                            <div className="text-[13px] text-gray-500 mt-0.5">(lokalny geodeta)</div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="font-bold text-gray-900">800 – 1200 zł</span>
+                                        </div>
+                                    </div>
 
                                     <div className="px-6 py-6 flex items-start justify-between gap-6 bg-white">
                                         <div className="min-w-0">
@@ -1330,7 +1324,6 @@ export const OfferGenerator: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
                         </div>
                         <OfferFooter />
                     </A4Page>
