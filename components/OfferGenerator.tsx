@@ -1057,8 +1057,7 @@ export const OfferGenerator: React.FC = () => {
                                     <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Proste i zrozumiałe warunki współpracy.</p>
                                 </div>
 	                            </div>
-	                            </div>
-	                        <OfferFooter />
+                        <OfferFooter />
                     </A4Page>
 
                     {/* PAGE 3: 6 KROKÓW (NEW) */}
@@ -1243,7 +1242,6 @@ export const OfferGenerator: React.FC = () => {
                           NOTE: This section is purely visual in the configurator.
                           It replaces the previous "Po naszej stronie / Po stronie klienta" boxes.
                         */}
-	                        <div className="mt-auto">
 	                            {/*
 	                              NOTE: Visual-only block (configurator).
 	                              Scaled to 75% to ensure it fits inside the A4 preview/PDF without being clipped.
