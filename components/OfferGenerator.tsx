@@ -1244,9 +1244,9 @@ export const OfferGenerator: React.FC = () => {
                           NOTE: This section is purely visual in the configurator.
                           It replaces the previous "Po naszej stronie / Po stronie klienta" boxes.
                         */}
-                        <div className="flex flex-col justify-center items-center flex-1">
+                        <div className="flex-1 flex items-center justify-center">
                             <div className="transform scale-75 origin-center">
-                            <div className="overflow-hidden rounded-xl border border-gray-200">
+                                <div className="overflow-hidden rounded-xl border border-gray-200">
                                 <div className="bg-[#6e8809] text-white px-5 py-4">
                                     <div className="text-xl font-bold tracking-tight">Koszty związane z budową</div>
                                 </div>
@@ -1323,6 +1323,7 @@ export const OfferGenerator: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
                             </div>
                         </div>
                         <OfferFooter />
