@@ -1251,7 +1251,7 @@ export const OfferGenerator: React.FC = () => {
 	                              NOTE: Visual-only block (configurator).
 	                              Scaled to 75% to ensure it fits inside the A4 preview/PDF without being clipped.
 	                            */}
-	                            <div className="scale-75 origin-top-left">
+	                            <div className="transform scale-75 origin-top-left">
 	                                <div className="overflow-hidden rounded-xl border border-gray-200">
                                 <div className="bg-[#6e8809] text-white px-5 py-4">
                                     <div className="text-xl font-bold tracking-tight">Koszty związane z budową</div>
@@ -1331,7 +1331,6 @@ export const OfferGenerator: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
                         </div>
                         <OfferFooter />
                     </A4Page>
