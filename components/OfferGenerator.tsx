@@ -368,6 +368,7 @@ export const OfferGenerator: React.FC = () => {
     const [isDeveloperState, setIsDeveloperState] = useState(false); 
     // TRYB EDYCJI (dla wszystkich domów)
     const [isEditMode, setIsEditMode] = useState(false);
+    const [processClientType, setProcessClientType] = useState<'cash' | 'credit'>('cash');
     // Nadpisania (edytowalne nazwy/opcje/ceny) per dom
     const [itemsByHouse, setItemsByHouse] = useState<Record<string, OfferItem[]>>({});
     const [basePricesByHouse, setBasePricesByHouse] = useState<Record<string, { surowy: number; deweloperski: number }>>({});
@@ -444,6 +445,64 @@ export const OfferGenerator: React.FC = () => {
         }
         const items = getOfferItemsForHouse(selectedHouse);
         const newConfig: Record<string, any> = {};
+
+type ProcessClientType = 'cash' | 'credit';
+
+const PROCESS_STEPS: Record<ProcessClientType, { no: number; title: string; desc: string }[]> = {
+  cash: [
+    { no: 1, title: 'ETAP 1 – Analiza działki', desc: 'Sprawdzamy możliwości zabudowy, warunki techniczne oraz zgodność działki z planem miejscowym lub warunkami zabudowy.' },
+    { no: 2, title: 'ETAP 2 – Wybór projektu', desc: 'Dobieramy projekt domu dopasowany do działki, budżetu i potrzeb inwestora.' },
+    { no: 3, title: 'ETAP 3 – Podpisanie umowy', desc: 'Ustalamy zakres realizacji, harmonogram oraz warunki współpracy.' },
+    { no: 4, title: 'ETAP 4 – Uzyskanie pozwoleń urzędowych', desc: 'Przygotowujemy dokumentację i wspieramy klienta w uzyskaniu wymaganych decyzji administracyjnych.' },
+    { no: 5, title: 'ETAP 5 – Rozpoczęcie budowy', desc: 'Rozpoczynamy realizację inwestycji zgodnie z harmonogramem.' },
+  ],
+  credit: [
+    { no: 1, title: 'ETAP 1 – Analiza działki', desc: 'Weryfikujemy działkę pod kątem formalnym i technicznym, niezbędnym do realizacji inwestycji i procesu kredytowego.' },
+    { no: 2, title: 'ETAP 2 – Wybór projektu', desc: 'Pomagamy w wyborze projektu spełniającego wymagania klienta oraz banku.' },
+    { no: 3, title: 'ETAP 3 – Podpisanie umowy', desc: 'Podpisujemy umowę stanowiącą podstawę do dalszych działań formalnych i kredytowych.' },
+    { no: 4, title: 'ETAP 4 – Uzyskanie pozwoleń urzędowych', desc: 'Zapewniamy wsparcie w przygotowaniu dokumentów potrzebnych do uzyskania pozwoleń.' },
+    { no: 5, title: 'ETAP 5 – Uzyskanie kredytu', desc: 'Wspieramy klienta w procesie uzyskania finansowania bankowego.' },
+    { no: 6, title: 'ETAP 6 – Rozpoczęcie budowy', desc: 'Po uruchomieniu finansowania rozpoczynamy budowę domu.' },
+  ],
+};
+
+const ProcessFlowTable = ({ type }: { type: ProcessClientType }) => {
+  const steps = PROCESS_STEPS[type];
+  const heading = type === 'cash' ? 'Klient gotówkowy' : 'Klient kredytowy';
+
+  return (
+    <div className="w-full max-w-[760px] overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="bg-[#6e8809] text-white px-6 py-4">
+        <div className="text-lg font-bold tracking-tight">{heading}</div>
+      </div>
+
+      <div className="px-6 py-6">
+        <div className="space-y-5">
+          {steps.map((s, idx) => (
+            <React.Fragment key={s.no}>
+              <div className="flex items-start gap-4">
+                <div className="shrink-0 w-9 h-9 rounded-full bg-[#6e8809] text-white flex items-center justify-center font-bold">
+                  {s.no}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-gray-900">{s.title}</div>
+                  <div className="text-sm text-gray-600 mt-1 leading-relaxed">{s.desc}</div>
+                </div>
+              </div>
+
+              {idx !== steps.length - 1 && (
+                <div className="flex justify-start pl-3">
+                  <ChevronDown className="w-5 h-5 text-gray-300" />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
         items.forEach((item) => {
             newConfig[item.code] = item.defaultValue;
         });
@@ -1023,23 +1082,38 @@ export const OfferGenerator: React.FC = () => {
                         <div className="mt-auto grid grid-cols-1 gap-6">
                             <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
                                 <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
-                                     <ShieldCheck className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-gray-900 text-lg">Brak ukrytych kosztów</h4>
-                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Cena w umowie jest ostateczna i transparentna.</p>
+                               <div className="flex gap-10 mb-auto">
+                            <div className="w-64">
+                                <div className="flex flex-col gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setProcessClientType('cash')}
+                                        className={`w-full rounded-lg border px-4 py-3 text-left font-semibold transition-colors ${
+                                            processClientType === 'cash'
+                                                ? 'bg-[#6e8809] text-white border-[#6e8809]'
+                                                : 'bg-white text-gray-900 border-gray-200 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        Klient gotówkowy
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setProcessClientType('credit')}
+                                        className={`w-full rounded-lg border px-4 py-3 text-left font-semibold transition-colors ${
+                                            processClientType === 'credit'
+                                                ? 'bg-[#6e8809] text-white border-[#6e8809]'
+                                                : 'bg-white text-gray-900 border-gray-200 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        Klient kredytowy
+                                    </button>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
-                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
-                                     <Lock className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-gray-900 text-lg">Gwarancja niezmienności ceny</h4>
-                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Pełne bezpieczeństwo finansowe Twojej inwestycji.</p>
-                                </div>
+
+                            <div className="flex-1 flex justify-center">
+                                <ProcessFlowTable type={processClientType} />
                             </div>
-                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
+                         </div>y-100 rounded-xl">
                                 <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
                                      <LayoutTemplate className="w-7 h-7" />
                                 </div>
