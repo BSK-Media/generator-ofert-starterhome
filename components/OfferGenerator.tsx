@@ -341,62 +341,6 @@ const A4Page: React.FC<{ children: React.ReactNode; className?: string; id?: str
 );
 const LeafDecor: React.FC<{ src: string }> = ({ src }) => (<div className="absolute top-0 right-0 w-40 h-40 overflow-hidden pointer-events-none z-0"><img src={src} alt="Decor" className="absolute top-[-20px] right-[-20px] w-40 h-40 object-contain opacity-[0.08] transform rotate-12" /></div>);
 const OfferFooter = () => (<div className="absolute bottom-0 left-0 right-0 p-8 flex justify-center items-end"></div>);
-const ProcessFlowTable: React.FC<{ type: 'cash' | 'credit' }> = ({ type }) => {
-    const steps =
-        type === 'cash'
-            ? [
-                  { no: 1, title: 'ETAP 1 – Analiza działki', desc: 'Sprawdzamy możliwości zabudowy, warunki techniczne oraz zgodność działki z planem miejscowym lub warunkami zabudowy.' },
-                  { no: 2, title: 'ETAP 2 – Wybór projektu', desc: 'Dobieramy projekt domu dopasowany do działki, budżetu i potrzeb inwestora.' },
-                  { no: 3, title: 'ETAP 3 – Podpisanie umowy', desc: 'Ustalamy zakres realizacji, harmonogram oraz warunki współpracy.' },
-                  { no: 4, title: 'ETAP 4 – Uzyskanie pozwoleń urzędowych', desc: 'Przygotowujemy dokumentację i wspieramy klienta w uzyskaniu wymaganych decyzji administracyjnych.' },
-                  { no: 5, title: 'ETAP 5 – Rozpoczęcie budowy', desc: 'Rozpoczynamy realizację inwestycji zgodnie z harmonogramem.' },
-              ]
-            : [
-                  { no: 1, title: 'ETAP 1 – Analiza działki', desc: 'Weryfikujemy działkę pod kątem formalnym i technicznym, niezbędnym do realizacji inwestycji i procesu kredytowego.' },
-                  { no: 2, title: 'ETAP 2 – Wybór projektu', desc: 'Pomagamy w wyborze projektu spełniającego wymagania klienta oraz banku.' },
-                  { no: 3, title: 'ETAP 3 – Podpisanie umowy', desc: 'Podpisujemy umowę stanowiącą podstawę do dalszych działań formalnych i kredytowych.' },
-                  { no: 4, title: 'ETAP 4 – Uzyskanie pozwoleń urzędowych', desc: 'Zapewniamy wsparcie w przygotowaniu dokumentów potrzebnych do uzyskania pozwoleń.' },
-                  { no: 5, title: 'ETAP 5 – Uzyskanie kredytu', desc: 'Wspieramy klienta w procesie uzyskania finansowania bankowego.' },
-                  { no: 6, title: 'ETAP 6 – Rozpoczęcie budowy', desc: 'Po uruchomieniu finansowania rozpoczynamy budowę domu.' },
-              ];
-
-    const header = type === 'cash' ? 'Klient gotówkowy' : 'Klient kredytowy';
-
-    return (
-        <div className="w-full max-w-[720px]">
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                <div className="bg-[#6e8809] text-white px-6 py-4">
-                    <div className="text-lg font-bold tracking-tight">{header}</div>
-                </div>
-
-                <div className="px-6 py-6">
-                    <div className="space-y-4">
-                        {steps.map((s, idx) => (
-                            <div key={s.no}>
-                                <div className="flex gap-4">
-                                    <div className="w-9 h-9 rounded-full bg-[#f7faf3] border border-[#e2e8da] flex items-center justify-center font-bold text-[#6e8809] shrink-0">
-                                        {s.no}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="font-bold text-gray-900">{s.title}</div>
-                                        <div className="text-gray-600 text-sm leading-relaxed mt-1">{s.desc}</div>
-                                    </div>
-                                </div>
-
-                                {idx < steps.length - 1 && (
-                                    <div className="ml-4 mt-3 mb-3 h-6 border-l-2 border-[#e2e8da] relative" aria-hidden="true">
-                                        <div className="absolute -left-[7px] bottom-0 w-3 h-3 border-r-2 border-b-2 border-[#e2e8da] rotate-45" />
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 
 // --- MAIN GENERATOR ---
 export const OfferGenerator: React.FC = () => {
@@ -416,8 +360,6 @@ export const OfferGenerator: React.FC = () => {
 
     // -- SCALING STATE --
     const [fontScale, setFontScale] = useState(1.0);
-    const [processClientType, setProcessClientType] = useState<'cash' | 'credit'>('cash');
-
 
     // -- STATES --
     const [openSection, setOpenSection] = useState<string>('config');
@@ -1121,39 +1063,23 @@ export const OfferGenerator: React.FC = () => {
 
                     {/* PAGE 3: 6 KROKÓW (NEW) */}
                     <A4Page className="flex flex-col p-20 a4-page">
-                         <div className="flex justify-between items-center mb-12">
-                             <h2 className="text-3xl font-bold text-gray-900">Twój proces budowy</h2>
-                             <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
+                         <div className="flex justify-between items-center mb-16"><h2 className="text-3xl font-bold text-gray-900">Twój proces budowy</h2><img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" /></div>
+                         <div className="grid grid-cols-3 gap-8 mb-auto">
+                            {[
+                                { num: 1, title: customTexts.step1, icon: MapPin },
+                                { num: 2, title: customTexts.step2, icon: Calendar },
+                                { num: 3, title: customTexts.step3, icon: FileText },
+                                { num: 4, title: customTexts.step4, icon: ShieldCheck },
+                                { num: 5, title: customTexts.step5, icon: PenTool },
+                                { num: 6, title: customTexts.step6, icon: Hammer },
+                            ].map(s => (
+                                <div key={s.num} className="bg-[#f9f9f9] p-6 flex flex-col items-center text-center border border-gray-100 rounded-lg">
+                                    <div className="w-12 h-12 bg-[#6E8809] rounded-full flex items-center justify-center text-white mb-4"><s.icon className="w-6 h-6" /></div>
+                                    <div className="text-4xl font-black text-gray-200 mb-2">0{s.num}</div>
+                                    <h3 className="font-bold text-gray-900 leading-tight" style={{ fontSize: `${18 * fontScale}px` }}>{s.title}</h3>
+                                </div>
+                            ))}
                          </div>
-
-                         <div className="flex gap-10 flex-1">
-                             {/* LEFT: wybór typu klienta */}
-                             <div className="w-56 shrink-0">
-                                 <div className="text-sm font-semibold text-gray-500 mb-3">Wybierz typ klienta</div>
-                                 <div className="flex flex-col gap-3">
-                                     <button
-                                         type="button"
-                                         onClick={() => setProcessClientType('cash')}
-                                         className={`px-4 py-3 rounded-lg border text-left font-semibold transition ${processClientType === 'cash' ? 'bg-[#6e8809] text-white border-[#6e8809]' : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300'}`}
-                                     >
-                                         Klient gotówkowy
-                                     </button>
-                                     <button
-                                         type="button"
-                                         onClick={() => setProcessClientType('credit')}
-                                         className={`px-4 py-3 rounded-lg border text-left font-semibold transition ${processClientType === 'credit' ? 'bg-[#6e8809] text-white border-[#6e8809]' : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300'}`}
-                                     >
-                                         Klient kredytowy
-                                     </button>
-                                 </div>
-                             </div>
-
-                             {/* RIGHT: tabela procesu */}
-                             <div className="flex-1 flex justify-center">
-                                 <ProcessFlowTable type={processClientType} />
-                             </div>
-                         </div>
-
                          <OfferFooter />
                     </A4Page>
 
@@ -1210,49 +1136,19 @@ export const OfferGenerator: React.FC = () => {
                     </A4Page>
 
                     {/* PAGE 5: WIZUALIZACJE & RZUTY */}
-                    <A4Page className="flex flex-col a4-page p-12">
-                        <div className="grid grid-cols-2 gap-4 flex-1">
-                            <div className="overflow-hidden rounded-xl bg-gray-100">
-                                <img
-                                    src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
-                                    className="w-full h-full object-cover"
-                                    alt="Wizualizacja 1"
-                                />
-                            </div>
-                            <div className="overflow-hidden rounded-xl bg-gray-100">
-                                <img
-                                    src={resolvePublicAsset(selectedHouse.images?.[1] || selectedHouse.images?.[0] || selectedHouse.image)}
-                                    className="w-full h-full object-cover"
-                                    alt="Wizualizacja 2"
-                                />
-                            </div>
-                            <div className="overflow-hidden rounded-xl bg-gray-100">
-                                <img
-                                    src={resolvePublicAsset(selectedHouse.images?.[2] || selectedHouse.images?.[0] || selectedHouse.image)}
-                                    className="w-full h-full object-cover"
-                                    alt="Wizualizacja 3"
-                                />
-                            </div>
-                            <div className="overflow-hidden rounded-xl bg-gray-100">
-                                <img
-                                    src={resolvePublicAsset(selectedHouse.images?.[3] || selectedHouse.images?.[0] || selectedHouse.image)}
-                                    className="w-full h-full object-cover"
-                                    alt="Wizualizacja 4"
-                                />
-                            </div>
-                        </div>
+                   <A4Page className="flex flex-col a4-page">
+    <div className="h-full w-full relative">
+        <img
+            src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
+            className="w-full h-full object-cover"
+            alt="Wizualizacja"
+        />
+        <div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">
+            Wizualizacja
+        </div>
+    </div>
+</A4Page>
 
-                        <div className="pt-8 text-center">
-                            <div style={{ fontFamily: "Inter, sans-serif", fontSize: "24px", fontWeight: 700, color: "rgb(17, 24, 39)" }}>
-                                Wizualizacja
-                            </div>
-                            <div style={{ fontFamily: "Inter, sans-serif", fontSize: "20px", fontWeight: 400, color: "#6e8809", marginTop: "6px" }}>
-                                Zdjęcia mają charakter podglądowy
-                            </div>
-                        </div>
-
-                        <OfferFooter />
-                    </A4Page>
 
 {/* PAGE 6: RZUT TECHNICZNY */}
 <A4Page className="flex flex-col a4-page bg-[#f9f9f9] p-12">
