@@ -600,7 +600,6 @@ export const OfferGenerator: React.FC = () => {
 
     // NEEDS (Page 2)
     const [customExtras, setCustomExtras] = useState([{ label: '', price: 0 }]);
-    const [pvOption, setPvOption] = useState<'none' | 'standard' | 'backup'>('none');
     const [needs, setNeeds] = useState([
         { id: '1', icon: 'Maximize', text: 'Dom o powierzchni do 70m2 zabudowy' },
         { id: '2', icon: 'BedDouble', text: '2 sypialnie' },
@@ -695,20 +694,6 @@ export const OfferGenerator: React.FC = () => {
     const availableItems = useMemo(() => {
         return itemsByHouse[selectedHouse.id] ?? getOfferItemsForHouse(selectedHouse);
     }, [selectedHouse, itemsByHouse]);
-
-    const pvLabels = useMemo(() => {
-        const map: Record<string, { standard: string; backup: string }> = {
-            nest_house: { standard: '4kW + Magazyn 10.24kWh', backup: '4kW + Magazyn 10.24kWh + Zasilanie Awaryjne' },
-            haven_house: { standard: '4kW + Magazyn 10.24kWh', backup: '4kW + Magazyn 10.24kWh + Zasilanie Awaryjne' },
-            balance_house: { standard: '10kW + Magazyn 15.36kWh', backup: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne' },
-            comfort_house: { standard: '5.5kW + Magazyn 10.24kWh', backup: '5.5kW + Magazyn 10.24kWh + Zasilanie Awaryjne' },
-            vista_house: { standard: '10kW + Magazyn 15.36kWh', backup: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne' },
-            peak_house: { standard: '8kW + Magazyn 10.24kWh', backup: '8kW + Magazyn 10.24kWh + Zasilanie Awaryjne' },
-            skyline_house: { standard: '3.5kW + Magazyn 5.3kWh', backup: '3.5kW + Magazyn 5.3kWh + Zasilanie Awaryjne' },
-            zenith_house: { standard: '3.5kW + Magazyn 5.3kWh', backup: '3.5kW + Magazyn 5.3kWh + Zasilanie Awaryjne' },
-        };
-        return map[selectedHouse.id] || { standard: 'Fotowoltaika', backup: 'Fotowoltaika + Zasilanie Awaryjne' };
-    }, [selectedHouse.id]);
     
     const { totalNetPrice, selectedItemsList } = useMemo(() => {
         const extras = (customExtras || []).map(e => ({
@@ -717,9 +702,6 @@ export const OfferGenerator: React.FC = () => {
         })).filter(e => e.label || e.price !== 0);
 
         const extrasTotal = extras.reduce((acc, e) => acc + e.price, 0);
-
-        const pvPrice = pvOption === 'standard' ? 20000 : pvOption === 'backup' ? 21500 : 0;
-        const pvVariant = pvOption === 'standard' ? pvLabels.standard : pvOption === 'backup' ? pvLabels.backup : '';
 
         // Projekt indywidualny: suma = cena bazowa + ceny sekcji + dodatki
         if (selectedHouse.id === 'individual_house') {
@@ -734,9 +716,8 @@ export const OfferGenerator: React.FC = () => {
                 }));
 
             extras.forEach(e => list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price }));
-            if (pvPrice > 0) list.push({ name: 'Fotowoltaika', variant: pvVariant, price: pvPrice });
 
-            return { totalNetPrice: basePrice + sumSections + extrasTotal + pvPrice, selectedItemsList: list };
+            return { totalNetPrice: basePrice + sumSections + extrasTotal, selectedItemsList: list };
         }
 
         let sum = basePrice;
@@ -765,13 +746,8 @@ export const OfferGenerator: React.FC = () => {
             list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price });
         });
 
-        if (pvPrice > 0) {
-            sum += pvPrice;
-            list.push({ name: 'Fotowoltaika', variant: pvVariant, price: pvPrice });
-        }
-
         return { totalNetPrice: sum, selectedItemsList: list };
-    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections, customExtras, pvOption, pvLabels]);
+    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections, customExtras]);
 
     const totalVat = totalNetPrice * 0.08;
     const totalGross = totalNetPrice + totalVat;
@@ -1036,64 +1012,7 @@ export const OfferGenerator: React.FC = () => {
                         </div>
                     </AccordionItem>
 
-                    
-                    {/* FOTOWOLTAIKA */}
-                    <AccordionItem title="Fotowoltaika" icon={Sun} isOpen={openSection === 'pv'} onToggle={() => toggleAccordion('pv')}>
-                        <div className="space-y-3">
-                            <div className="text-xs text-gray-500 leading-snug">
-                                W instalacjach stosujemy: Panele JA Solar Bifacial 500W (czarna rama), falownik hybrydowy Deye, magazyn energii Deye lub Kon-Tec. Wycena orientacyjna (brak dokładnego projektu dachu).
-                            </div>
-
-                            <button
-                                type="button"
-                                onClick={() => setPvOption('none')}
-                                className={`w-full flex items-center justify-between gap-3 border p-3 text-left ${pvOption === 'none' ? 'border-[#6E8809] bg-[#f7faf3]' : 'border-gray-200 bg-white'}`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-4 h-4 border flex items-center justify-center ${pvOption === 'none' ? 'bg-[#6E8809] border-[#6E8809]' : 'border-gray-300'}`}>
-                                        {pvOption === 'none' && <Check className="w-3 h-3 text-white" />}
-                                    </div>
-                                    <div className="text-sm font-bold text-gray-800">Brak</div>
-                                </div>
-                                <div className="text-sm font-bold text-gray-700">W cenie</div>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setPvOption('standard')}
-                                className={`w-full flex items-start justify-between gap-3 border p-3 text-left ${pvOption === 'standard' ? 'border-[#6E8809] bg-[#f7faf3]' : 'border-gray-200 bg-white'}`}
-                            >
-                                <div className="flex items-start gap-3">
-                                    <div className={`mt-0.5 w-4 h-4 border flex items-center justify-center ${pvOption === 'standard' ? 'bg-[#6E8809] border-[#6E8809]' : 'border-gray-300'}`}>
-                                        {pvOption === 'standard' && <Check className="w-3 h-3 text-white" />}
-                                    </div>
-                                    <div>
-                                        <div className="text-sm font-bold text-gray-900">{pvLabels.standard}</div>
-                                    </div>
-                                </div>
-                                <div className="text-sm font-bold text-gray-900 whitespace-nowrap">+ 20 000 zł</div>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setPvOption('backup')}
-                                className={`w-full flex items-start justify-between gap-3 border p-3 text-left ${pvOption === 'backup' ? 'border-[#6E8809] bg-[#f7faf3]' : 'border-gray-200 bg-white'}`}
-                            >
-                                <div className="flex items-start gap-3">
-                                    <div className={`mt-0.5 w-4 h-4 border flex items-center justify-center ${pvOption === 'backup' ? 'bg-[#6E8809] border-[#6E8809]' : 'border-gray-300'}`}>
-                                        {pvOption === 'backup' && <Check className="w-3 h-3 text-white" />}
-                                    </div>
-                                    <div>
-                                        <div className="text-sm font-bold text-gray-900">{pvLabels.backup}</div>
-                                        <div className="text-xs text-gray-500 mt-1">(+1500 zł)</div>
-                                    </div>
-                                </div>
-                                <div className="text-sm font-bold text-gray-900 whitespace-nowrap">+ 21 500 zł</div>
-                            </button>
-                        </div>
-                    </AccordionItem>
-
-{/* SCOPE */}
+                    {/* SCOPE */}
                     <AccordionItem title="9. Inne (Strona 9)" icon={Briefcase} isOpen={openSection === 'scope'} onToggle={() => toggleAccordion('scope')}>
                          <div className="space-y-4">
                              {customExtras.map((extra, index) => (
@@ -1334,52 +1253,62 @@ export const OfferGenerator: React.FC = () => {
                     <A4Page className="flex flex-col p-12 a4-page">
                          <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Technologia i Przekroje</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
                          
-                         <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-6">
-                             {/* Item 1: Roof */}
-                             <div className="flex flex-col h-full border border-gray-100 bg-white">
-                                <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-                                    <img src={images.techRoof} className="max-h-full max-w-full object-contain" alt="Dach" />
-                                </div>
-                                <div className="p-3 flex-1">
-                                    <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.techRoofTitle}</h3>
-                                    <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>{customTexts.techRoofDesc}</p>
-                                </div>
-                             </div>
+                         
+<div className="flex-1 flex flex-col gap-6">
 
-                             {/* Item 2: Ext Wall */}
-                             <div className="flex flex-col h-full border border-gray-100 bg-white">
-                                <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-                                    <img src={images.techWallExt} className="max-h-full max-w-full object-contain" alt="Ściana Zew." />
-                                </div>
-                                <div className="p-3 flex-1">
-                                    <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.techWallExtTitle}</h3>
-                                    <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>{customTexts.techWallExtDesc}</p>
-                                </div>
-                             </div>
+    {/* 1. PRZEKRÓJ ŚCIANY ZEWNĘTRZNEJ - szeroki */}
+    <div className="flex flex-col border border-gray-100 bg-white">
+        <div className="w-full overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
+            <img src={resolvePublicAsset('przekroj-sciany-zewnetrznej-1.webp')} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
+        </div>
+        <div className="p-4">
+            <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                {customTexts.techWallExtTitle}
+            </h3>
+            <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                {customTexts.techWallExtDesc}
+            </p>
+        </div>
+    </div>
 
-                             {/* Item 3: Int Wall */}
-                             <div className="flex flex-col h-full border border-gray-100 bg-white">
-                                <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-                                    <img src={images.techWallInt} className="max-h-full max-w-full object-contain" alt="Ściana Wew." />
-                                </div>
-                                <div className="p-3 flex-1">
-                                    <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.techWallIntTitle}</h3>
-                                    <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>{customTexts.techWallIntDesc}</p>
-                                </div>
-                             </div>
+    {/* 2 i 3 - Dach i Strop w 2 kolumnach */}
+    <div className="grid grid-cols-2 gap-6">
 
-                             {/* Item 4: Ceiling/Floor */}
-                             <div className="flex flex-col h-full border border-gray-100 bg-white">
-                                <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-                                    <img src={images.techFloor} className="max-h-full max-w-full object-contain" alt="Strop" />
-                                </div>
-                                <div className="p-3 flex-1">
-                                    <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.techFloorTitle}</h3>
-                                    <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>{customTexts.techFloorDesc}</p>
-                                </div>
-                             </div>
-                         </div>
-                         <OfferFooter />
+        {/* Dach (przeniesiony niżej) */}
+        <div className="flex flex-col border border-gray-100 bg-white">
+            <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
+                <img src={images.techRoof} className="max-h-full max-w-full object-contain" alt="Dach" />
+            </div>
+            <div className="p-3 flex-1">
+                <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                    {customTexts.techRoofTitle}
+                </h3>
+                <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                    {customTexts.techRoofDesc}
+                </p>
+            </div>
+        </div>
+
+        {/* Strop (bez zmian) */}
+        <div className="flex flex-col border border-gray-100 bg-white">
+            <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
+                <img src={images.techFloor} className="max-h-full max-w-full object-contain" alt="Strop" />
+            </div>
+            <div className="p-3 flex-1">
+                <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                    {customTexts.techFloorTitle}
+                </h3>
+                <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                    {customTexts.techFloorDesc}
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+<OfferFooter />
+
                     </A4Page>
 
                     {/* PAGE 5: WIZUALIZACJE */}
