@@ -641,6 +641,10 @@ export const OfferGenerator: React.FC = () => {
         techFloorDesc: "Konstrukcja Międzykondygnacyjna U = 0.20 W/m²K. Wykończenie góra: Panele 8mm. Poszycie nośne: Płyta OSB 22mm. Konstrukcja drewniana C24. Izolacja akustyczna: Wełna. Wykończenie dół: Ruszt + GK."
     });
 
+    // Dodatkowa pozycja niestandardowa (np. transport) dodawana ręcznie do podsumowania
+    const [customExtraLabel, setCustomExtraLabel] = useState<string>('');
+    const [customExtraPrice, setCustomExtraPrice] = useState<number>(0);
+
     // -- LOGIC --
     const openCompressionModal = () => { setIsCompressionModalOpen(true); setCompressionStatus('idle'); setCompressionLogs([]); setCompressionProgress(0); setCurrentProcessingFile(''); setProcessingDetail(''); setCompressionStats({ original: 0, compressed: 0 }); };
     const handleCancelCompression = () => { abortRef.current = true; setCompressionStatus('idle'); setIsCompressionModalOpen(false); };
@@ -696,13 +700,18 @@ export const OfferGenerator: React.FC = () => {
     }, [selectedHouse, itemsByHouse]);
     
     const { totalNetPrice, selectedItemsList } = useMemo(() => {
+        const extraLabel = (customExtraLabel || '').trim();
+        const extraPrice = Number(customExtraPrice) || 0;
         // Projekt indywidualny: suma = cena bazowa + ceny sekcji
         if (selectedHouse.id === 'individual_house') {
             const sumSections = customSections.reduce((acc, s) => acc + (Number(s.price) || 0), 0);
             const list = customSections
                 .filter(s => (s.title?.trim() || s.text?.trim() || (Number(s.price) || 0) !== 0))
                 .map(s => ({ name: s.title || 'Sekcja', variant: s.text ? s.text.slice(0, 80) + (s.text.length > 80 ? '…' : '') : undefined, price: Number(s.price) || 0 }));
-            return { totalNetPrice: basePrice + sumSections, selectedItemsList: list };
+            if (extraLabel || extraPrice !== 0) {
+                list.push({ name: extraLabel || 'Pozycja niestandardowa', variant: '-', price: extraPrice });
+            }
+            return { totalNetPrice: basePrice + sumSections + extraPrice, selectedItemsList: list };
         }
         let sum = basePrice;
         const list: { name: string; variant?: string; price: number }[] = [];
@@ -724,8 +733,14 @@ export const OfferGenerator: React.FC = () => {
                 list.push({ name: item.name, variant: `${val} ${item.unit || ''}`, price: cost });
             }
         });
+
+        if (extraLabel || extraPrice !== 0) {
+            sum += extraPrice;
+            list.push({ name: extraLabel || 'Pozycja niestandardowa', variant: '-', price: extraPrice });
+        }
+
         return { totalNetPrice: sum, selectedItemsList: list };
-    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections]);
+    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections, customExtraLabel, customExtraPrice]);
 
     const totalVat = totalNetPrice * 0.08;
     const totalGross = totalNetPrice + totalVat;
@@ -993,8 +1008,29 @@ export const OfferGenerator: React.FC = () => {
                     {/* SCOPE */}
                     <AccordionItem title="9. Zakres (Strona 9)" icon={Briefcase} isOpen={openSection === 'scope'} onToggle={() => toggleAccordion('scope')}>
                          <div className="space-y-4">
-                             <div><label className="text-[10px] font-bold text-gray-400 uppercase">Po naszej stronie</label><textarea rows={3} className="w-full text-xs p-2 border border-gray-200" value={customTexts.scopeOurSide} onChange={e => updateText('scopeOurSide', e.target.value)} /></div>
-                             <div><label className="text-[10px] font-bold text-gray-400 uppercase">Po stronie klienta</label><textarea rows={3} className="w-full text-xs p-2 border border-gray-200" value={customTexts.scopeClientSide} onChange={e => updateText('scopeClientSide', e.target.value)} /></div>
+                             <div>
+                                 <label className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa (np. transport)</label>
+                                 <input
+                                     type="text"
+                                     placeholder="Np. Transport"
+                                     className="w-full text-xs p-2 border border-gray-200"
+                                     value={customExtraLabel}
+                                     onChange={(e) => setCustomExtraLabel(e.target.value)}
+                                 />
+                             </div>
+                             <div>
+                                 <label className="text-[10px] font-bold text-gray-400 uppercase">Cena netto (zł)</label>
+                                 <input
+                                     type="number"
+                                     placeholder="0"
+                                     className="w-full text-xs p-2 border border-gray-200"
+                                     value={Number.isFinite(customExtraPrice) ? customExtraPrice : 0}
+                                     onChange={(e) => setCustomExtraPrice(Number(e.target.value))}
+                                 />
+                             </div>
+                             <div className="text-[11px] text-gray-500 leading-snug">
+                                 Ta pozycja pojawi się w podsumowaniu oferty i zostanie doliczona do ceny.
+                             </div>
                          </div>
                     </AccordionItem>
 
