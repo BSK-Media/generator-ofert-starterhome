@@ -599,6 +599,7 @@ export const OfferGenerator: React.FC = () => {
 
 
     // NEEDS (Page 2)
+    const [customExtras, setCustomExtras] = useState([{ label: '', price: 0 }]);
     const [needs, setNeeds] = useState([
         { id: '1', icon: 'Maximize', text: 'Dom o powierzchni do 70m2 zabudowy' },
         { id: '2', icon: 'BedDouble', text: '2 sypialnie' },
@@ -700,17 +701,22 @@ export const OfferGenerator: React.FC = () => {
     }, [selectedHouse, itemsByHouse]);
     
     const { totalNetPrice, selectedItemsList } = useMemo(() => {
-        const extraLabel = (customExtraLabel || '').trim();
-        const extraPrice = Number(customExtraPrice) || 0;
+        const extras = customExtras || [];
+        
         // Projekt indywidualny: suma = cena bazowa + ceny sekcji
         if (selectedHouse.id === 'individual_house') {
             const sumSections = customSections.reduce((acc, s) => acc + (Number(s.price) || 0), 0);
             const list = customSections
                 .filter(s => (s.title?.trim() || s.text?.trim() || (Number(s.price) || 0) !== 0))
                 .map(s => ({ name: s.title || 'Sekcja', variant: s.text ? s.text.slice(0, 80) + (s.text.length > 80 ? '…' : '') : undefined, price: Number(s.price) || 0 }));
-            if (extraLabel || extraPrice !== 0) {
-                list.push({ name: extraLabel || 'Pozycja niestandardowa', variant: '-', price: extraPrice });
+            extras.forEach(extra => {
+            const label = (extra.label || '').trim();
+            const price = Number(extra.price) || 0;
+            if (label || price !== 0) {
+                sum += price;
+                list.push({ name: label || 'Pozycja niestandardowa', variant: '-', price });
             }
+        });
             return { totalNetPrice: basePrice + sumSections + extraPrice, selectedItemsList: list };
         }
         let sum = basePrice;
@@ -734,10 +740,14 @@ export const OfferGenerator: React.FC = () => {
             }
         });
 
-        if (extraLabel || extraPrice !== 0) {
-            sum += extraPrice;
-            list.push({ name: extraLabel || 'Pozycja niestandardowa', variant: '-', price: extraPrice });
-        }
+        extras.forEach(extra => {
+            const label = (extra.label || '').trim();
+            const price = Number(extra.price) || 0;
+            if (label || price !== 0) {
+                sum += price;
+                list.push({ name: label || 'Pozycja niestandardowa', variant: '-', price });
+            }
+        });
 
         return { totalNetPrice: sum, selectedItemsList: list };
     }, [basePrice, offerConfig, availableItems, selectedHouse, customSections, customExtraLabel, customExtraPrice]);
@@ -1006,33 +1016,46 @@ export const OfferGenerator: React.FC = () => {
                     </AccordionItem>
 
                     {/* SCOPE */}
-                    <AccordionItem title="9. Zakres (Strona 9)" icon={Briefcase} isOpen={openSection === 'scope'} onToggle={() => toggleAccordion('scope')}>
+                    <AccordionItem title="9. Inne (Strona 9)" icon={Briefcase} isOpen={openSection === 'scope'} onToggle={() => toggleAccordion('scope')}>
                          <div className="space-y-4">
-                             <div>
-                                 <label className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa (np. transport)</label>
-                                 <input
-                                     type="text"
-                                     placeholder="Np. Transport"
-                                     className="w-full text-xs p-2 border border-gray-200"
-                                     value={customExtraLabel}
-                                     onChange={(e) => setCustomExtraLabel(e.target.value)}
-                                 />
-                             </div>
-                             <div>
-                                 <label className="text-[10px] font-bold text-gray-400 uppercase">Cena netto (zł)</label>
-                                 <input
-                                     type="number"
-                                     placeholder="0"
-                                     className="w-full text-xs p-2 border border-gray-200"
-                                     value={Number.isFinite(customExtraPrice) ? customExtraPrice : 0}
-                                     onChange={(e) => setCustomExtraPrice(Number(e.target.value))}
-                                 />
-                             </div>
-                             <div className="text-[11px] text-gray-500 leading-snug">
-                                 Ta pozycja pojawi się w podsumowaniu oferty i zostanie doliczona do ceny.
-                             </div>
+                             {customExtras.map((extra, index) => (
+                                 <div key={index} className="border border-gray-200 p-2">
+                                     <label className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa</label>
+                                     <input
+                                         type="text"
+                                         placeholder="Np. Transport"
+                                         className="w-full text-xs p-2 border border-gray-200 mb-2"
+                                         value={extra.label}
+                                         onChange={(e) => {
+                                             const updated = [...customExtras];
+                                             updated[index].label = e.target.value;
+                                             setCustomExtras(updated);
+                                         }}
+                                     />
+                                     <label className="text-[10px] font-bold text-gray-400 uppercase">Cena netto (zł)</label>
+                                     <input
+                                         type="number"
+                                         placeholder="0"
+                                         className="w-full text-xs p-2 border border-gray-200"
+                                         value={extra.price}
+                                         onChange={(e) => {
+                                             const updated = [...customExtras];
+                                             updated[index].price = Number(e.target.value);
+                                             setCustomExtras(updated);
+                                         }}
+                                     />
+                                 </div>
+                             ))}
+                             <button
+                                 type="button"
+                                 onClick={() => setCustomExtras([...customExtras, { label: '', price: 0 }])}
+                                 className="flex items-center gap-2 text-xs font-bold text-[#6E8809]"
+                             >
+                                 <Plus className="w-4 h-4" />
+                                 Dodaj kolejną pozycję
+                             </button>
                          </div>
-                    </AccordionItem>
+                     </AccordionItem>
 
                     {/* TRANCHES & CTA */}
                     <AccordionItem title="Finanse i CTA" icon={Banknote} isOpen={openSection === 'finance'} onToggle={() => toggleAccordion('finance')}>
