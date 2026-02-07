@@ -600,6 +600,7 @@ export const OfferGenerator: React.FC = () => {
 
     // NEEDS (Page 2)
     const [customExtras, setCustomExtras] = useState([{ label: '', price: 0 }]);
+    const [pvOption, setPvOption] = useState<'none' | 'standard' | 'backup'>('none');
     const [needs, setNeeds] = useState([
         { id: '1', icon: 'Maximize', text: 'Dom o powierzchni do 70m2 zabudowy' },
         { id: '2', icon: 'BedDouble', text: '2 sypialnie' },
@@ -694,6 +695,20 @@ export const OfferGenerator: React.FC = () => {
     const availableItems = useMemo(() => {
         return itemsByHouse[selectedHouse.id] ?? getOfferItemsForHouse(selectedHouse);
     }, [selectedHouse, itemsByHouse]);
+
+    const pvLabels = useMemo(() => {
+        const map: Record<string, { standard: string; backup: string }> = {
+            nest_house: { standard: '4kW + Magazyn 10.24kWh', backup: '4kW + Magazyn 10.24kWh + Zasilanie Awaryjne' },
+            haven_house: { standard: '4kW + Magazyn 10.24kWh', backup: '4kW + Magazyn 10.24kWh + Zasilanie Awaryjne' },
+            balance_house: { standard: '10kW + Magazyn 15.36kWh', backup: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne' },
+            comfort_house: { standard: '5.5kW + Magazyn 10.24kWh', backup: '5.5kW + Magazyn 10.24kWh + Zasilanie Awaryjne' },
+            vista_house: { standard: '10kW + Magazyn 15.36kWh', backup: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne' },
+            peak_house: { standard: '8kW + Magazyn 10.24kWh', backup: '8kW + Magazyn 10.24kWh + Zasilanie Awaryjne' },
+            skyline_house: { standard: '3.5kW + Magazyn 5.3kWh', backup: '3.5kW + Magazyn 5.3kWh + Zasilanie Awaryjne' },
+            zenith_house: { standard: '3.5kW + Magazyn 5.3kWh', backup: '3.5kW + Magazyn 5.3kWh + Zasilanie Awaryjne' },
+        };
+        return map[selectedHouse.id] || { standard: 'Fotowoltaika', backup: 'Fotowoltaika + Zasilanie Awaryjne' };
+    }, [selectedHouse.id]);
     
     const { totalNetPrice, selectedItemsList } = useMemo(() => {
         const extras = (customExtras || []).map(e => ({
@@ -702,6 +717,9 @@ export const OfferGenerator: React.FC = () => {
         })).filter(e => e.label || e.price !== 0);
 
         const extrasTotal = extras.reduce((acc, e) => acc + e.price, 0);
+
+        const pvPrice = pvOption === 'standard' ? 20000 : pvOption === 'backup' ? 21500 : 0;
+        const pvVariant = pvOption === 'standard' ? pvLabels.standard : pvOption === 'backup' ? pvLabels.backup : '';
 
         // Projekt indywidualny: suma = cena bazowa + ceny sekcji + dodatki
         if (selectedHouse.id === 'individual_house') {
@@ -716,8 +734,9 @@ export const OfferGenerator: React.FC = () => {
                 }));
 
             extras.forEach(e => list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price }));
+            if (pvPrice > 0) list.push({ name: 'Fotowoltaika', variant: pvVariant, price: pvPrice });
 
-            return { totalNetPrice: basePrice + sumSections + extrasTotal, selectedItemsList: list };
+            return { totalNetPrice: basePrice + sumSections + extrasTotal + pvPrice, selectedItemsList: list };
         }
 
         let sum = basePrice;
@@ -746,8 +765,13 @@ export const OfferGenerator: React.FC = () => {
             list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price });
         });
 
+        if (pvPrice > 0) {
+            sum += pvPrice;
+            list.push({ name: 'Fotowoltaika', variant: pvVariant, price: pvPrice });
+        }
+
         return { totalNetPrice: sum, selectedItemsList: list };
-    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections, customExtras]);
+    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections, customExtras, pvOption, pvLabels]);
 
     const totalVat = totalNetPrice * 0.08;
     const totalGross = totalNetPrice + totalVat;
@@ -1012,7 +1036,64 @@ export const OfferGenerator: React.FC = () => {
                         </div>
                     </AccordionItem>
 
-                    {/* SCOPE */}
+                    
+                    {/* FOTOWOLTAIKA */}
+                    <AccordionItem title="Fotowoltaika" icon={Sun} isOpen={openSection === 'pv'} onToggle={() => toggleAccordion('pv')}>
+                        <div className="space-y-3">
+                            <div className="text-xs text-gray-500 leading-snug">
+                                W instalacjach stosujemy: Panele JA Solar Bifacial 500W (czarna rama), falownik hybrydowy Deye, magazyn energii Deye lub Kon-Tec. Wycena orientacyjna (brak dokładnego projektu dachu).
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setPvOption('none')}
+                                className={`w-full flex items-center justify-between gap-3 border p-3 text-left ${pvOption === 'none' ? 'border-[#6E8809] bg-[#f7faf3]' : 'border-gray-200 bg-white'}`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-4 h-4 border flex items-center justify-center ${pvOption === 'none' ? 'bg-[#6E8809] border-[#6E8809]' : 'border-gray-300'}`}>
+                                        {pvOption === 'none' && <Check className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-800">Brak</div>
+                                </div>
+                                <div className="text-sm font-bold text-gray-700">W cenie</div>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setPvOption('standard')}
+                                className={`w-full flex items-start justify-between gap-3 border p-3 text-left ${pvOption === 'standard' ? 'border-[#6E8809] bg-[#f7faf3]' : 'border-gray-200 bg-white'}`}
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className={`mt-0.5 w-4 h-4 border flex items-center justify-center ${pvOption === 'standard' ? 'bg-[#6E8809] border-[#6E8809]' : 'border-gray-300'}`}>
+                                        {pvOption === 'standard' && <Check className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-bold text-gray-900">{pvLabels.standard}</div>
+                                    </div>
+                                </div>
+                                <div className="text-sm font-bold text-gray-900 whitespace-nowrap">+ 20 000 zł</div>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setPvOption('backup')}
+                                className={`w-full flex items-start justify-between gap-3 border p-3 text-left ${pvOption === 'backup' ? 'border-[#6E8809] bg-[#f7faf3]' : 'border-gray-200 bg-white'}`}
+                            >
+                                <div className="flex items-start gap-3">
+                                    <div className={`mt-0.5 w-4 h-4 border flex items-center justify-center ${pvOption === 'backup' ? 'bg-[#6E8809] border-[#6E8809]' : 'border-gray-300'}`}>
+                                        {pvOption === 'backup' && <Check className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <div>
+                                        <div className="text-sm font-bold text-gray-900">{pvLabels.backup}</div>
+                                        <div className="text-xs text-gray-500 mt-1">(+1500 zł)</div>
+                                    </div>
+                                </div>
+                                <div className="text-sm font-bold text-gray-900 whitespace-nowrap">+ 21 500 zł</div>
+                            </button>
+                        </div>
+                    </AccordionItem>
+
+{/* SCOPE */}
                     <AccordionItem title="9. Inne (Strona 9)" icon={Briefcase} isOpen={openSection === 'scope'} onToggle={() => toggleAccordion('scope')}>
                          <div className="space-y-4">
                              {customExtras.map((extra, index) => (
