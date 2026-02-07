@@ -1210,19 +1210,49 @@ export const OfferGenerator: React.FC = () => {
                     </A4Page>
 
                     {/* PAGE 5: WIZUALIZACJE & RZUTY */}
-                   <A4Page className="flex flex-col a4-page">
-    <div className="h-full w-full relative">
-        <img
-            src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
-            className="w-full h-full object-cover"
-            alt="Wizualizacja"
-        />
-        <div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">
-            Wizualizacja
-        </div>
-    </div>
-</A4Page>
+                    <A4Page className="flex flex-col a4-page p-12">
+                        <div className="grid grid-cols-2 gap-4 flex-1">
+                            <div className="overflow-hidden rounded-xl bg-gray-100">
+                                <img
+                                    src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
+                                    className="w-full h-full object-cover"
+                                    alt="Wizualizacja 1"
+                                />
+                            </div>
+                            <div className="overflow-hidden rounded-xl bg-gray-100">
+                                <img
+                                    src={resolvePublicAsset(selectedHouse.images?.[1] || selectedHouse.images?.[0] || selectedHouse.image)}
+                                    className="w-full h-full object-cover"
+                                    alt="Wizualizacja 2"
+                                />
+                            </div>
+                            <div className="overflow-hidden rounded-xl bg-gray-100">
+                                <img
+                                    src={resolvePublicAsset(selectedHouse.images?.[2] || selectedHouse.images?.[0] || selectedHouse.image)}
+                                    className="w-full h-full object-cover"
+                                    alt="Wizualizacja 3"
+                                />
+                            </div>
+                            <div className="overflow-hidden rounded-xl bg-gray-100">
+                                <img
+                                    src={resolvePublicAsset(selectedHouse.images?.[3] || selectedHouse.images?.[0] || selectedHouse.image)}
+                                    className="w-full h-full object-cover"
+                                    alt="Wizualizacja 4"
+                                />
+                            </div>
+                        </div>
 
+                        <div className="pt-8 text-center">
+                            <div style={{ fontFamily: "Inter, sans-serif", fontSize: "24px", fontWeight: 700, color: "rgb(17, 24, 39)" }}>
+                                Wizualizacja
+                            </div>
+                            <div style={{ fontFamily: "Inter, sans-serif", fontSize: "20px", fontWeight: 400, color: "#6e8809", marginTop: "6px" }}>
+                                Zdjęcia mają charakter podglądowy
+                            </div>
+                        </div>
+
+                        <OfferFooter />
+                    </A4Page>
 
 {/* PAGE 6: RZUT TECHNICZNY */}
 <A4Page className="flex flex-col a4-page bg-[#f9f9f9] p-12">
