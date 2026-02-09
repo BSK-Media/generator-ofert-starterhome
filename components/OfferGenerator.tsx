@@ -1599,32 +1599,11 @@ export const OfferGenerator: React.FC = () => {
                         <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Porównanie Stanów</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
                         
                         <div className="mb-12">
-                            <table className="w-full border-collapse" style={{ fontSize: `${12 * fontScale}px` }}>
-                                <thead>
-                                    <tr className="bg-gray-900 text-white">
-                                        <th className="p-3 text-left w-1/3">Element</th>
-                                        <th className="p-3 text-center w-1/3 bg-gray-800">Stan Surowy Zamknięty</th>
-                                        <th className="p-3 text-center w-1/3 bg-[#6E8809]">Stan Deweloperski</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {[
-                                        { el: "Konstrukcja C24", s: true, d: true },
-                                        { el: "Dach z pełnym deskowaniem + blacha na rąbek", s: true, d: true },
-                                        { el: "Okna 3-szybowe", s: true, d: true },
-                                        { el: "Elewacja na gotowo", s: true, d: true },
-                                        { el: "Ocieplenie (wełna)", s: false, d: true },
-                                        { el: "Instalacje (Wod-Kan, Prąd)", s: false, d: true },
-                                        { el: "Ściany G-K", s: false, d: true },
-                                    ].map((row, i) => (
-                                        <tr key={i} className="border-b border-gray-100 last:border-0 even:bg-gray-50">
-                                            <td className="p-3 font-medium text-gray-700">{row.el}</td>
-                                            <td className="p-3 text-center text-gray-500">{row.s ? <Check className="w-5 h-5 mx-auto text-gray-900" /> : <X className="w-4 h-4 mx-auto text-gray-300" />}</td>
-                                            <td className="p-3 text-center text-[#6E8809] font-bold bg-[#f7faf3]">{row.d ? <Check className="w-5 h-5 mx-auto" /> : <X className="w-4 h-4 mx-auto" />}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <img
+                                src={resolvePublicAsset('/assets/porownanie-stanow.png')}
+                                alt="Porównanie Stanów"
+                                className="w-full h-auto object-contain"
+                            />
                         </div>
 
                         {/*
