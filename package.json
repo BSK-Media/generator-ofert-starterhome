@@ -15,7 +15,9 @@
     "@google/genai": "^1.30.0",
     "@emailjs/browser": "^4.4.1",
     "html2canvas": "^1.4.1",
-    "jspdf": "^2.5.1"
+    "jspdf": "^2.5.1",
+    "puppeteer-core": "^24.10.0",
+    "@sparticuz/chromium": "^123.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

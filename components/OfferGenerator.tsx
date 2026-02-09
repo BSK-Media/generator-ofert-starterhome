@@ -150,9 +150,19 @@ const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout 
 };
 
 const fetchImageBlob = async (url: string, onStatus: (status: string) => void): Promise<Blob> => {
-    try { onStatus('Pobieranie bezpośrednie...'); const response = await fetchWithTimeout(url, { mode: 'cors' }, 5000); if (response.ok) return await response.blob(); } catch (e) { /* continue */ }
-    try { onStatus('Pobieranie przez Proxy #1...'); const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`; const response = await fetchWithTimeout(proxyUrl, {}, 8000); if (response.ok) return await response.blob(); } catch (e) { /* continue */ }
-    try { onStatus('Pobieranie przez Proxy #2...'); const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`; const response = await fetchWithTimeout(proxyUrl, {}, 10000); if (response.ok) return await response.blob(); } catch (e) { /* continue */ }
+    // Najpierw spróbuj przez własny backend (Vercel Serverless Function).
+    // To stabilniejsze niż publiczne proxy i pomaga ominąć część problemów z CORS/blokadami.
+    try {
+        onStatus('Pobieranie przez Proxy (backend)...');
+        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(url)}`;
+        const response = await fetchWithTimeout(proxyUrl, {}, 15000);
+        if (response.ok) return await response.blob();
+    } catch (e) {
+        /* continue */
+    }
+    try { onStatus('Pobieranie bezpośrednie...'); const response = await fetchWithTimeout(url, { mode: 'cors' }, 15000); if (response.ok) return await response.blob(); } catch (e) { /* continue */ }
+    try { onStatus('Pobieranie przez Proxy #1...'); const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`; const response = await fetchWithTimeout(proxyUrl, {}, 15000); if (response.ok) return await response.blob(); } catch (e) { /* continue */ }
+    try { onStatus('Pobieranie przez Proxy #2...'); const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`; const response = await fetchWithTimeout(proxyUrl, {}, 20000); if (response.ok) return await response.blob(); } catch (e) { /* continue */ }
     throw new Error("Nie udało się pobrać obrazu.");
 };
 
@@ -1008,9 +1018,53 @@ export const OfferGenerator: React.FC = () => {
     };
 
     const handleSavePdf = async () => {
-        // RAW = "powrót do podstaw" – używamy natywnego drukowania przeglądarki.
-        // To zachowuje layout 1:1 i nie gubi obrazów (brak problemów CORS html2canvas).
-        handlePrint();
+        // RAW: próbujemy wygenerować PDF po stronie backendu (headless Chrome).
+        // To zachowuje layout 1:1 oraz ładuje obrazki bez ograniczeń canvas/CORS.
+        // Jeśli backend nie jest dostępny (np. lokalnie bez Vercel), robimy fallback do natywnego print.
+        if (!previewRef.current) return;
+        try {
+            setIsSavingPdf(true);
+            const safeClient = (clientName || 'klient')
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, '_')
+                .replace(/[^a-z0-9_\-]/g, '');
+            const fileName = `oferta_${safeClient || 'klient'}.pdf`;
+
+            const content = previewRef.current.innerHTML;
+            const html = `<!doctype html><html><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+body{font-family:'Inter',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.a4-page{page-break-after:always;width:210mm;height:297mm;overflow:hidden;position:relative;margin:0;}
+@media print{body{margin:0;padding:0;}.a4-page{box-shadow:none;page-break-after:always;}.font-black{font-weight:700!important;}.font-bold{font-weight:600!important;}}
+</style>
+</head><body>${content}</body></html>`;
+
+            const resp = await fetch('/api/render-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ html, fileName, mode: 'raw' }),
+            });
+
+            if (!resp.ok) throw new Error(`render-pdf failed: ${resp.status}`);
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.warn('Backend PDF failed, fallback to print()', e);
+            handlePrint();
+        } finally {
+            setIsSavingPdf(false);
+        }
     };
 
     const handleSaveCompressedPdf = async () => {
