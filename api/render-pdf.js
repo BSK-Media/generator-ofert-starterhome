@@ -1,4 +1,4 @@
-import chromium from '@sparticuz/chromium';
+import chromium from 'chrome-aws-lambda';
 import puppeteer from 'puppeteer-core';
 
 // Vercel Serverless Function
@@ -27,7 +27,6 @@ export default async function handler(req, res) {
     const executablePath = await chromium.executablePath;
     const browser = await puppeteer.launch({
       args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
       executablePath,
       headless: chromium.headless,
     });

@@ -1,4 +1,4 @@
-import chromium from '@sparticuz/chromium';
+import chromium from 'chrome-aws-lambda';
 import puppeteer from 'puppeteer-core';
 import { PDFDocument } from 'pdf-lib';
 
