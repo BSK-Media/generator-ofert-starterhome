@@ -254,7 +254,7 @@ export const HOUSES: House[] = [
     area: 'Do ustalenia',
     details: { builtArea: '35 m²', usableArea: '55 m²', bedrooms: 2 },
     description: 'Zenith House 35 m² łączy elegancję z przytulnością. Duże przeszklenia na bocznej ścianie nadają budynkowi wyjątkowy charakter.',
-    image: 'https://starterhome.pl/wp-content/uploads/2025/10/enhanced_ujecie-1-przod-scaled.png',
+    image: '/assets/houses/zenith.webp',
     images: ['kolaz-zenith-1.webp'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Zenith.pdf'
   },
@@ -268,7 +268,7 @@ export const HOUSES: House[] = [
     details: { builtArea: '55 m²', usableArea: '45 m²', bedrooms: 2 },
     description: 'Dom o powierzchni użytkowej 45 m² został zaprojektowany z myślą o funkcjonalności. Posiada dwie sypialnie, salon z aneksem kuchennym oraz łazienkę.',
     // Main image (unchanged) used in the first/top section
-    image: 'nest-main.webp',
+    image: '/assets/houses/nest-main.webp',
     images: ['kolaz-nest-1.png'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Nest.pdf'
   },
@@ -281,7 +281,7 @@ export const HOUSES: House[] = [
     area: 'Do ustalenia',
     details: { builtArea: '69 m²', usableArea: '58 m²', bedrooms: 2 },
     description: 'Praktyczny dom o 58 m² powierzchni użytkowej łączy funkcjonalność z komfortem. Znajdują się w nim dwie sypialnie, otwarty salon z kuchnią oraz łazienka.',
-    image: 'https://starterhome.pl/wp-content/uploads/2025/09/Haven-House-1.png',
+    image: '/assets/houses/haven.webp',
     images: ['kolaz-haven-1.webp'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Haven.pdf'
   },
@@ -294,7 +294,7 @@ export const HOUSES: House[] = [
     area: 'Do ustalenia',
     details: { builtArea: '94 m²', usableArea: '80 m²', bedrooms: 3 },
     description: 'Dom o 80 m² powierzchni użytkowej oferuje komfortową przestrzeń dla rodziny. Składa się z trzech sypialni, salonu z aneksem kuchennym oraz łazienki.',
-    image: 'https://starterhome.pl/wp-content/uploads/2025/09/Balance-House-1-1024x768.png',
+    image: '/assets/houses/balance.webp',
     images: ['kolaz-balance-1.webp'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Balance.pdf'
   },
@@ -307,7 +307,7 @@ export const HOUSES: House[] = [
     area: 'Do ustalenia',
     details: { builtArea: '103 m²', usableArea: '86 m²', bedrooms: 3 },
     description: 'Comfort House to parterowy dom o powierzchni 86 m², stworzony z myślą o wygodzie rodziny. Posiada trzy sypialnie oraz otwartą część dzienną.',
-    image: 'https://starterhome.pl/wp-content/uploads/2025/09/Comfort-House-1-1024x768.png',
+    image: '/assets/houses/comfort.webp',
     images: ['kolaz-comfort-1.webp'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Comfort.pdf'
   },
@@ -320,7 +320,7 @@ export const HOUSES: House[] = [
     area: 'Do ustalenia',
     details: { builtArea: '126 m²', usableArea: '108 m²', bedrooms: '3-4' },
     description: 'Duży, komfortowy dom o 108 m² powierzchni użytkowej zapewnia przestrzeń i wygodę dla całej rodziny.',
-    image: 'https://starterhome.pl/wp-content/uploads/2025/10/Vista-House-1-1024x768.png',
+    image: '/assets/houses/vista.webp',
     images: ['kolaz-vista-1.webp'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Vista.pdf'
   },
@@ -333,7 +333,7 @@ export const HOUSES: House[] = [
     area: 'Do ustalenia',
     details: { builtArea: '67 m²', usableArea: '111 m²', bedrooms: '3-4' },
     description: 'Piętrowy dom o 111 m² powierzchni użytkowej łączy przestronność z funkcjonalnością.',
-    image: 'https://starterhome.pl/wp-content/uploads/2025/09/Peak-House-1-scaled.png',
+    image: '/assets/houses/peak.webp',
     images: ['kolaz-peak-1.webp'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Peak.pdf'
   },
@@ -346,7 +346,7 @@ export const HOUSES: House[] = [
     area: 'Do ustalenia',
     details: { builtArea: '35 m²', usableArea: '45 m²', bedrooms: '1-3' },
     description: 'Nowoczesny dom o formie stodoły, 35 m², z praktycznym parterem i antresolą.',
-    image: 'https://starterhome.pl/wp-content/uploads/2025/10/ujecie-1-scaled.png',
+    image: '/assets/houses/skyline.webp',
     images: ['kolaz-skyline-1.webp'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Skyline.pdf'
   },
@@ -354,7 +354,7 @@ export const HOUSES: House[] = [
     id: 'individual_house',
     name: 'Indywidualny',
     status: 'DRAFT',
-    image: 'https://starterhome.pl/wp-content/uploads/2025/09/Nest-House-1-scaled.png',
+    image: '/assets/houses/nest.webp',
     basePrice: 0,
     developerPrice: 0,
     area: 'Do ustalenia',
