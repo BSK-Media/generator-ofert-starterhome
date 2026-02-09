@@ -216,6 +216,78 @@ const rasterizeImage = (img: HTMLImageElement, originalSize: number): ProcessedI
     return { originalSize, compressedSize, dataUrl: newDataUrl };
 };
 
+// --- PDF EXPORT: helpers to make sure all assets are ready for html2canvas ---
+const waitForAllImages = async (root: HTMLElement) => {
+    const imgs = Array.from(root.querySelectorAll('img')) as HTMLImageElement[];
+
+    // Force anonymous CORS where possible (helps html2canvas when assets come from CDN/sub-path).
+    imgs.forEach((img) => {
+        try {
+            if (!img.getAttribute('crossorigin')) img.setAttribute('crossorigin', 'anonymous');
+        } catch {
+            /* ignore */
+        }
+    });
+
+    await Promise.all(
+        imgs.map(async (img) => {
+            try {
+                if (!img.complete) {
+                    await new Promise<void>((resolve) => {
+                        const done = () => resolve();
+                        img.addEventListener('load', done, { once: true });
+                        img.addEventListener('error', done, { once: true });
+                    });
+                }
+            } catch {
+                /* ignore */
+            }
+            // decode() makes a big difference for webp/png not yet decoded.
+            try {
+                // @ts-ignore
+                if (typeof img.decode === 'function') await img.decode();
+            } catch {
+                /* ignore */
+            }
+        })
+    );
+};
+
+const preloadBackgroundImages = async (root: HTMLElement) => {
+    const urls = new Set<string>();
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    let node = walker.currentNode as Element | null;
+    while (node) {
+        try {
+            const bg = window.getComputedStyle(node).getPropertyValue('background-image');
+            if (bg && bg !== 'none') {
+                const matches = bg.match(/url\((['"]?)(.*?)\1\)/g) || [];
+                matches.forEach((m) => {
+                    const u = m.replace(/^url\((['"]?)/, '').replace(/(['"]?)\)$/, '');
+                    if (u && !u.startsWith('data:')) urls.add(u);
+                });
+            }
+        } catch {
+            /* ignore */
+        }
+        node = walker.nextNode() as Element | null;
+    }
+
+    const list = Array.from(urls);
+    await Promise.all(
+        list.map(
+            (u) =>
+                new Promise<void>((resolve) => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve();
+                    img.src = u;
+                })
+        )
+    );
+};
+
 // --- ANIMATION COMPONENTS ---
 const CountUp: React.FC<{ value: number }> = ({ value }) => {
     const [displayValue, setDisplayValue] = useState(value);
@@ -762,6 +834,17 @@ export const OfferGenerator: React.FC = () => {
                 return;
             }
 
+            // Upewnij się, że fonty są załadowane zanim zaczniemy render do canvas (ważne dla wyrównań/centrowania tekstów).
+            try {
+                // @ts-ignore
+                if (document.fonts && typeof document.fonts.ready?.then === 'function') {
+                    // @ts-ignore
+                    await document.fonts.ready;
+                }
+            } catch {
+                /* ignore */
+            }
+
             const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
 
             // A4 w mm
@@ -775,11 +858,21 @@ export const OfferGenerator: React.FC = () => {
             const jpegQuality = Math.min(1, Math.max(0.2, Number(opts.jpegQuality ?? pdfJpegQuality) || 0.9));
 
             for (let i = 0; i < pages.length; i++) {
+                // Częsty powód „znikających obrazków” w html2canvas:
+                // obraz jeszcze nie jest w pełni załadowany/zdekodowany albo jest w background-image.
+                await waitForAllImages(pages[i]);
+                await preloadBackgroundImages(pages[i]);
+
+                // Daj przeglądarce mikro-chwilę na layout po ewentualnym decode()
+                await new Promise<void>((r) => requestAnimationFrame(() => r()));
+
                 const canvas = await html2canvas(pages[i], {
                     scale: renderScale,
                     useCORS: true,
+                    allowTaint: false,
                     backgroundColor: '#ffffff',
                     logging: false,
+                    imageTimeout: 15000,
                 });
 
                 const imgW = pageW;
