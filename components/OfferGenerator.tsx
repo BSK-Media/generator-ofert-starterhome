@@ -413,6 +413,7 @@ export const OfferGenerator: React.FC = () => {
     const [processingDetail, setProcessingDetail] = useState('');
     const [compressionStats, setCompressionStats] = useState({ original: 0, compressed: 0 });
     const [isCompressed, setIsCompressed] = useState(false);
+    const [isSavingPdf, setIsSavingPdf] = useState(false);
 
     // -- SCALING STATE --
     const [fontScale, setFontScale] = useState(1.0);
@@ -674,6 +675,67 @@ export const OfferGenerator: React.FC = () => {
         const content = previewRef.current.innerHTML;
         printWindow.document.write(`<html><head><title>Oferta</title><script src="https://cdn.tailwindcss.com"></script><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');body{font-family:'Inter',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}.a4-page{page-break-after:always;width:210mm;height:297mm;overflow:hidden;position:relative;margin-bottom:0;}@media print{body{margin:0;padding:0;}.a4-page{margin:0;box-shadow:none;page-break-after:always;}.font-black{font-weight:700!important;}.font-bold{font-weight:600!important;}}</style></head><body>${content}<script>window.onload=()=>{setTimeout(()=>{window.print();window.close();},1000);}</script></body></html>`);
         printWindow.document.close();
+    };
+
+    // Zapis PDF (spłaszczony/rastrowany) z kompresją JPEG.
+    // To jest najprostszy i najbardziej przewidywalny sposób na realne zmniejszenie rozmiaru
+    // (szczególnie gdy w ofercie są ciężkie obrazki). Minusem jest brak zaznaczalnego tekstu.
+    const handleSavePdf = async () => {
+        if (!previewRef.current || isSavingPdf) return;
+        setIsSavingPdf(true);
+        try {
+            // 1) Najpierw "odchudź" obrazy używane w podglądzie (jeśli jeszcze nie).
+            if (!isCompressed) {
+                openCompressionModal();
+                await runSmartCompression();
+                setIsCompressionModalOpen(false);
+            }
+
+            // 2) Wygeneruj PDF z każdej strony A4 jako obrazu.
+            const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+                import('html2canvas'),
+                import('jspdf'),
+            ]);
+
+            const pages = Array.from(previewRef.current.querySelectorAll('.a4-page')) as HTMLElement[];
+            if (!pages.length) {
+                alert('Nie znaleziono stron do eksportu.');
+                return;
+            }
+
+            const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
+
+            // Ustawienia kompresji: zmniejsz scale / jakość JPEG jeśli nadal za ciężko.
+            const renderScale = 1.6; // 1.4–2.0 (wyżej = lepsza jakość, większy plik)
+            const jpegQuality = 0.72; // 0.55–0.85 (niżej = mniejszy plik)
+
+            for (let i = 0; i < pages.length; i++) {
+                const canvas = await html2canvas(pages[i], {
+                    scale: renderScale,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                });
+                const imgData = canvas.toDataURL('image/jpeg', jpegQuality);
+
+                if (i > 0) pdf.addPage();
+                // A4: 210 x 297 mm
+                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+            }
+
+            const safeClient = (clientName || 'klient')
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, '_')
+                .replace(/[^a-z0-9_\-]/g, '');
+            const fileName = `oferta_${safeClient || 'klient'}.pdf`;
+            pdf.save(fileName);
+        } catch (e) {
+            console.error(e);
+            alert('Nie udało się wygenerować PDF. Sprawdź konsolę (F12).');
+        } finally {
+            setIsSavingPdf(false);
+        }
     };
 
     const handleImageUpload = async (key: keyof typeof images, file: File) => {
@@ -1122,8 +1184,13 @@ export const OfferGenerator: React.FC = () => {
 
                 <div className="p-4 border-t border-gray-200 bg-white space-y-3">
                     <div className="flex justify-between items-end mb-2"><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Brutto</span><span className="text-3xl font-black text-[#6E8809] tracking-tight"><CountUp value={totalGross} /> zł</span></div>
-                    <button onClick={handlePrint} className={`w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs bg-gray-900 text-white hover:bg-black cursor-pointer`}><FileOutput className="w-4 h-4" /> Drukuj Ofertę</button>
-                    <a href="https://www.ilovepdf.com/compress_pdf" target="_blank" rel="noopener noreferrer" className="w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200"><ExternalLink className="w-4 h-4" /> Tu kompresuj PDF</a>
+                    <button
+                        onClick={handleSavePdf}
+                        disabled={isSavingPdf}
+                        className={`w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs ${isSavingPdf ? 'bg-gray-300 text-white cursor-not-allowed' : 'bg-gray-900 text-white hover:bg-black cursor-pointer'}`}
+                    >
+                        <FileDown className="w-4 h-4" /> {isSavingPdf ? 'Zapisuję…' : 'Zapisz PDF'}
+                    </button>
                 </div>
             </div>
 
