@@ -1,5 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+// @ts-expect-error - html2pdf.js has no bundled TS types in this project
+import html2pdf from 'html2pdf.js';
 import { HOUSES, getOfferItemsForHouse } from '../constants';
 import { House, OfferItem } from '../types';
 import { 
@@ -136,6 +138,18 @@ const ICON_LABELS_PL: Record<string, string> = {
 const bytesToMB = (bytes: number) => bytes / (1024 * 1024);
 interface ProcessedImageResult { originalSize: number; compressedSize: number; dataUrl: string; }
 
+type CompressionSettings = { targetWidth: number; jpegQuality: number };
+
+// Poziom kompresji: 1 = minimalna (lepsza jakość), 100 = maksymalna (mniejszy plik)
+const getCompressionSettings = (level: number): CompressionSettings => {
+    const clamped = Math.max(1, Math.min(100, Math.round(level)));
+    // JPEG quality: 0.90 -> 0.20
+    const jpegQuality = 0.9 - (clamped / 100) * 0.7;
+    // Target width: 1400px -> 800px
+    const targetWidth = Math.round(1400 - (clamped / 100) * 600);
+    return { targetWidth, jpegQuality };
+};
+
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 10000): Promise<Response> => {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
@@ -166,13 +180,19 @@ const loadImageWithTimeout = (src: string, timeout = 5000): Promise<HTMLImageEle
     });
 };
 
-const processImageForPrint = async (src: string, label: string, onLog: (msg: string) => void, onStatusUpdate: (msg: string) => void): Promise<ProcessedImageResult> => {
+const processImageForPrint = async (
+    src: string,
+    label: string,
+    onLog: (msg: string) => void,
+    onStatusUpdate: (msg: string) => void,
+    params: CompressionSettings
+): Promise<ProcessedImageResult> => {
     if (src.startsWith('data:')) {
          onStatusUpdate('Optymalizacja lokalna...');
          const originalSize = src.length * 0.75;
          try {
              const img = await loadImageWithTimeout(src);
-             const result = rasterizeImage(img, originalSize);
+             const result = rasterizeImage(img, originalSize, params);
              onLog(`${label}: Lokalny -> Kompresja OK`);
              return result;
          } catch (e) {
@@ -187,7 +207,7 @@ const processImageForPrint = async (src: string, label: string, onLog: (msg: str
     try {
         onStatusUpdate('Dekodowanie i kompresja...');
         const img = await loadImageWithTimeout(objectUrl);
-        const result = rasterizeImage(img, originalSize);
+        const result = rasterizeImage(img, originalSize, params);
         onLog(`${label}: ${bytesToMB(originalSize).toFixed(2)}MB -> ${bytesToMB(result.compressedSize).toFixed(2)}MB`);
         URL.revokeObjectURL(objectUrl);
         return result;
@@ -198,9 +218,9 @@ const processImageForPrint = async (src: string, label: string, onLog: (msg: str
     }
 };
 
-const rasterizeImage = (img: HTMLImageElement, originalSize: number): ProcessedImageResult => {
+const rasterizeImage = (img: HTMLImageElement, originalSize: number, params: CompressionSettings): ProcessedImageResult => {
     const canvas = document.createElement('canvas');
-    const TARGET_WIDTH = 1122; 
+    const TARGET_WIDTH = params.targetWidth;
     let width = img.width;
     let height = img.height;
     if (width > TARGET_WIDTH) { height = (height * TARGET_WIDTH) / width; width = TARGET_WIDTH; }
@@ -211,7 +231,7 @@ const rasterizeImage = (img: HTMLImageElement, originalSize: number): ProcessedI
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(img, 0, 0, width, height);
-    const newDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+    const newDataUrl = canvas.toDataURL('image/jpeg', params.jpegQuality);
     const compressedSize = newDataUrl.split(',')[1].length * 0.75;
     return { originalSize, compressedSize, dataUrl: newDataUrl };
 };
@@ -259,8 +279,11 @@ interface CompressionModalProps {
     isOpen: boolean; onClose: () => void; onRun: () => void; onCancel: () => void;
     status: 'idle' | 'running' | 'done'; logs: string[]; progress: number; currentFile: string; processingDetail: string;
     stats: { original: number; compressed: number };
+    compressionLevel: number;
+    onCompressionLevelChange: (val: number) => void;
+    onSaveCompressedPdf: () => void;
 }
-const CompressionModal: React.FC<CompressionModalProps> = ({ isOpen, onClose, onRun, onCancel, status, logs, progress, currentFile, processingDetail, stats }) => {
+const CompressionModal: React.FC<CompressionModalProps> = ({ isOpen, onClose, onRun, onCancel, status, logs, progress, currentFile, processingDetail, stats, compressionLevel, onCompressionLevelChange, onSaveCompressedPdf }) => {
     if (!isOpen) return null;
     const savedPercent = stats.original > 0 ? Math.round(((stats.original - stats.compressed) / stats.original) * 100) : 0;
     return (
@@ -285,6 +308,27 @@ const CompressionModal: React.FC<CompressionModalProps> = ({ isOpen, onClose, on
                             )
                         })}
                     </div>
+
+                    {status === 'idle' && (
+                        <div className="mb-6">
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="text-xs font-bold text-gray-700 uppercase tracking-widest">Poziom kompresji</span>
+                                <span className="text-xs font-bold text-gray-900">{Math.round(compressionLevel)}%</span>
+                            </div>
+                            <input
+                                type="range"
+                                min={1}
+                                max={100}
+                                step={1}
+                                value={compressionLevel}
+                                onChange={(e) => onCompressionLevelChange(Number(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#6E8809]"
+                            />
+                            <div className="text-[10px] text-gray-500 mt-2 leading-snug">
+                                1% = minimalna kompresja (lepsza jakość), 100% = maksymalna kompresja (mniejszy plik)
+                            </div>
+                        </div>
+                    )}
                     {status === 'running' && (
                         <div className="mb-6">
                             <div className="flex justify-between items-end mb-2">
@@ -313,9 +357,22 @@ const CompressionModal: React.FC<CompressionModalProps> = ({ isOpen, onClose, on
                     )}
                 </div>
                 <div className="p-6 border-t border-gray-100 bg-gray-50">
-                    {status === 'idle' && (<button onClick={onRun} className="w-full py-3 bg-gray-900 text-white font-bold uppercase tracking-widest text-xs rounded hover:bg-black transition-colors flex items-center justify-center gap-2"><Activity className="w-4 h-4" /> Uruchom Kompresję</button>)}
+                    {status === 'idle' && (
+                        <button onClick={onRun} className="w-full py-3 bg-gray-900 text-white font-bold uppercase tracking-widest text-xs rounded hover:bg-black transition-colors flex items-center justify-center gap-2">
+                            <FileDown className="w-4 h-4" /> Zapisz skompresowany PDF
+                        </button>
+                    )}
                     {status === 'running' && (<button onClick={onCancel} className="w-full py-3 bg-red-50 text-red-600 border border-red-100 font-bold uppercase tracking-widest text-xs rounded hover:bg-red-100 transition-colors flex items-center justify-center gap-2"><StopCircle className="w-4 h-4" /> Anuluj</button>)}
-                    {status === 'done' && (<button onClick={onClose} className="w-full py-3 bg-[#6E8809] text-white font-bold uppercase tracking-widest text-xs rounded hover:bg-[#556b07] transition-colors flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Wróć do oferty</button>)}
+                    {status === 'done' && (
+                        <div className="space-y-2">
+                            <button onClick={onSaveCompressedPdf} className="w-full py-3 bg-[#6E8809] text-white font-bold uppercase tracking-widest text-xs rounded hover:bg-[#556b07] transition-colors flex items-center justify-center gap-2">
+                                <FileDown className="w-4 h-4" /> Zapisz ponownie PDF
+                            </button>
+                            <button onClick={onClose} className="w-full py-3 bg-white text-gray-700 border border-gray-200 font-bold uppercase tracking-widest text-xs rounded hover:bg-gray-100 transition-colors flex items-center justify-center gap-2">
+                                <Check className="w-4 h-4" /> Zamknij
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -413,6 +470,8 @@ export const OfferGenerator: React.FC = () => {
     const [processingDetail, setProcessingDetail] = useState('');
     const [compressionStats, setCompressionStats] = useState({ original: 0, compressed: 0 });
     const [isCompressed, setIsCompressed] = useState(false);
+    // 1..100 (1 = minimalna kompresja, 100 = maksymalna)
+    const [compressionLevel, setCompressionLevel] = useState(60);
 
     // -- SCALING STATE --
     const [fontScale, setFontScale] = useState(1.0);
@@ -646,6 +705,7 @@ export const OfferGenerator: React.FC = () => {
     const handleCancelCompression = () => { abortRef.current = true; setCompressionStatus('idle'); setIsCompressionModalOpen(false); };
     const runSmartCompression = async () => {
         abortRef.current = false; setCompressionStatus('running');
+        const params = getCompressionSettings(compressionLevel);
         const logs: string[] = []; const addLog = (msg: string) => { logs.push(msg); setCompressionLogs([...logs]); };
         addLog("Etap 1: Inicjalizacja...");
         let totalOriginal = 0; let totalCompressed = 0;
@@ -657,7 +717,7 @@ export const OfferGenerator: React.FC = () => {
             const key = keys[i];
             setCurrentProcessingFile(`Przetwarzanie ${i + 1}/${keys.length}: ${String(key)}`);
             setCompressionProgress(Math.round((i / keys.length) * 100));
-            const result = await processImageForPrint(newImages[key], String(key), addLog, (status) => setProcessingDetail(status));
+            const result = await processImageForPrint(newImages[key], String(key), addLog, (status) => setProcessingDetail(status), params);
             totalOriginal += bytesToMB(result.originalSize); totalCompressed += bytesToMB(result.compressedSize);
             newImages[key] = result.dataUrl;
         }
@@ -667,13 +727,50 @@ export const OfferGenerator: React.FC = () => {
         setImages(newImages); setCompressionStats({ original: totalOriginal, compressed: totalCompressed }); setCompressionStatus('done'); setIsCompressed(true);
     };
 
-    const handlePrint = () => {
+    const getPdfFilename = (suffix?: string) => {
+        const house = selectedHouse.name.replace(/\s+/g, '-').toLowerCase();
+        const state = isDeveloperState ? 'deweloperski' : 'surowy-zamkniety';
+        const client = (clientName || 'oferta').trim().replace(/\s+/g, '-');
+        const tail = suffix ? `-${suffix}` : '';
+        return `starterhome-${client}-${house}-${state}${tail}.pdf`;
+    };
+
+    const savePdf = async (opts?: { compressed?: boolean; quality?: number }) => {
         if (!previewRef.current) return;
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) { alert("Proszę zezwolić na wyskakujące okienka"); return; }
-        const content = previewRef.current.innerHTML;
-        printWindow.document.write(`<html><head><title>Oferta</title><script src="https://cdn.tailwindcss.com"></script><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');body{font-family:'Inter',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}.a4-page{page-break-after:always;width:210mm;height:297mm;overflow:hidden;position:relative;margin-bottom:0;}@media print{body{margin:0;padding:0;}.a4-page{margin:0;box-shadow:none;page-break-after:always;}.font-black{font-weight:700!important;}.font-bold{font-weight:600!important;}}</style></head><body>${content}<script>window.onload=()=>{setTimeout(()=>{window.print();window.close();},1000);}</script></body></html>`);
-        printWindow.document.close();
+        const el = previewRef.current;
+        const quality = opts?.quality ?? 0.98;
+        const filename = getPdfFilename(opts?.compressed ? 'skompresowany' : undefined);
+
+        try {
+            await (html2pdf as any)()
+                .set({
+                    margin: 0,
+                    filename,
+                    pagebreak: { mode: ['css', 'legacy'] },
+                    image: { type: 'jpeg', quality },
+                    html2canvas: { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#FFFFFF' },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                })
+                .from(el)
+                .save();
+        } catch (e) {
+            console.error(e);
+            alert('Nie udało się zapisać PDF. Spróbuj ponownie.');
+        }
+    };
+
+    const handleSavePdf = () => savePdf({ compressed: false, quality: 0.98 });
+    const handleSaveCompressedPdf = () => {
+        // użytkownik ustawia poziom kompresji w popupie, a następnie uruchamia kompresję
+        openCompressionModal();
+    };
+
+    const runCompressionAndSavePdf = async () => {
+        await runSmartCompression();
+        // Poczekaj na render po podmianie obrazów, żeby PDF zaciągnął już skompresowane assety
+        await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+        const { jpegQuality } = getCompressionSettings(compressionLevel);
+        await savePdf({ compressed: true, quality: jpegQuality });
     };
 
     const handleImageUpload = async (key: keyof typeof images, file: File) => {
@@ -762,7 +859,24 @@ export const OfferGenerator: React.FC = () => {
     return (
         <div className="flex h-screen bg-gray-100 font-sans print:block print:h-auto print:overflow-visible">
             {!welcomeDone && <WelcomeModal onComplete={() => setWelcomeDone(true)} />}
-            <CompressionModal isOpen={isCompressionModalOpen} onClose={() => setIsCompressionModalOpen(false)} onRun={runSmartCompression} onCancel={handleCancelCompression} status={compressionStatus} logs={compressionLogs} progress={compressionProgress} currentFile={currentProcessingFile} processingDetail={processingDetail} stats={compressionStats} />
+            <CompressionModal
+                isOpen={isCompressionModalOpen}
+                onClose={() => setIsCompressionModalOpen(false)}
+                onRun={runCompressionAndSavePdf}
+                onCancel={handleCancelCompression}
+                status={compressionStatus}
+                logs={compressionLogs}
+                progress={compressionProgress}
+                currentFile={currentProcessingFile}
+                processingDetail={processingDetail}
+                stats={compressionStats}
+                compressionLevel={compressionLevel}
+                onCompressionLevelChange={setCompressionLevel}
+                onSaveCompressedPdf={() => {
+                    const { jpegQuality } = getCompressionSettings(compressionLevel);
+                    savePdf({ compressed: true, quality: jpegQuality });
+                }}
+            />
 
             {/* --- LEFT SIDEBAR --- */}
             <div className="w-[450px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col print:hidden z-50">
@@ -1130,8 +1244,18 @@ export const OfferGenerator: React.FC = () => {
 
                 <div className="p-4 border-t border-gray-200 bg-white space-y-3">
                     <div className="flex justify-between items-end mb-2"><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Brutto</span><span className="text-3xl font-black text-[#6E8809] tracking-tight"><CountUp value={totalGross} /> zł</span></div>
-                    <button onClick={handlePrint} className={`w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs bg-gray-900 text-white hover:bg-black cursor-pointer`}><FileOutput className="w-4 h-4" /> Drukuj Ofertę</button>
-                    <a href="https://www.ilovepdf.com/compress_pdf" target="_blank" rel="noopener noreferrer" className="w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs border border-gray-200 text-gray-500 hover:bg-red-50 hover:text-red-500 hover:border-red-200"><ExternalLink className="w-4 h-4" /> Tu kompresuj PDF</a>
+                    <button
+                        onClick={handleSavePdf}
+                        className="w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs bg-gray-900 text-white hover:bg-black cursor-pointer"
+                    >
+                        <FileDown className="w-4 h-4" /> Zapisz PDF
+                    </button>
+                    <button
+                        onClick={handleSaveCompressedPdf}
+                        className="w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                    >
+                        <Layers className="w-4 h-4" /> Zapisz skompresowany PDF
+                    </button>
                 </div>
             </div>
 
