@@ -459,6 +459,9 @@ const ProcessFlowTable: React.FC<{ type: 'cash' | 'credit' }> = ({ type }) => {
 export const OfferGenerator: React.FC = () => {
     const [welcomeDone, setWelcomeDone] = useState(false);
     const previewRef = useRef<HTMLDivElement>(null);
+    // Contains ONLY the A4 pages (without the gray preview wrapper/padding).
+    // We generate PDFs from this node to keep pagination stable.
+    const pdfRootRef = useRef<HTMLDivElement>(null);
     const abortRef = useRef<boolean>(false);
     
     // -- COMPRESSION STATES --
@@ -736,26 +739,72 @@ export const OfferGenerator: React.FC = () => {
     };
 
     const savePdf = async (opts?: { compressed?: boolean; quality?: number }) => {
-        if (!previewRef.current) return;
-        const el = previewRef.current;
+        if (!pdfRootRef.current) return;
+
+        const source = pdfRootRef.current;
         const quality = opts?.quality ?? 0.98;
         const filename = getPdfFilename(opts?.compressed ? 'skompresowany' : undefined);
+
+        // IMPORTANT:
+        // Don't generate the PDF from the gray preview wrapper (padding/bg/scroll),
+        // because html2canvas would capture those and break pagination.
+        // Instead, clone the pure A4 pages into an off-screen white container.
+        const exportHost = document.createElement('div');
+        exportHost.style.position = 'fixed';
+        exportHost.style.left = '-10000px';
+        exportHost.style.top = '0';
+        exportHost.style.background = '#ffffff';
+        exportHost.style.padding = '0';
+        exportHost.style.margin = '0';
+        exportHost.style.width = '210mm';
+        exportHost.style.overflow = 'visible';
+
+        const clone = source.cloneNode(true) as HTMLElement;
+        clone.style.padding = '0';
+        clone.style.margin = '0';
+        clone.style.background = '#ffffff';
+        // Remove centering constraints that can add extra whitespace when rasterizing
+        clone.classList.remove('mx-auto');
+
+        // Ensure page-to-page gaps are not captured in the raster
+        clone.querySelectorAll('.a4-page').forEach((node) => {
+            const el = node as HTMLElement;
+            el.style.margin = '0';
+            el.style.marginBottom = '0';
+            el.style.boxShadow = 'none';
+        });
+
+        exportHost.appendChild(clone);
+        document.body.appendChild(exportHost);
 
         try {
             await (html2pdf as any)()
                 .set({
                     margin: 0,
                     filename,
-                    pagebreak: { mode: ['css', 'legacy'] },
+                    pagebreak: { mode: ['css'], after: '.a4-page' },
                     image: { type: 'jpeg', quality },
-                    html2canvas: { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#FFFFFF' },
+                    html2canvas: {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#FFFFFF',
+                        // Give html2canvas a deterministic viewport matching A4 width
+                        windowWidth: exportHost.getBoundingClientRect().width || undefined,
+                    },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 })
-                .from(el)
+                .from(clone)
                 .save();
         } catch (e) {
             console.error(e);
             alert('Nie udało się zapisać PDF. Spróbuj ponownie.');
+        } finally {
+            try {
+                document.body.removeChild(exportHost);
+            } catch {
+                // no-op
+            }
         }
     };
 
@@ -1261,7 +1310,7 @@ export const OfferGenerator: React.FC = () => {
 
             {/* --- RIGHT PREVIEW (PDF) --- */}
             <div ref={previewRef} className="flex-1 bg-gray-200 overflow-y-auto p-12 print:p-0 print:bg-white print:overflow-visible print:w-full print:h-auto print:block custom-scrollbar">
-                <div className="scale-100 origin-top mx-auto print:scale-100 max-w-[210mm]">
+                <div ref={pdfRootRef} id="pdf-root" className="scale-100 origin-top mx-auto print:scale-100 max-w-[210mm]">
                     
                     {/* PAGE 1: OKŁADKA */}
                     <A4Page className="flex flex-col a4-page">
