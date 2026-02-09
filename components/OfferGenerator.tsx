@@ -531,7 +531,7 @@ const CompressionModal: React.FC<CompressionModalProps> = ({
                     )}
                 </div>
                 <div className="p-6 border-t border-gray-100 bg-gray-50">
-                    {status === 'idle' && (<button onClick={onRun} className="w-full py-3 bg-gray-900 text-white font-bold uppercase tracking-widest text-xs rounded hover:bg-black transition-colors flex items-center justify-center gap-2"><Activity className="w-4 h-4" /> Uruchom Kompresję</button>)}
+                    {status === 'idle' && (<button onClick={onRun} className="w-full py-3 bg-gray-900 text-white font-bold uppercase tracking-widest text-xs rounded hover:bg-black transition-colors flex items-center justify-center gap-2"><Activity className="w-4 h-4" /> Zapisz skompresowany PDF</button>)}
                     {status === 'running' && (<button onClick={onCancel} className="w-full py-3 bg-red-50 text-red-600 border border-red-100 font-bold uppercase tracking-widest text-xs rounded hover:bg-red-100 transition-colors flex items-center justify-center gap-2"><StopCircle className="w-4 h-4" /> Anuluj</button>)}
                     {status === 'done' && (<button onClick={onClose} className="w-full py-3 bg-[#6E8809] text-white font-bold uppercase tracking-widest text-xs rounded hover:bg-[#556b07] transition-colors flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Wróć do oferty</button>)}
                 </div>
@@ -621,6 +621,7 @@ export const OfferGenerator: React.FC = () => {
     const [welcomeDone, setWelcomeDone] = useState(false);
     const previewRef = useRef<HTMLDivElement>(null);
     const abortRef = useRef<boolean>(false);
+    const compressedFetchControllerRef = useRef<AbortController | null>(null);
     
     // -- COMPRESSION STATES --
     const [isCompressionModalOpen, setIsCompressionModalOpen] = useState(false);
@@ -632,7 +633,7 @@ export const OfferGenerator: React.FC = () => {
     const [compressionStats, setCompressionStats] = useState({ original: 0, compressed: 0 });
     const [isCompressed, setIsCompressed] = useState(false);
     const [isSavingPdf, setIsSavingPdf] = useState(false);
-    const [pendingCompressedExport, setPendingCompressedExport] = useState(false);
+    // (legacy) pendingCompressedExport zostało usunięte – kompresja odbywa się bezpośrednio w backendzie.
 
     // -- PDF EXPORT SETTINGS (user-tunable) --
     // Domyślnie dość wysoka jakość (większy plik). Do kompresji klient może to obniżyć ręcznie.
@@ -868,7 +869,13 @@ export const OfferGenerator: React.FC = () => {
     });
     // -- LOGIC --
     const openCompressionModal = () => { setIsCompressionModalOpen(true); setCompressionStatus('idle'); setCompressionLogs([]); setCompressionProgress(0); setCurrentProcessingFile(''); setProcessingDetail(''); setCompressionStats({ original: 0, compressed: 0 }); };
-    const handleCancelCompression = () => { abortRef.current = true; setCompressionStatus('idle'); setIsCompressionModalOpen(false); };
+    const handleCancelCompression = () => {
+        abortRef.current = true;
+        try { compressedFetchControllerRef.current?.abort(); } catch (_) {}
+        compressedFetchControllerRef.current = null;
+        setCompressionStatus('idle');
+        setIsCompressionModalOpen(false);
+    };
     const runSmartCompression = async () => {
         abortRef.current = false; setCompressionStatus('running');
         const logs: string[] = []; const addLog = (msg: string) => { logs.push(msg); setCompressionLogs([...logs]); };
@@ -890,6 +897,103 @@ export const OfferGenerator: React.FC = () => {
         setCompressionProgress(100); setCurrentProcessingFile('Finalizacja...');
         await new Promise(resolve => setTimeout(resolve, 300));
         setImages(newImages); setCompressionStats({ original: totalOriginal, compressed: totalCompressed }); setCompressionStatus('done'); setIsCompressed(true);
+    };
+
+    // Wariant 1 (potwierdzony): spłaszczony (rastrowany) PDF generowany na backendzie.
+    // Zalety: 100% zgodny wygląd, obrazki zawsze się ładują (brak problemów CORS), mały plik (JPEG).
+    const runBackendCompressedPdf = async () => {
+        if (!previewRef.current) return;
+        abortRef.current = false;
+        setCompressionStatus('running');
+        setCompressionLogs([]);
+        setCompressionProgress(5);
+        setCurrentProcessingFile('Renderowanie PDF (backend)...');
+        setProcessingDetail('Ładowanie strony i zasobów...');
+
+        const logs: string[] = [];
+        const addLog = (msg: string) => {
+            logs.push(msg);
+            setCompressionLogs([...logs]);
+        };
+
+        const controller = new AbortController();
+        compressedFetchControllerRef.current = controller;
+
+        try {
+            const safeClient = (clientName || 'klient')
+                .toLowerCase()
+                .trim()
+                .replace(/\s+/g, '_')
+                .replace(/[^a-z0-9_\-]/g, '');
+            const fileName = `oferta_${safeClient || 'klient'}_skompresowana.pdf`;
+
+            const content = previewRef.current.innerHTML;
+            const html = `<!doctype html><html><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+body{font-family:'Inter',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.a4-page{page-break-after:always;width:210mm;height:297mm;overflow:hidden;position:relative;margin:0;}
+@media print{body{margin:0;padding:0;}.a4-page{box-shadow:none;page-break-after:always;}.font-black{font-weight:700!important;}.font-bold{font-weight:600!important;}}
+</style>
+</head><body>${content}</body></html>`;
+
+            addLog('Start: wysyłanie do backendu...');
+            setCompressionProgress(15);
+
+            const resp = await fetch('/api/render-pdf-compressed', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify({
+                    html,
+                    fileName,
+                    renderScale: pdfRenderScale,
+                    jpegQuality: pdfJpegQuality,
+                }),
+            });
+
+            if (!resp.ok) {
+                const msg = await resp.text().catch(() => '');
+                throw new Error(`render-pdf-compressed failed: ${resp.status} ${msg}`);
+            }
+
+            setProcessingDetail('Odbieranie pliku PDF...');
+            setCompressionProgress(70);
+            const blob = await resp.blob();
+
+            setProcessingDetail('Pobieranie...');
+            setCompressionProgress(90);
+
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+
+            const sizeMB = bytesToMB(blob.size);
+            setCompressionStats({ original: 0, compressed: Number.isFinite(sizeMB) ? sizeMB : 0 });
+            addLog(`PDF gotowy: ${(Number.isFinite(sizeMB) ? sizeMB : 0).toFixed(2)} MB`);
+            setProcessingDetail('Gotowe');
+            setCompressionProgress(100);
+            setCompressionStatus('done');
+        } catch (e) {
+            if (abortRef.current) {
+                addLog('Anulowano.');
+                setCompressionStatus('idle');
+                return;
+            }
+            console.error(e);
+            addLog('Błąd: nie udało się wygenerować skompresowanego PDF (backend).');
+            alert('Nie udało się wygenerować skompresowanego PDF. Sprawdź konsolę (F12).');
+            setCompressionStatus('idle');
+        } finally {
+            compressedFetchControllerRef.current = null;
+        }
     };
 
     const handlePrint = () => {
@@ -1068,31 +1172,10 @@ body{font-family:'Inter',sans-serif;-webkit-print-color-adjust:exact;print-color
     };
 
     const handleSaveCompressedPdf = async () => {
-        // Najpierw pokaż popup z ustawieniami, a dopiero potem start kompresji (wymóg UX)
+        // Wariant 1 (potwierdzony): spłaszczony PDF generowany po stronie backendu (Vercel).
+        // Najpierw popup z ustawieniami, dopiero potem uruchomienie.
         openCompressionModal();
-        setPendingCompressedExport(true);
     };
-
-    // Po zakończeniu „smart compression” (podmianie obrazów) automatycznie generujemy skompresowany PDF,
-    // jeśli użytkownik kliknął „Zapisz skompresowany PDF”.
-    useEffect(() => {
-        if (compressionStatus !== 'done') return;
-        if (!pendingCompressedExport) return;
-
-        (async () => {
-            // Daj Reactowi chwilę na wyrenderowanie podmienionych obrazów.
-            await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-            await exportRasterPdf({
-                mode: 'compressed',
-                fileSuffix: 'skompresowana',
-                renderScale: pdfRenderScale,
-                jpegQuality: pdfJpegQuality,
-            });
-            setIsCompressionModalOpen(false);
-            setPendingCompressedExport(false);
-        })();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [compressionStatus, pendingCompressedExport]);
 
     const handleImageUpload = async (key: keyof typeof images, file: File) => {
         if (!file) return;
@@ -1182,8 +1265,8 @@ body{font-family:'Inter',sans-serif;-webkit-print-color-adjust:exact;print-color
             {!welcomeDone && <WelcomeModal onComplete={() => setWelcomeDone(true)} />}
             <CompressionModal
                 isOpen={isCompressionModalOpen}
-                onClose={() => { setIsCompressionModalOpen(false); setPendingCompressedExport(false); }}
-                onRun={runSmartCompression}
+                onClose={() => { setIsCompressionModalOpen(false); }}
+                onRun={runBackendCompressedPdf}
                 onCancel={handleCancelCompression}
                 status={compressionStatus}
                 logs={compressionLogs}

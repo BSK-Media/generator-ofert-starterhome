@@ -17,7 +17,8 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
     "puppeteer-core": "^24.10.0",
-    "@sparticuz/chromium": "^123.0.0"
+    "@sparticuz/chromium": "^123.0.0",
+    "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
