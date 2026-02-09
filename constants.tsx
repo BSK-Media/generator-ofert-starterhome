@@ -114,7 +114,58 @@ export const getOfferItemsForHouse = (house: House): OfferItem[] => {
   const prices = PRICING_DB[house.id];
   if (!prices) return [];
 
+  // Fotowoltaika: warianty zależne od domu (wymóg: sekcja tylko po lewej + w podsumowaniu).
+  // Użytkownik nie podał cen – domyślnie 0 ("W cenie").
+  const pvOptionsByHouse: Record<string, { id: string; name: string; price: number }[]> = {
+    nest_house: [
+      { id: 'pv_basic', name: '4kW + magazyn 10.24kWh', price: 0 },
+      { id: 'pv_backup', name: '4kW + magazyn 10.24kWh + Zasilanie Awaryjne', price: 0 },
+    ],
+    haven_house: [
+      { id: 'pv_basic', name: '4kW + magazyn 10.24kWh', price: 0 },
+      { id: 'pv_backup', name: '4kW + magazyn 10.24kWh + Zasilanie Awaryjne', price: 0 },
+    ],
+    balance_house: [
+      { id: 'pv_basic', name: '10kW + magazyn 15.36kWh', price: 0 },
+      { id: 'pv_backup', name: '10kW + magazyn 15.36kWh + Zasilanie Awaryjne', price: 0 },
+    ],
+    comfort_house: [
+      { id: 'pv_basic', name: '5.5kW + magazyn 10.24kWh', price: 0 },
+      { id: 'pv_backup', name: '5.5kW + magazyn 10.24kWh + Zasilanie Awaryjne', price: 0 },
+    ],
+    vista_house: [
+      { id: 'pv_basic', name: '10kW + magazyn 15.36kWh', price: 0 },
+      { id: 'pv_backup', name: '10kW + magazyn 15.36kWh + Zasilanie Awaryjne', price: 0 },
+    ],
+    peak_house: [
+      { id: 'pv_basic', name: '8kW + magazyn 10.24kWh', price: 0 },
+      { id: 'pv_backup', name: '8kW + magazyn 10.24kWh + Zasilanie Awaryjne', price: 0 },
+    ],
+    skyline_house: [
+      { id: 'pv_basic', name: '3.5kW + magazyn 5.3kWh', price: 0 },
+      { id: 'pv_backup', name: '3.5kW + magazyn 5.3kWh + Zasilanie Awaryjne', price: 0 },
+    ],
+    zenith_house: [
+      { id: 'pv_basic', name: '3.5kW + magazyn 5.3kWh', price: 0 },
+      { id: 'pv_backup', name: '3.5kW + magazyn 5.3kWh + Zasilanie Awaryjne', price: 0 },
+    ],
+  };
+  const pvOptions = pvOptionsByHouse[house.id];
+
   return [
+    ...(pvOptions
+      ? ([
+          {
+            code: 'PV',
+            name: 'Fotowoltaika',
+            description:
+              'Dobierz zestaw fotowoltaiki (sekcja pojawia się tylko po lewej i trafia do podsumowania).',
+            type: 'radio',
+            defaultValue: 'none',
+            options: [{ id: 'none', name: 'Brak', price: 0 }, ...pvOptions],
+          },
+        ] as OfferItem[])
+      : []),
     {
       code: 'FUND',
       name: 'Fundamenty',

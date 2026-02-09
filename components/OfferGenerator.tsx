@@ -288,112 +288,84 @@ const preloadBackgroundImages = async (root: HTMLElement) => {
     );
 };
 
-// --- PDF EXPORT: inline external images/backgrounds to avoid CORS-missing graphics in html2canvas ---
-const blobToDataURL = (blob: Blob): Promise<string> =>
+// html2canvas potrafi gubić obrazki z zewnętrznych domen (CORS) oraz background-image.
+// Żeby PDF był wierny temu, co widać w aplikacji, robimy "offscreen" klon strony A4
+// i w klonie zamieniamy wszystkie zewnętrzne obrazki na data: URL (pobierane przez te same proxy co kompresja).
+const blobToDataUrl = (blob: Blob): Promise<string> =>
     new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ''));
-        reader.onerror = () => reject(new Error('Nie udało się odczytać danych obrazu'));
+        reader.onloadend = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Nie udało się odczytać blob jako dataURL'));
         reader.readAsDataURL(blob);
     });
 
-const isSameOriginUrl = (url: string) => {
-    try {
-        const u = new URL(url, window.location.href);
-        return u.origin === window.location.origin;
-    } catch {
-        return true;
-    }
+const isProbablyExternalUrl = (url: string) => {
+    if (!url) return false;
+    if (url.startsWith('data:')) return false;
+    if (url.startsWith('blob:')) return false;
+    // Absolutne http(s) traktujemy jako potencjalnie zewnętrzne (CORS).
+    return /^https?:\/\//i.test(url);
 };
 
-const convertBlobToPngDataUrl = async (blob: Blob): Promise<string> => {
-    // Wymuś PNG, bo webp + html2canvas potrafi znikać w niektórych przeglądarkach.
-    try {
-        const bmp = await createImageBitmap(blob);
-        const c = document.createElement('canvas');
-        c.width = bmp.width;
-        c.height = bmp.height;
-        const ctx = c.getContext('2d');
-        if (!ctx) return await blobToDataURL(blob);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, c.width, c.height);
-        ctx.drawImage(bmp, 0, 0);
-        return c.toDataURL('image/png');
-    } catch {
-        return await blobToDataURL(blob);
-    }
-};
-
-const inlineExternalAssetsForCanvas = async (root: HTMLElement, cache: Map<string, string>) => {
-    const restore: Array<() => void> = [];
-
+const inlineExternalImagesAndBackgrounds = async (root: HTMLElement, onStatus?: (s: string) => void) => {
     // IMG tags
     const imgs = Array.from(root.querySelectorAll('img')) as HTMLImageElement[];
     for (const img of imgs) {
         const src = img.getAttribute('src') || '';
-        if (!src || src.startsWith('data:') || src.startsWith('blob:')) continue;
-        if (src.startsWith('/') || isSameOriginUrl(src)) {
-            // lokalne - zostaw
-            continue;
-        }
-
+        if (!isProbablyExternalUrl(src)) continue;
         try {
-            const original = img.src;
-            if (!cache.has(src)) {
-                const blob = await fetchImageBlob(src, () => void 0);
-                const dataUrl = await convertBlobToPngDataUrl(blob);
-                cache.set(src, dataUrl);
-            }
-            const dataUrl = cache.get(src)!;
-            img.setAttribute('crossorigin', 'anonymous');
-            img.src = dataUrl;
-            restore.push(() => {
-                img.src = original;
-            });
+            onStatus?.('Pobieranie grafik do PDF...');
+            const blob = await fetchImageBlob(src, () => void 0);
+            const dataUrl = await blobToDataUrl(blob);
+            img.setAttribute('src', dataUrl);
         } catch {
-            // ignore
+            // Jeśli nie uda się zinline'ować, zostawiamy jak jest.
         }
     }
 
-    // background-image URLs
+    // background-image
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
     let node = walker.currentNode as Element | null;
-    const bgUrlRegex = /url\((['"]?)(.*?)\1\)/g;
-
     while (node) {
         try {
-            const style = window.getComputedStyle(node);
-            const bg = style.getPropertyValue('background-image');
-            if (bg && bg !== 'none') {
-                const matches = Array.from(bg.matchAll(bgUrlRegex));
+            const bg = window.getComputedStyle(node).getPropertyValue('background-image');
+            if (bg && bg !== 'none' && bg.includes('url(')) {
+                const matches = bg.match(/url\((['"]?)(.*?)\1\)/g) || [];
+                let newBg = bg;
                 for (const m of matches) {
-                    const raw = (m[2] || '').trim();
-                    if (!raw || raw.startsWith('data:') || raw.startsWith('blob:')) continue;
-                    if (raw.startsWith('/') || isSameOriginUrl(raw)) continue;
-                    if (!cache.has(raw)) {
-                        try {
-                            const blob = await fetchImageBlob(raw, () => void 0);
-                            const dataUrl = await convertBlobToPngDataUrl(blob);
-                            cache.set(raw, dataUrl);
-                        } catch {
-                            continue;
-                        }
+                    const u = m.replace(/^url\((['"]?)/, '').replace(/(['"]?)\)$/, '');
+                    if (!isProbablyExternalUrl(u)) continue;
+                    try {
+                        const blob = await fetchImageBlob(u, () => void 0);
+                        const dataUrl = await blobToDataUrl(blob);
+                        // Podmień tylko konkretne url() (z zachowaniem ewentualnych cudzysłowów)
+                        newBg = newBg.replace(u, dataUrl);
+                    } catch {
+                        /* ignore */
                     }
-                    const dataUrl = cache.get(raw)!;
-                    const originalInline = (node as HTMLElement).style.backgroundImage;
-                    (node as HTMLElement).style.backgroundImage = `url('${dataUrl}')`;
-                    restore.push(() => {
-                        (node as HTMLElement).style.backgroundImage = originalInline;
-                    });
                 }
+                // Ustawiamy styl inline na klonie
+                (node as HTMLElement).style.backgroundImage = newBg;
             }
         } catch {
             /* ignore */
         }
         node = walker.nextNode() as Element | null;
     }
+};
 
-    return () => restore.forEach((fn) => fn());
+const fixButtonsForCanvas = (root: HTMLElement) => {
+    const buttons = Array.from(root.querySelectorAll('button')) as HTMLElement[];
+    buttons.forEach((b) => {
+        // html2canvas ma bug z baseline w buttonach – wymuszamy flex-centrowanie w klonie.
+        b.style.display = 'flex';
+        b.style.alignItems = 'center';
+        b.style.justifyContent = b.classList.contains('text-left') ? 'flex-start' : 'center';
+        b.style.lineHeight = '1.2';
+        // Minimalny padding żeby tekst nie "siadał" na krawędzi
+        if (!b.style.paddingTop) b.style.paddingTop = '0px';
+        if (!b.style.paddingBottom) b.style.paddingBottom = '0px';
+    });
 };
 
 // --- ANIMATION COMPONENTS ---
@@ -965,58 +937,55 @@ export const OfferGenerator: React.FC = () => {
 
             const jpegQuality = Math.min(1, Math.max(0.2, Number(opts.jpegQuality ?? pdfJpegQuality) || 0.9));
 
-            // Cache dla podmiany zewnętrznych obrazów -> dataURL (żeby nie pobierać wielokrotnie).
-            const assetCache = new Map<string, string>();
-
             for (let i = 0; i < pages.length; i++) {
-                // Częsty powód „znikających obrazków” w html2canvas:
-                // obraz jeszcze nie jest w pełni załadowany/zdekodowany albo jest w background-image.
-                await waitForAllImages(pages[i]);
-                await preloadBackgroundImages(pages[i]);
+                // Renderujemy OFFSCREEN klon strony, żeby:
+                // 1) nie psuć UI (żadne podmiany src/background nie dotykają aplikacji)
+                // 2) móc async zinline'ować zewnętrzne grafiki (CORS) przed html2canvas
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'fixed';
+                wrapper.style.left = '-99999px';
+                wrapper.style.top = '0';
+                wrapper.style.width = '210mm';
+                wrapper.style.height = '297mm';
+                wrapper.style.background = '#ffffff';
+                wrapper.style.zIndex = '-1';
 
-                // Kolejny częsty powód: obrazki z zewnętrznych domen nie mają CORS i html2canvas je pomija.
-                // Podmieniamy je tymczasowo na dataURL (PNG) żeby zawsze wpadły do PDF.
-                const restoreExternal = await inlineExternalAssetsForCanvas(pages[i], assetCache);
+                const cloned = pages[i].cloneNode(true) as HTMLElement;
+                // Upewniamy się, że klon ma dokładny rozmiar strony.
+                cloned.style.width = '210mm';
+                cloned.style.height = '297mm';
 
-                // Daj przeglądarce mikro-chwilę na layout po ewentualnym decode()
-                await new Promise<void>((r) => requestAnimationFrame(() => r()));
+                wrapper.appendChild(cloned);
+                document.body.appendChild(wrapper);
 
-                const canvas = await html2canvas(pages[i], {
+                // Najpierw naprawiamy buttony (baseline/centrowanie), bo html2canvas renderuje klon.
+                fixButtonsForCanvas(cloned);
+
+                // Inline grafik (IMG + background-image) żeby nie znikały w PDF przez CORS.
+                await inlineExternalImagesAndBackgrounds(cloned);
+
+                // Upewniamy się, że wszystko się załadowało i zdekodowało w klonie.
+                await waitForAllImages(cloned);
+                await preloadBackgroundImages(cloned);
+
+                // Daj przeglądarce chwilę na reflow po podmianach
+                await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
+
+                const canvas = await html2canvas(cloned, {
                     scale: renderScale,
                     useCORS: true,
                     allowTaint: false,
                     backgroundColor: '#ffffff',
                     logging: false,
                     imageTimeout: 15000,
-                    onclone: (clonedDoc) => {
-                        // Naprawa wyrównania tekstów w <button> (html2canvas potrafi je rysować "przy dole").
-                        const clonedPages = Array.from(clonedDoc.querySelectorAll('.a4-page')) as HTMLElement[];
-                        const page = clonedPages[i];
-                        if (!page) return;
-
-                        page.querySelectorAll('button').forEach((btn) => {
-                            const b = btn as HTMLElement;
-                            b.style.display = 'flex';
-                            // jeżeli w projekcie button jest tekstowy (text-left), zostawiamy justify-content:start
-                            const isTextLeft = (b.className || '').toString().includes('text-left');
-                            b.style.justifyContent = isTextLeft ? 'flex-start' : 'center';
-                            b.style.alignItems = 'center';
-                            b.style.lineHeight = '1.2';
-                        });
-
-                        // html2canvas miewa problemy z mix-blend-mode (czasem element znika). Wyłączamy blend w klonie.
-                        page.querySelectorAll<HTMLElement>('*').forEach((el) => {
-                            // @ts-ignore
-                            if ((el.style as any)?.mixBlendMode && (el.style as any).mixBlendMode !== 'normal') {
-                                // @ts-ignore
-                                (el.style as any).mixBlendMode = 'normal';
-                            }
-                        });
-                    },
                 });
 
-                // Przywróć oryginalne src/backgroundi po zrobieniu canvasa.
-                restoreExternal();
+                // Sprzątanie klonu (ważne: żeby nie zostawiać śmieci w DOM)
+                try {
+                    wrapper.remove();
+                } catch {
+                    document.body.removeChild(wrapper);
+                }
 
                 const imgW = pageW;
                 const imgH = (canvas.height * imgW) / canvas.width;
