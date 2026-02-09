@@ -938,54 +938,33 @@ export const OfferGenerator: React.FC = () => {
             const jpegQuality = Math.min(1, Math.max(0.2, Number(opts.jpegQuality ?? pdfJpegQuality) || 0.9));
 
             for (let i = 0; i < pages.length; i++) {
-                // Renderujemy OFFSCREEN klon strony, żeby:
-                // 1) nie psuć UI (żadne podmiany src/background nie dotykają aplikacji)
-                // 2) móc async zinline'ować zewnętrzne grafiki (CORS) przed html2canvas
-                const wrapper = document.createElement('div');
-                wrapper.style.position = 'fixed';
-                wrapper.style.left = '-99999px';
-                wrapper.style.top = '0';
-                wrapper.style.width = '210mm';
-                wrapper.style.height = '297mm';
-                wrapper.style.background = '#ffffff';
-                wrapper.style.zIndex = '-1';
+                // "Powrót do podstaw": renderujemy bez ręcznych podmian src/background.
+                // Jeśli obrazki są z zewnętrznych domen bez CORS, RAW PDF robimy przez print (patrz handleSavePdf).
+                // Skompresowany PDF korzysta z obrazów już podmienionych przez Smart Compression (dataURL), więc nie gubi grafik.
+                const pageEl = pages[i];
 
-                const cloned = pages[i].cloneNode(true) as HTMLElement;
-                // Upewniamy się, że klon ma dokładny rozmiar strony.
-                cloned.style.width = '210mm';
-                cloned.style.height = '297mm';
-
-                wrapper.appendChild(cloned);
-                document.body.appendChild(wrapper);
-
-                // Najpierw naprawiamy buttony (baseline/centrowanie), bo html2canvas renderuje klon.
-                fixButtonsForCanvas(cloned);
-
-                // Inline grafik (IMG + background-image) żeby nie znikały w PDF przez CORS.
-                await inlineExternalImagesAndBackgrounds(cloned);
-
-                // Upewniamy się, że wszystko się załadowało i zdekodowało w klonie.
-                await waitForAllImages(cloned);
-                await preloadBackgroundImages(cloned);
-
-                // Daj przeglądarce chwilę na reflow po podmianach
+                // Upewniamy się, że wszystko się załadowało i zdekodowało (pomaga dla webp/lazy-load)
+                await waitForAllImages(pageEl);
+                await preloadBackgroundImages(pageEl);
                 await new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
 
-                const canvas = await html2canvas(cloned, {
+                const canvas = await html2canvas(pageEl, {
                     scale: renderScale,
                     useCORS: true,
                     allowTaint: false,
                     backgroundColor: '#ffffff',
                     logging: false,
-                    imageTimeout: 15000,
+                    imageTimeout: 30000,
+                    onclone: (doc) => {
+                        try {
+                            // Naprawa baseline w buttonach TYLKO w klonie renderowanym przez html2canvas.
+                            const root = doc.body as unknown as HTMLElement;
+                            if (root) fixButtonsForCanvas(root);
+                        } catch {
+                            /* ignore */
+                        }
+                    },
                 });
-
-                // Sprzątanie klonu (ważne: żeby nie zostawiać śmieci w DOM)
-                try {
-                    wrapper.remove();
-                } catch {
-                    document.body.removeChild(wrapper);
-                }
 
                 const imgW = pageW;
                 const imgH = (canvas.height * imgW) / canvas.width;
@@ -1029,8 +1008,9 @@ export const OfferGenerator: React.FC = () => {
     };
 
     const handleSavePdf = async () => {
-        // RAW zawsze bez kompresji i bez „smart compression” obrazów
-        await exportRasterPdf({ mode: 'raw' });
+        // RAW = "powrót do podstaw" – używamy natywnego drukowania przeglądarki.
+        // To zachowuje layout 1:1 i nie gubi obrazów (brak problemów CORS html2canvas).
+        handlePrint();
     };
 
     const handleSaveCompressedPdf = async () => {

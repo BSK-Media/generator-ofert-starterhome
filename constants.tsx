@@ -114,58 +114,59 @@ export const getOfferItemsForHouse = (house: House): OfferItem[] => {
   const prices = PRICING_DB[house.id];
   if (!prices) return [];
 
-  // Fotowoltaika: warianty zależne od domu (wymóg: sekcja tylko po lewej + w podsumowaniu).
-  // Użytkownik nie podał cen – domyślnie 0 ("W cenie").
+  // Fotowoltaika: warianty zależne od domu (sekcja tylko po lewej + w podsumowaniu).
+  // Kwoty wg screena: +20 000 zł (wariant podstawowy) oraz +21 500 zł (z zasilaniem awaryjnym).
   const pvOptionsByHouse: Record<string, { id: string; name: string; price: number }[]> = {
     nest_house: [
-      { id: 'pv_basic', name: '4kW + magazyn 10.24kWh', price: 0 },
-      { id: 'pv_backup', name: '4kW + magazyn 10.24kWh + Zasilanie Awaryjne', price: 0 },
+      { id: 'pv_basic', name: '4kW + Magazyn 10.24kWh', price: 20000 },
+      { id: 'pv_backup', name: '4kW + Magazyn 10.24kWh + Zasilanie Awaryjne', price: 21500 },
     ],
     haven_house: [
-      { id: 'pv_basic', name: '4kW + magazyn 10.24kWh', price: 0 },
-      { id: 'pv_backup', name: '4kW + magazyn 10.24kWh + Zasilanie Awaryjne', price: 0 },
+      { id: 'pv_basic', name: '4kW + Magazyn 10.24kWh', price: 20000 },
+      { id: 'pv_backup', name: '4kW + Magazyn 10.24kWh + Zasilanie Awaryjne', price: 21500 },
     ],
     balance_house: [
-      { id: 'pv_basic', name: '10kW + magazyn 15.36kWh', price: 0 },
-      { id: 'pv_backup', name: '10kW + magazyn 15.36kWh + Zasilanie Awaryjne', price: 0 },
+      { id: 'pv_basic', name: '10kW + Magazyn 15.36kWh', price: 20000 },
+      { id: 'pv_backup', name: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne', price: 21500 },
     ],
     comfort_house: [
-      { id: 'pv_basic', name: '5.5kW + magazyn 10.24kWh', price: 0 },
-      { id: 'pv_backup', name: '5.5kW + magazyn 10.24kWh + Zasilanie Awaryjne', price: 0 },
+      { id: 'pv_basic', name: '5.5kW + Magazyn 10.24kWh', price: 20000 },
+      { id: 'pv_backup', name: '5.5kW + Magazyn 10.24kWh + Zasilanie Awaryjne', price: 21500 },
     ],
     vista_house: [
-      { id: 'pv_basic', name: '10kW + magazyn 15.36kWh', price: 0 },
-      { id: 'pv_backup', name: '10kW + magazyn 15.36kWh + Zasilanie Awaryjne', price: 0 },
+      { id: 'pv_basic', name: '10kW + Magazyn 15.36kWh', price: 20000 },
+      { id: 'pv_backup', name: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne', price: 21500 },
     ],
     peak_house: [
-      { id: 'pv_basic', name: '8kW + magazyn 10.24kWh', price: 0 },
-      { id: 'pv_backup', name: '8kW + magazyn 10.24kWh + Zasilanie Awaryjne', price: 0 },
+      { id: 'pv_basic', name: '8kW + Magazyn 10.24kWh', price: 20000 },
+      { id: 'pv_backup', name: '8kW + Magazyn 10.24kWh + Zasilanie Awaryjne', price: 21500 },
     ],
     skyline_house: [
-      { id: 'pv_basic', name: '3.5kW + magazyn 5.3kWh', price: 0 },
-      { id: 'pv_backup', name: '3.5kW + magazyn 5.3kWh + Zasilanie Awaryjne', price: 0 },
+      { id: 'pv_basic', name: '3.5kW + Magazyn 5.3kWh', price: 20000 },
+      { id: 'pv_backup', name: '3.5kW + Magazyn 5.3kWh + Zasilanie Awaryjne', price: 21500 },
     ],
     zenith_house: [
-      { id: 'pv_basic', name: '3.5kW + magazyn 5.3kWh', price: 0 },
-      { id: 'pv_backup', name: '3.5kW + magazyn 5.3kWh + Zasilanie Awaryjne', price: 0 },
+      { id: 'pv_basic', name: '3.5kW + Magazyn 5.3kWh', price: 20000 },
+      { id: 'pv_backup', name: '3.5kW + Magazyn 5.3kWh + Zasilanie Awaryjne', price: 21500 },
     ],
   };
   const pvOptions = pvOptionsByHouse[house.id];
 
+  const pvItem: OfferItem[] = pvOptions
+    ? ([
+        {
+          code: 'PV',
+          name: 'Fotowoltaika (Hybrydowa)',
+          description:
+            'W instalacjach stosujemy: panele JA Solar Bifacial 500W (czarna rama), falownik hybrydowy Deye, magazyn energii Deye lub Kon-Tec. Wizualizacja oraz wycena jest orientacyjna (brak dokładnego projektu dachu).',
+          type: 'radio',
+          defaultValue: 'none',
+          options: [{ id: 'none', name: 'Brak', price: 0 }, ...pvOptions],
+        },
+      ] as OfferItem[])
+    : [];
+
   return [
-    ...(pvOptions
-      ? ([
-          {
-            code: 'PV',
-            name: 'Fotowoltaika',
-            description:
-              'Dobierz zestaw fotowoltaiki (sekcja pojawia się tylko po lewej i trafia do podsumowania).',
-            type: 'radio',
-            defaultValue: 'none',
-            options: [{ id: 'none', name: 'Brak', price: 0 }, ...pvOptions],
-          },
-        ] as OfferItem[])
-      : []),
     {
       code: 'FUND',
       name: 'Fundamenty',
@@ -221,6 +222,8 @@ export const getOfferItemsForHouse = (house: House): OfferItem[] => {
         { id: 'none', name: 'Brak / Własny zakres', price: 0 }
       ]
     },
+    // Fotowoltaika ma być pod sekcją Gospodarka wodno-ściekowa (wymóg)
+    ...pvItem,
     {
       code: 'BLINDS',
       name: 'Rolety zewnętrzne',
