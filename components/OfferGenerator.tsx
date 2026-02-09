@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-// @ts-expect-error - html2pdf.js has no bundled TS types in this project
-import html2pdf from 'html2pdf.js';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { HOUSES, getOfferItemsForHouse } from '../constants';
 import { House, OfferItem } from '../types';
 import { 
@@ -509,10 +509,10 @@ export const OfferGenerator: React.FC = () => {
         logo: 'https://i.ibb.co/PZJv90w6/logo.png',
         decorLeaf: 'https://starterhome.pl/wp-content/uploads/2025/12/cropped-Favicon.png',
         // 4 Tech Images
-        techRoof: 'https://starterhome.pl/wp-content/uploads/2025/12/G_F_4.png',
+        techRoof: '/assets/G_F_4.png',
         techWallExt: 'https://starterhome.pl/wp-content/uploads/2025/12/G_F_2.png',
         techWallInt: 'https://starterhome.pl/wp-content/uploads/2025/12/G_2.png',
-        techFloor: 'https://starterhome.pl/wp-content/uploads/2025/12/G_F_5.png' // Strop
+        techFloor: '/assets/G_F_5.png' // Strop
     });
 
     // FLOOR PLANS (RZUTY) - loaded dynamically from /public (GitHub Pages safe via BASE_URL)
@@ -738,6 +738,21 @@ export const OfferGenerator: React.FC = () => {
         return `starterhome-${client}-${house}-${state}${tail}.pdf`;
     };
 
+    const waitForImages = async (root: HTMLElement) => {
+        const imgs = Array.from(root.querySelectorAll('img')) as HTMLImageElement[];
+        await Promise.all(
+            imgs.map(
+                (img) =>
+                    new Promise<void>((resolve) => {
+                        if (img.complete && img.naturalWidth > 0) return resolve();
+                        const done = () => resolve();
+                        img.addEventListener('load', done, { once: true });
+                        img.addEventListener('error', done, { once: true });
+                    })
+            )
+        );
+    };
+
     const savePdf = async (opts?: { compressed?: boolean; quality?: number }) => {
         if (!pdfRootRef.current) return;
 
@@ -745,10 +760,8 @@ export const OfferGenerator: React.FC = () => {
         const quality = opts?.quality ?? 0.98;
         const filename = getPdfFilename(opts?.compressed ? 'skompresowany' : undefined);
 
-        // IMPORTANT:
-        // Don't generate the PDF from the gray preview wrapper (padding/bg/scroll),
-        // because html2canvas would capture those and break pagination.
-        // Instead, clone the pure A4 pages into an off-screen white container.
+        // Render page-by-page to avoid the classic html2pdf "blank page every other page" bug.
+        // Each .a4-page becomes exactly one PDF page.
         const exportHost = document.createElement('div');
         exportHost.style.position = 'fixed';
         exportHost.style.left = '-10000px';
@@ -763,39 +776,53 @@ export const OfferGenerator: React.FC = () => {
         clone.style.padding = '0';
         clone.style.margin = '0';
         clone.style.background = '#ffffff';
-        // Remove centering constraints that can add extra whitespace when rasterizing
         clone.classList.remove('mx-auto');
 
-        // Ensure page-to-page gaps are not captured in the raster
         clone.querySelectorAll('.a4-page').forEach((node) => {
             const el = node as HTMLElement;
             el.style.margin = '0';
             el.style.marginBottom = '0';
             el.style.boxShadow = 'none';
+            // Make sure the DOM page has deterministic dimensions
+            el.style.width = '210mm';
+            el.style.height = '297mm';
+            el.style.overflow = 'hidden';
         });
 
         exportHost.appendChild(clone);
         document.body.appendChild(exportHost);
 
         try {
-            await (html2pdf as any)()
-                .set({
-                    margin: 0,
-                    filename,
-                    pagebreak: { mode: ['css'], after: '.a4-page' },
-                    image: { type: 'jpeg', quality },
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true,
-                        allowTaint: true,
-                        backgroundColor: '#FFFFFF',
-                        // Give html2canvas a deterministic viewport matching A4 width
-                        windowWidth: exportHost.getBoundingClientRect().width || undefined,
-                    },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                })
-                .from(clone)
-                .save();
+            await waitForImages(clone);
+            // Give the browser a moment to layout fonts/images
+            await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+            const pages = Array.from(clone.querySelectorAll('.a4-page')) as HTMLElement[];
+            const targets = pages.length ? pages : [clone];
+
+            const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+            const pageWidth = 210;
+            const pageHeight = 297;
+
+            for (let i = 0; i < targets.length; i++) {
+                const pageEl = targets[i];
+                const canvas = await html2canvas(pageEl, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#FFFFFF',
+                    logging: false,
+                    scrollX: 0,
+                    scrollY: 0,
+                    windowWidth: pageEl.scrollWidth,
+                    windowHeight: pageEl.scrollHeight,
+                });
+                const imgData = canvas.toDataURL('image/jpeg', quality);
+                if (i > 0) pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+            }
+
+            pdf.save(filename);
         } catch (e) {
             console.error(e);
             alert('Nie udało się zapisać PDF. Spróbuj ponownie.');
