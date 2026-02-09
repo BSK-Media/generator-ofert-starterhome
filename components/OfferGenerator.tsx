@@ -93,7 +93,24 @@ const resolvePublicAsset = (src: string) => {
 // --- FLOOR PLAN (RZUT) HELPERS ---
 // Naming convention in /public: rzut-<house>-<index>.webp (e.g., rzut-nest-1.webp)
 const FALLBACK_FLOORPLAN = 'https://howsmart.pl/wp-content/uploads/2025/02/EMILY-RZUT-PL-scaled.jpg';
-const MAX_FLOORPLANS_PER_HOUSE = 20;
+// Avoid generating a ton of non-existing URLs (causes 404 spam in console).
+// Keep this map in sync with actual files in /public.
+const FLOORPLAN_COUNTS_BY_HOUSE_ID: Record<string, number> = {
+    nest_house: 1,
+    haven_house: 1,
+    comfort_house: 1,
+    balance_house: 1,
+    vista_house: 1,
+    peak_house: 2,
+    skyline_house: 2,
+    zenith_house: 2,
+    individual_house: 1,
+};
+
+const getFloorPlanCount = (houseId: string) => {
+    if (!houseId) return 1;
+    return FLOORPLAN_COUNTS_BY_HOUSE_ID[houseId] ?? 1;
+};
 
 const getHouseSlugFromId = (houseId: string) => {
     if (!houseId) return '';
@@ -689,7 +706,7 @@ export const OfferGenerator: React.FC = () => {
         // For the individual project, reuse Nest floor plan (rzut-nest-1.webp) as requested.
         const candidates = isIndividual
             ? [getFloorPlanSrc("nest_house", 1)].filter(Boolean)
-            : Array.from({ length: MAX_FLOORPLANS_PER_HOUSE }, (_, i) => getFloorPlanSrc(selectedHouse.id, i + 1)).filter(Boolean);
+            : Array.from({ length: getFloorPlanCount(selectedHouse.id) }, (_, i) => getFloorPlanSrc(selectedHouse.id, i + 1)).filter(Boolean);
         setFloorPlanCandidates(candidates);
         setAvailableFloorPlans([]);
         setActiveFloorPlanIndex(0);
@@ -1164,8 +1181,10 @@ body{font-family:'Inter',sans-serif;-webkit-print-color-adjust:exact;print-color
             a.remove();
             URL.revokeObjectURL(url);
         } catch (e) {
-            console.warn('Backend PDF failed, fallback to print()', e);
-            handlePrint();
+            // Nie otwieramy nowej karty / print(). Jeśli backend padnie (np. limity),
+            // robimy fallback do pobrania PDF generowanego w przeglądarce.
+            console.warn('Backend PDF failed, fallback to in-browser export', e);
+            await savePdfViaCanvas({ mode: 'raw' });
         } finally {
             setIsSavingPdf(false);
         }
