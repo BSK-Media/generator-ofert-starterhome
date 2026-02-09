@@ -415,6 +415,11 @@ export const OfferGenerator: React.FC = () => {
     const [isCompressed, setIsCompressed] = useState(false);
     const [isSavingPdf, setIsSavingPdf] = useState(false);
 
+    // -- PDF EXPORT SETTINGS (user-tunable) --
+    // Domyślnie dość wysoka jakość (większy plik). Do kompresji klient może to obniżyć ręcznie.
+    const [pdfRenderScale, setPdfRenderScale] = useState<number>(2);
+    const [pdfJpegQuality, setPdfJpegQuality] = useState<number>(0.9);
+
     // -- SCALING STATE --
     const [fontScale, setFontScale] = useState(1.0);
     const [processClientType, setProcessClientType] = useState<'cash' | 'credit'>('cash');
@@ -677,21 +682,19 @@ export const OfferGenerator: React.FC = () => {
         printWindow.document.close();
     };
 
-    // Zapis PDF (spłaszczony/rastrowany) z kompresją JPEG.
-    // To jest najprostszy i najbardziej przewidywalny sposób na realne zmniejszenie rozmiaru
-    // (szczególnie gdy w ofercie są ciężkie obrazki). Minusem jest brak zaznaczalnego tekstu.
-    const handleSavePdf = async () => {
+    // Eksport PDF jako spłaszczony obraz na stronę.
+    // Dzięki temu mamy pełną kontrolę nad rozmiarem (scale + jakość JPEG), kosztem braku zaznaczalnego tekstu.
+    const exportPdf = async (opts: { ensureCompressed: boolean; fileSuffix?: string }) => {
         if (!previewRef.current || isSavingPdf) return;
         setIsSavingPdf(true);
         try {
-            // 1) Najpierw "odchudź" obrazy używane w podglądzie (jeśli jeszcze nie).
-            if (!isCompressed) {
+            // Jeśli użytkownik chce „skompresowany PDF”, najpierw odchudzamy obrazy w ofercie.
+            if (opts.ensureCompressed && !isCompressed) {
                 openCompressionModal();
                 await runSmartCompression();
                 setIsCompressionModalOpen(false);
             }
 
-            // 2) Wygeneruj PDF z każdej strony A4 jako obrazu.
             const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
                 import('html2canvas'),
                 import('jspdf'),
@@ -705,9 +708,9 @@ export const OfferGenerator: React.FC = () => {
 
             const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4', compress: true });
 
-            // Ustawienia kompresji: zmniejsz scale / jakość JPEG jeśli nadal za ciężko.
-            const renderScale = 1.6; // 1.4–2.0 (wyżej = lepsza jakość, większy plik)
-            const jpegQuality = 0.72; // 0.55–0.85 (niżej = mniejszy plik)
+            // Ustawienia (ręcznie regulowane przez klienta)
+            const renderScale = Math.min(3, Math.max(1, Number(pdfRenderScale) || 2));
+            const jpegQuality = Math.min(1, Math.max(0.2, Number(pdfJpegQuality) || 0.9));
 
             for (let i = 0; i < pages.length; i++) {
                 const canvas = await html2canvas(pages[i], {
@@ -719,7 +722,6 @@ export const OfferGenerator: React.FC = () => {
                 const imgData = canvas.toDataURL('image/jpeg', jpegQuality);
 
                 if (i > 0) pdf.addPage();
-                // A4: 210 x 297 mm
                 pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
             }
 
@@ -728,7 +730,8 @@ export const OfferGenerator: React.FC = () => {
                 .trim()
                 .replace(/\s+/g, '_')
                 .replace(/[^a-z0-9_\-]/g, '');
-            const fileName = `oferta_${safeClient || 'klient'}.pdf`;
+            const suffix = opts.fileSuffix ? `_${opts.fileSuffix}` : '';
+            const fileName = `oferta_${safeClient || 'klient'}${suffix}.pdf`;
             pdf.save(fileName);
         } catch (e) {
             console.error(e);
@@ -737,6 +740,9 @@ export const OfferGenerator: React.FC = () => {
             setIsSavingPdf(false);
         }
     };
+
+    const handleSavePdf = async () => exportPdf({ ensureCompressed: false });
+    const handleSaveCompressedPdf = async () => exportPdf({ ensureCompressed: true, fileSuffix: 'skompresowana' });
 
     const handleImageUpload = async (key: keyof typeof images, file: File) => {
         if (!file) return;
@@ -1184,12 +1190,55 @@ export const OfferGenerator: React.FC = () => {
 
                 <div className="p-4 border-t border-gray-200 bg-white space-y-3">
                     <div className="flex justify-between items-end mb-2"><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Brutto</span><span className="text-3xl font-black text-[#6E8809] tracking-tight"><CountUp value={totalGross} /> zł</span></div>
+
+                    {/* PDF SETTINGS */}
+                    <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ustawienia zapisu PDF</div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase">Render Scale</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={3}
+                                    step={0.1}
+                                    value={pdfRenderScale}
+                                    onChange={(e) => setPdfRenderScale(Number(e.target.value))}
+                                    className="w-full mt-1 text-xs p-2 border border-gray-200 rounded"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-bold text-gray-400 uppercase">JPEG Quality</label>
+                                <input
+                                    type="number"
+                                    min={0.2}
+                                    max={1}
+                                    step={0.05}
+                                    value={pdfJpegQuality}
+                                    onChange={(e) => setPdfJpegQuality(Number(e.target.value))}
+                                    className="w-full mt-1 text-xs p-2 border border-gray-200 rounded"
+                                />
+                            </div>
+                        </div>
+                        <div className="text-[10px] text-gray-400 mt-2 leading-relaxed">
+                            Im wyższe wartości, tym lepsza jakość i większy plik. Do wysyłki mailem obniż np. Quality.
+                        </div>
+                    </div>
+
                     <button
                         onClick={handleSavePdf}
                         disabled={isSavingPdf}
                         className={`w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs ${isSavingPdf ? 'bg-gray-300 text-white cursor-not-allowed' : 'bg-gray-900 text-white hover:bg-black cursor-pointer'}`}
                     >
                         <FileDown className="w-4 h-4" /> {isSavingPdf ? 'Zapisuję…' : 'Zapisz PDF'}
+                    </button>
+
+                    <button
+                        onClick={handleSaveCompressedPdf}
+                        disabled={isSavingPdf}
+                        className={`w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs ${isSavingPdf ? 'bg-gray-300 text-white cursor-not-allowed' : 'bg-[#6E8809] text-white hover:bg-[#5d7608] cursor-pointer'}`}
+                    >
+                        <FileDown className="w-4 h-4" /> {isSavingPdf ? 'Zapisuję…' : 'Zapisz skompresowany PDF'}
                     </button>
                 </div>
             </div>
