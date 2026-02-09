@@ -778,7 +778,15 @@ export const OfferGenerator: React.FC = () => {
                         <div className="space-y-4">
                             <input type="text" placeholder="Imię i Nazwisko" className="w-full p-3 border border-gray-200 text-sm" value={clientName} onChange={(e) => setClientName(e.target.value)} />
                             <div className="grid grid-cols-2 gap-2">{HOUSES.map(house => (<button key={house.id} onClick={() => setSelectedHouse(house)} className={`p-2 border text-xs font-bold uppercase ${selectedHouse.id === house.id ? 'border-[#6E8809] bg-[#f7faf3] text-[#6E8809]' : 'border-gray-200 text-gray-500'}`}>{house.name}</button>))}</div>
-                            <div className="flex border border-gray-200"><button onClick={() => setIsDeveloperState(false)} className={`flex-1 py-2 text-xs font-bold uppercase ${!isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Surowy</button><button onClick={() => setIsDeveloperState(true)} className={`flex-1 py-2 text-xs font-bold uppercase ${isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Deweloperski</button></div>
+                            <div className="flex border border-gray-200"><button onClick={() => setIsDeveloperState(false)} className={`flex-1 py-2 text-xs font-bold uppercase ${!isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Surowy zamknięty</button><button onClick={() => setIsDeveloperState(true)} className={`flex-1 py-2 text-xs font-bold uppercase ${isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Deweloperski</button></div>
+                            <div className="mt-3">
+                                <div className="text-[11px] text-gray-500 mb-1 font-bold uppercase tracking-widest">Typ klienta</div>
+                                <div className="flex border border-gray-200">
+                                    <button onClick={() => setProcessClientType('cash')} className={`flex-1 py-2 text-xs font-bold uppercase ${processClientType === 'cash' ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Klient gotówkowy</button>
+                                    <button onClick={() => setProcessClientType('credit')} className={`flex-1 py-2 text-xs font-bold uppercase ${processClientType === 'credit' ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Klient kredytowy</button>
+                                </div>
+                            </div>
+
                             <div className="flex items-center justify-between">
                                 <button
                                     type="button"
@@ -792,7 +800,7 @@ export const OfferGenerator: React.FC = () => {
                             {isEditMode && (
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="border border-gray-200 p-3">
-                                        <div className="text-[11px] text-gray-500 mb-1">Cena bazowa — Surowy</div>
+                                        <div className="text-[11px] text-gray-500 mb-1">Cena bazowa — Surowy zamknięty</div>
                                         <input
                                             type="number"
                                             className="w-full p-2 border border-gray-200 text-sm"
@@ -1167,8 +1175,7 @@ export const OfferGenerator: React.FC = () => {
                                 return (<div key={item.id} className="flex items-center gap-4 text-gray-700" style={{ fontSize: `${16 * fontScale}px` }}><div className="w-8 h-8 bg-[#f7faf3] flex items-center justify-center text-[#6E8809] shrink-0"><IconComponent size={16} strokeWidth={2.5} /></div><span className="font-medium">{item.text}</span></div>);
                             })}
                         </div>
-                        <div className="mb-12 border-l-4 border-[#6E8809] pl-6 py-2"><h3 className="text-4xl font-black text-[#6E8809] mb-1">{totalNetPrice.toLocaleString()} zł <span className="text-xl font-medium text-gray-400">netto</span></h3><p className="text-gray-400 text-sm font-medium uppercase tracking-wider">*Cena zawiera wybrane opcje</p></div>
-                        
+
                         {/* USPs SECTION (REPLACED LIST) */}
                         <div className="mt-auto grid grid-cols-1 gap-6">
                             <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
@@ -1218,32 +1225,8 @@ export const OfferGenerator: React.FC = () => {
                              <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
                          </div>
 
-                         <div className="flex gap-10 flex-1">
-                             {/* LEFT: wybór typu klienta */}
-                             <div className="w-56 shrink-0">
-                                 <div className="text-sm font-semibold text-gray-500 mb-3">Wybierz typ klienta</div>
-                                 <div className="flex flex-col gap-3">
-                                     <button
-                                         type="button"
-                                         onClick={() => setProcessClientType('cash')}
-                                         className={`px-4 py-3 rounded-lg border text-left font-semibold transition ${processClientType === 'cash' ? 'bg-[#6e8809] text-white border-[#6e8809]' : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300'}`}
-                                     >
-                                         Klient gotówkowy
-                                     </button>
-                                     <button
-                                         type="button"
-                                         onClick={() => setProcessClientType('credit')}
-                                         className={`px-4 py-3 rounded-lg border text-left font-semibold transition ${processClientType === 'credit' ? 'bg-[#6e8809] text-white border-[#6e8809]' : 'bg-white text-gray-800 border-gray-200 hover:border-gray-300'}`}
-                                     >
-                                         Klient kredytowy
-                                     </button>
-                                 </div>
-                             </div>
-
-                             {/* RIGHT: tabela procesu */}
-                             <div className="flex-1 flex justify-center">
-                                 <ProcessFlowTable type={processClientType} />
-                             </div>
+                         <div className="flex flex-1 justify-center items-start mt-6">
+                             <ProcessFlowTable type={processClientType} />
                          </div>
 
                          <OfferFooter />
@@ -1561,7 +1544,7 @@ export const OfferGenerator: React.FC = () => {
                                         </thead>
                                         <tbody style={{ fontSize: `${12 * fontScale}px` }}>
                                             <tr className="border-b border-gray-200 leading-loose">
-                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({isDeveloperState ? 'Deweloperski' : 'Surowy'})</td>
+                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({isDeveloperState ? 'Deweloperski' : 'Surowy zamknięty'})</td>
                                                 <td className="py-2 text-gray-500">-</td>
                                                 <td className="py-2 text-right font-bold text-gray-900">{basePrice.toLocaleString()} zł</td>
                                             </tr>
@@ -1574,6 +1557,36 @@ export const OfferGenerator: React.FC = () => {
                                             ))}
                                         </tbody>
                                      </table>
+
+                                     <div className="mt-6">
+                                         <div className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">
+                                             {isDeveloperState ? 'Stan deweloperski zawiera:' : 'Stan surowy zamknięty zawiera:'}
+                                         </div>
+                                         <ul className="list-disc pl-5 space-y-1 text-gray-600" style={{ fontSize: `${11 * fontScale}px` }}>
+                                             {isDeveloperState ? (
+                                                 <>
+                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
+                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
+                                                     <li>Okna trzyszybowe</li>
+                                                     <li>Gotowa elewacja</li>
+                                                     <li>Instalacje sanitarne i elektryczne (15 pkt)</li>
+                                                     <li>Ściany działowe</li>
+                                                     <li>Płyty g-k na ścianach i sufitach</li>
+                                                     <li>Drzwi wejściowe w kolorze dachu</li>
+                                                 </>
+                                             ) : (
+                                                 <>
+                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
+                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
+                                                     <li>Okna trzyszybowe</li>
+                                                     <li>Gotowa elewacja</li>
+                                                     <li>Ściany działowe</li>
+                                                     <li>Drzwi wejściowe w kolorze dachu</li>
+                                                 </>
+                                             )}
+                                         </ul>
+                                     </div>
+
                                 </div>
 
                                 {/* TOTALS (Fixed at bottom of grey area) */}
@@ -1602,7 +1615,9 @@ export const OfferGenerator: React.FC = () => {
                              <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
                          </div>
 
+                         
                          {/* TRANCHES */}
+                         {processClientType === 'cash' ? (
                          <div className="mb-auto space-y-4">
                              <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
                                  <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">I</div>
@@ -1626,6 +1641,19 @@ export const OfferGenerator: React.FC = () => {
                                  </div>
                              </div>
                          </div>
+                         ) : (
+                         <div className="mb-auto">
+                             <div className="px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                 <div className="flex items-center gap-2 mb-2">
+                                     <div className="w-10 h-10 bg-[#f7faf3] border border-[#e2e8da] rounded-lg flex items-center justify-center text-[#6E8809] shrink-0">💳</div>
+                                     <div className="text-base font-bold text-gray-900">Zakup kredytowy</div>
+                                 </div>
+                                 <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>
+                                     Wpłata 30% po podpisaniu umowy, a reszta transz realizowana zgodnie z harmonogramem banku kredytującego.
+                                 </p>
+                             </div>
+                         </div>
+                         )}
 
                          {/* CTA BIG */}
                          <div className="mt-12 bg-white border-t-2 border-[#6E8809] pt-8">
