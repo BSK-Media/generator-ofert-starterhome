@@ -1184,7 +1184,7 @@ body{font-family:'Inter',sans-serif;-webkit-print-color-adjust:exact;print-color
             // Nie otwieramy nowej karty / print(). Jeśli backend padnie (np. limity),
             // robimy fallback do pobrania PDF generowanego w przeglądarce.
             console.warn('Backend PDF failed, fallback to in-browser export', e);
-            await savePdfViaCanvas({ mode: 'raw' });
+            await exportRasterPdf({ mode: 'raw' });
         } finally {
             setIsSavingPdf(false);
         }
