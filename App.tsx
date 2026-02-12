@@ -1,7 +1,19 @@
+import React, { useState } from 'react'
+import OfferGenerator from './components/OfferGenerator'
+import LoginScreen from './components/LoginScreen'
 
-import React from 'react';
-import { OfferGenerator } from './components/OfferGenerator';
+export default function App() {
+  const [authenticated, setAuthenticated] = useState(false)
 
-export const App: React.FC = () => {
-  return <OfferGenerator />;
-};
+  if (!authenticated) {
+    return (
+      <LoginScreen
+        onSuccess={() => setAuthenticated(true)}
+        appName="Starter Home – Generator Ofert"
+        logoUrl="https://i.ibb.co/0pXg4mq/starterhome-logo.png"
+      />
+    )
+  }
+
+  return <OfferGenerator />
+}
