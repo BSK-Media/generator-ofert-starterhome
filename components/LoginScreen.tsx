@@ -1,100 +1,82 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react';
 
-interface LoginScreenProps {
-  onSuccess: () => void
-  appName?: string
-  logoUrl?: string
-}
+type Props = {
+  onLogin: (password: string) => void;
+  initialError?: string | null;
+};
 
-const PASSWORD = 'Kefirbekon123'
+export const LoginScreen: React.FC<Props> = ({ onLogin, initialError = null }) => {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(initialError);
 
-export default function LoginScreen({
-  onSuccess,
-  appName = 'Panel Handlowca',
-  logoUrl,
-}: LoginScreenProps) {
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const year = useMemo(() => new Date().getFullYear(), []);
 
-  const canSubmit = useMemo(() => password.trim().length > 0 && !submitting, [password, submitting])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
-    setError(null)
-
-    // tiny delay for nicer UX
-    window.setTimeout(() => {
-      if (password === PASSWORD) {
-        onSuccess()
-      } else {
-        setError('Nieprawidłowe hasło. Spróbuj ponownie.')
-        setSubmitting(false)
-      }
-    }, 150)
-  }
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!password.trim()) {
+      setError('Wpisz hasło.');
+      return;
+    }
+    onLogin(password);
+  };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-gray-50 to-gray-200 flex items-center justify-center p-6">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white/90 backdrop-blur rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div className="rounded-2xl bg-white/10 backdrop-blur-xl border border-white/15 shadow-2xl overflow-hidden">
           <div className="p-8">
             <div className="flex items-center gap-3">
-              {logoUrl ? (
-                <img src={logoUrl} alt="Logo" className="h-10 w-auto" />
-              ) : (
-                <div className="h-10 w-10 rounded-xl bg-gray-900 flex items-center justify-center text-white font-semibold">
-                  SH
-                </div>
-              )}
+              <div className="h-11 w-11 rounded-xl bg-white/15 border border-white/15 flex items-center justify-center">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5Z" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
+                </svg>
+              </div>
               <div>
-                <div className="text-sm text-gray-500">{appName}</div>
-                <div className="text-xl font-semibold text-gray-900">Zaloguj się</div>
+                <div className="text-white text-xl font-semibold leading-tight">Starter Home</div>
+                <div className="text-white/70 text-sm">Generator oferty • Panel admina</div>
               </div>
             </div>
 
-            <p className="mt-6 text-sm text-gray-600">
-              Wpisz hasło, aby uzyskać dostęp do generatora ofert.
-            </p>
+            <div className="mt-8">
+              <div className="text-white text-lg font-semibold">Zaloguj się</div>
+              <div className="text-white/70 text-sm mt-1">Wpisz hasło, aby uzyskać dostęp do konfiguratora.</div>
+            </div>
 
-            <form className="mt-6" onSubmit={handleSubmit}>
-              <label className="block text-sm font-medium text-gray-700">Hasło</label>
-              <div className="mt-2">
+            <form onSubmit={submit} className="mt-6 space-y-4">
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Hasło</label>
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    if (error) setError(null)
-                  }}
-                  autoFocus
-                  className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900"
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-xl bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 outline-none focus:border-white/40 focus:ring-2 focus:ring-white/10"
                   placeholder="Wpisz hasło"
+                  autoFocus
                 />
+                {error && (
+                  <div className="mt-2 text-sm text-rose-200">{error}</div>
+                )}
               </div>
-
-              {error && (
-                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
 
               <button
                 type="submit"
-                disabled={!canSubmit}
-                className="mt-6 w-full rounded-xl bg-gray-900 px-4 py-3 text-white font-semibold shadow-sm hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-xl bg-white text-emerald-900 font-semibold py-3 hover:bg-white/90 active:bg-white/80 transition"
               >
-                {submitting ? 'Sprawdzanie…' : 'Zaloguj'}
+                Wejdź do konfiguratora
               </button>
+
+              <div className="text-xs text-white/60 text-center pt-2">
+                © {year} Starter Home
+              </div>
             </form>
           </div>
+        </div>
 
-          <div className="px-8 py-4 bg-gray-50 border-t border-gray-200 text-xs text-gray-500">
-            Dostęp chroniony hasłem. Po odświeżeniu strony będzie wymagane ponowne logowanie.
-          </div>
+        <div className="text-center mt-4 text-white/60 text-xs">
+          Dostęp tylko dla osób uprawnionych.
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
