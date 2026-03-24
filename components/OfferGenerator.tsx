@@ -118,7 +118,7 @@ const HOUSE_COLLAGE_MAP: Record<string, string> = {
     vista_house: '/kolaz-vista-1.webp',
     peak_house: '/kolaz-peak-1.webp',
     skyline_house: '/kolaz-skyline-1.webp',
-    individual_house: '/nest-collage.webp',
+    individual_house: '/kolaz-nest-1.png',
 };
 
 const getHouseCollageSrc = (houseId: string) => {
@@ -528,7 +528,6 @@ export const OfferGenerator: React.FC = () => {
     const [individualProjectName, setIndividualProjectName] = useState('Projekt Indywidualny');
     const displayHouseName = selectedHouse.id === 'individual_house' ? (individualProjectName.trim() || 'Projekt Indywidualny') : selectedHouse.name;
     const isIndividualProject = selectedHouse.id === 'individual_house';
-    const defaultGalleryImage = selectedHouse.image;
     const [buildMode, setBuildMode] = useState<'surowy' | 'deweloperski' | 'both'>('surowy');
     const [isDeveloperState, setIsDeveloperState] = useState(false); 
     // TRYB EDYCJI (dla wszystkich domów)
@@ -566,6 +565,13 @@ export const OfferGenerator: React.FC = () => {
         techWallInt: 'https://starterhome.pl/wp-content/uploads/2025/12/G_2.png',
         techFloor: '/assets/G_F_5.png' // Strop
     });
+
+    const defaultMainImage = selectedHouse.image;
+    const collageImage = getHouseCollageSrc(selectedHouse.id);
+    const isGalleryCollageActive = Boolean(collageImage)
+        && images.main === defaultMainImage
+        && images.gallery1 === defaultMainImage
+        && images.gallery2 === defaultMainImage;
 
     // FLOOR PLANS (RZUTY) - loaded dynamically from /public (GitHub Pages safe via BASE_URL)
     const [floorPlanCandidates, setFloorPlanCandidates] = useState<string[]>([]);
