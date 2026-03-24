@@ -555,6 +555,7 @@ export const OfferGenerator: React.FC = () => {
     const [floorPlanCandidates, setFloorPlanCandidates] = useState<string[]>([]);
     const [availableFloorPlans, setAvailableFloorPlans] = useState<string[]>([]);
     const [activeFloorPlanIndex, setActiveFloorPlanIndex] = useState(0);
+    const [isCustomFloorPlanUploaded, setIsCustomFloorPlanUploaded] = useState(false);
 
     useEffect(() => {
         const isIndividual = selectedHouse?.id === "individual_house" || selectedHouse?.name === "Projekt Indywidualny";
@@ -565,14 +566,15 @@ export const OfferGenerator: React.FC = () => {
         setFloorPlanCandidates(candidates);
         setAvailableFloorPlans([]);
         setActiveFloorPlanIndex(0);
+        setIsCustomFloorPlanUploaded(false);
     }, [selectedHouse.id]);
 
     // Keep the global "floorPlan" image in sync with the first available plan (used by other parts of the generator)
     useEffect(() => {
-        if (availableFloorPlans.length > 0) {
+        if (!isCustomFloorPlanUploaded && availableFloorPlans.length > 0) {
             setImages(prev => ({ ...prev, floorPlan: availableFloorPlans[0] }));
         }
-    }, [availableFloorPlans]);
+    }, [availableFloorPlans, isCustomFloorPlanUploaded]);
 
 
     useEffect(() => {
@@ -585,6 +587,7 @@ export const OfferGenerator: React.FC = () => {
             // Default floor plan comes from /public using the naming convention.
             floorPlan: getFloorPlanSrc(selectedHouse.id, 1) || FALLBACK_FLOORPLAN,
         }));
+        setIsCustomFloorPlanUploaded(false);
         setIsCompressed(false);
         setCompressionStatus('idle');
     }, [selectedHouse]);
@@ -1159,7 +1162,15 @@ export const OfferGenerator: React.FC = () => {
     const handleImageUpload = async (key: keyof typeof images, file: File) => {
         if (!file) return;
         const reader = new FileReader();
-        reader.onloadend = () => { if (reader.result) { setImages(prev => ({ ...prev, [key]: reader.result as string })); setIsCompressed(false); } };
+        reader.onloadend = () => {
+            if (reader.result) {
+                if (key === 'floorPlan') {
+                    setIsCustomFloorPlanUploaded(true);
+                }
+                setImages(prev => ({ ...prev, [key]: reader.result as string }));
+                setIsCompressed(false);
+            }
+        };
         reader.readAsDataURL(file);
     };
 
@@ -1505,7 +1516,13 @@ export const OfferGenerator: React.FC = () => {
             ))}
         </div>
 
-        {availableFloorPlans.length > 0 ? (
+        {isCustomFloorPlanUploaded ? (
+            <img
+                src={images.floorPlan}
+                className="max-w-full object-contain"
+                alt="Rzut"
+            />
+        ) : availableFloorPlans.length > 0 ? (
             availableFloorPlans.map((src, i) => (
                 <img
                     key={src}
