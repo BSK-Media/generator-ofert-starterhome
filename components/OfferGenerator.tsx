@@ -109,7 +109,22 @@ const getFloorPlanSrc = (houseId: string, index: number) => {
     return resolvePublicAsset(`/rzut-${slug}-${index}.webp`);
 };
 
+const HOUSE_COLLAGE_MAP: Record<string, string> = {
+    zenith_house: '/kolaz-zenith-1.webp',
+    nest_house: '/kolaz-nest-1.png',
+    haven_house: '/kolaz-haven-1.webp',
+    balance_house: '/kolaz-balance-1.webp',
+    comfort_house: '/kolaz-comfort-1.webp',
+    vista_house: '/kolaz-vista-1.webp',
+    peak_house: '/kolaz-peak-1.webp',
+    skyline_house: '/kolaz-skyline-1.webp',
+    individual_house: '/nest-collage.webp',
+};
 
+const getHouseCollageSrc = (houseId: string) => {
+    const mapped = HOUSE_COLLAGE_MAP[houseId];
+    return mapped ? resolvePublicAsset(mapped) : '';
+};
 
 
 const NEED_TEXT_PRESETS = [
@@ -513,6 +528,9 @@ export const OfferGenerator: React.FC = () => {
     const [individualProjectName, setIndividualProjectName] = useState('Projekt Indywidualny');
     const displayHouseName = selectedHouse.id === 'individual_house' ? (individualProjectName.trim() || 'Projekt Indywidualny') : selectedHouse.name;
     const isIndividualProject = selectedHouse.id === 'individual_house';
+    const defaultGalleryImage = selectedHouse.image;
+    const collageImage = getHouseCollageSrc(selectedHouse.id);
+    const isGalleryCollageActive = !isIndividualProject && !!collageImage && images.main === defaultGalleryImage && images.gallery1 === defaultGalleryImage && images.gallery2 === defaultGalleryImage;
     const [buildMode, setBuildMode] = useState<'surowy' | 'deweloperski' | 'both'>('surowy');
     const [isDeveloperState, setIsDeveloperState] = useState(false); 
     // TRYB EDYCJI (dla wszystkich domów)
@@ -1449,27 +1467,38 @@ export const OfferGenerator: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-1 gap-6 flex-1">
-                            <div className="border border-gray-100 bg-white overflow-hidden">
-                                <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Zdjęcie główne</div>
-                                <div className="h-[380px] bg-gray-50">
-                                    <img src={images.main} className="w-full h-full object-cover" alt="Zdjęcie główne" />
+                            {isGalleryCollageActive ? (
+                                <div className="border border-gray-100 bg-white overflow-hidden">
+                                    <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Galeria projektu</div>
+                                    <div className="h-[620px] bg-gray-50">
+                                        <img src={collageImage} className="w-full h-full object-cover" alt={`Kolaż projektu ${displayHouseName}`} />
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <>
+                                    <div className="border border-gray-100 bg-white overflow-hidden">
+                                        <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Zdjęcie główne</div>
+                                        <div className="h-[380px] bg-gray-50">
+                                            <img src={images.main} className="w-full h-full object-cover" alt="Zdjęcie główne" />
+                                        </div>
+                                    </div>
 
-                            <div className="grid grid-cols-2 gap-6">
-                                <div className="border border-gray-100 bg-white overflow-hidden">
-                                    <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Galeria 1</div>
-                                    <div className="h-[220px] bg-gray-50">
-                                        <img src={images.gallery1} className="w-full h-full object-cover" alt="Galeria 1" />
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="border border-gray-100 bg-white overflow-hidden">
+                                            <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Galeria 1</div>
+                                            <div className="h-[220px] bg-gray-50">
+                                                <img src={images.gallery1} className="w-full h-full object-cover" alt="Galeria 1" />
+                                            </div>
+                                        </div>
+                                        <div className="border border-gray-100 bg-white overflow-hidden">
+                                            <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Galeria 2</div>
+                                            <div className="h-[220px] bg-gray-50">
+                                                <img src={images.gallery2} className="w-full h-full object-cover" alt="Galeria 2" />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="border border-gray-100 bg-white overflow-hidden">
-                                    <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Galeria 2</div>
-                                    <div className="h-[220px] bg-gray-50">
-                                        <img src={images.gallery2} className="w-full h-full object-cover" alt="Galeria 2" />
-                                    </div>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </div>
 
                         <div className="pt-6">
