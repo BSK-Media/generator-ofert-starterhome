@@ -1969,21 +1969,6 @@ export const OfferGenerator: React.FC = () => {
                         </div>
                     </AccordionItem>
 
-                    {/* STEPS */}
-                    <AccordionItem title="3. Kroki (Strona 3)" icon={Activity} isOpen={openSection === 'steps'} onToggle={() => toggleAccordion('steps')}>
-                        <div className="space-y-2">
-                            {[1,2,3,4,5,6].map(num => {
-                                const key = `step${num}` as keyof typeof customTexts;
-                                return (
-                                    <div key={num}>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase">Krok {num}</label>
-                                        <input className="w-full text-xs p-2 border border-gray-200" value={customTexts[key]} onChange={e => updateText(key, e.target.value)} />
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </AccordionItem>
-
                     {/* MEDIA */}
                     <AccordionItem title="4. Multimedia" icon={ImageIcon} isOpen={openSection === 'media'} onToggle={() => toggleAccordion('media')}>
                         <div className="space-y-4">
