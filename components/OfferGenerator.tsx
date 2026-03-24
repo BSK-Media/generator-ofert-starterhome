@@ -529,8 +529,6 @@ export const OfferGenerator: React.FC = () => {
     const displayHouseName = selectedHouse.id === 'individual_house' ? (individualProjectName.trim() || 'Projekt Indywidualny') : selectedHouse.name;
     const isIndividualProject = selectedHouse.id === 'individual_house';
     const defaultGalleryImage = selectedHouse.image;
-    const collageImage = getHouseCollageSrc(selectedHouse.id);
-    const isGalleryCollageActive = !isIndividualProject && !!collageImage && images.main === defaultGalleryImage && images.gallery1 === defaultGalleryImage && images.gallery2 === defaultGalleryImage;
     const [buildMode, setBuildMode] = useState<'surowy' | 'deweloperski' | 'both'>('surowy');
     const [isDeveloperState, setIsDeveloperState] = useState(false); 
     // TRYB EDYCJI (dla wszystkich domów)
