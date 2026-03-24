@@ -1826,7 +1826,7 @@ export const OfferGenerator: React.FC = () => {
                 </div>
                 <div className="flex-1 overflow-y-auto custom-scrollbar">
                     {/* DATA */}
-                    <AccordionItem title="1. Dane i Model" icon={User} isOpen={openSection === 'data'} onToggle={() => toggleAccordion('data')}>
+                    <AccordionItem title="1. DANE I MODEL" icon={User} isOpen={openSection === 'data'} onToggle={() => toggleAccordion('data')}>
                         <div className="space-y-4">
                             <input type="text" placeholder="Imię i Nazwisko" className="w-full p-3 border border-gray-200 text-sm" value={clientName} onChange={(e) => setClientName(e.target.value)} />
                             <div className="grid grid-cols-2 gap-2">{HOUSES.map(house => (<button key={house.id} onClick={() => setSelectedHouse(house)} className={`p-2 border text-xs font-bold uppercase ${selectedHouse.id === house.id ? 'border-[#6E8809] bg-[#f7faf3] text-[#6E8809]' : 'border-gray-200 text-gray-500'}`}>{house.name}</button>))}</div>
@@ -1896,7 +1896,7 @@ export const OfferGenerator: React.FC = () => {
                     </AccordionItem>
                     
                     {/* CONFIGURATION - Dynamic based on selected House */}
-                    <AccordionItem title="2. Konfiguracja i Ceny" icon={Settings} isOpen={openSection === 'config'} onToggle={() => toggleAccordion('config')}>
+                    <AccordionItem title="2. KONFIGURACJA I CENY" icon={Settings} isOpen={openSection === 'config'} onToggle={() => toggleAccordion('config')}>
                         <div className="space-y-6">
                             {buildMode === 'both' ? (
                                 <div className="space-y-4">
@@ -1935,7 +1935,7 @@ export const OfferGenerator: React.FC = () => {
                     </AccordionItem>
 
                     {/* NEEDS */}
-                    <AccordionItem title="3. Potrzeby (Strona 2)" icon={Type} isOpen={openSection === 'needs'} onToggle={() => toggleAccordion('needs')}>
+                    <AccordionItem title="3. POTRZEBY" icon={Type} isOpen={openSection === 'needs'} onToggle={() => toggleAccordion('needs')}>
                          <div className="space-y-4">
                              <textarea rows={2} className="w-full text-xs p-2 border border-gray-200" value={customTexts.page2Title} onChange={e => updateText('page2Title', e.target.value)} />
                              <div className="space-y-2">{needs.map((need, idx) => (
@@ -1970,7 +1970,7 @@ export const OfferGenerator: React.FC = () => {
                     </AccordionItem>
 
                     {/* MEDIA */}
-                    <AccordionItem title="4. Multimedia" icon={ImageIcon} isOpen={openSection === 'media'} onToggle={() => toggleAccordion('media')}>
+                    <AccordionItem title="4. MULTIMEDIA" icon={ImageIcon} isOpen={openSection === 'media'} onToggle={() => toggleAccordion('media')}>
                         <div className="space-y-4">
                             {[
                                 { label: 'Zdjęcie Główne', key: 'main' },
@@ -1997,7 +1997,7 @@ export const OfferGenerator: React.FC = () => {
                     </AccordionItem>
                     
                     {/* TECH TEXTS */}
-                    <AccordionItem title="8. Opisy Technologii (Strona 4)" icon={Box} isOpen={openSection === 'tech'} onToggle={() => toggleAccordion('tech')}>
+                    <AccordionItem title="5. OPISY TECHNOLOGII" icon={Box} isOpen={openSection === 'tech'} onToggle={() => toggleAccordion('tech')}>
                         <div className="space-y-4">
                              <div className="border-b border-gray-100 pb-2">
                                 <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Dach</label>
@@ -2023,7 +2023,7 @@ export const OfferGenerator: React.FC = () => {
                     </AccordionItem>
 
                     {/* SCOPE */}
-                    <AccordionItem title="9. Inne (Strona 9)" icon={Briefcase} isOpen={openSection === 'scope'} onToggle={() => toggleAccordion('scope')}>
+                    <AccordionItem title="6. INNE" icon={Briefcase} isOpen={openSection === 'scope'} onToggle={() => toggleAccordion('scope')}>
                          <div className="space-y-4">
                              {buildMode === 'both' ? (
                                 <>
@@ -2067,7 +2067,7 @@ export const OfferGenerator: React.FC = () => {
                      </AccordionItem>
 
                     {/* TRANCHES & CTA */}
-                    <AccordionItem title="Finanse i CTA" icon={Banknote} isOpen={openSection === 'finance'} onToggle={() => toggleAccordion('finance')}>
+                    <AccordionItem title="7. FINANSE" icon={Banknote} isOpen={openSection === 'finance'} onToggle={() => toggleAccordion('finance')}>
                         <div className="space-y-4">
                             <div><label className="text-[10px] font-bold text-gray-400 uppercase">Transza 1 (30%)</label><textarea rows={2} className="w-full text-xs p-2 border border-gray-200" value={customTexts.tranche1} onChange={e => updateText('tranche1', e.target.value)} /></div>
                             <div><label className="text-[10px] font-bold text-gray-400 uppercase">Transza 2 (50%)</label><textarea rows={2} className="w-full text-xs p-2 border border-gray-200" value={customTexts.tranche2} onChange={e => updateText('tranche2', e.target.value)} /></div>
