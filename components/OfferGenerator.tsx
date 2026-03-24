@@ -838,6 +838,31 @@ export const OfferGenerator: React.FC = () => {
                                 )}
                             </div>
                         ))}
+
+                        <div className="border-t border-gray-200 pt-5">
+                            <div className="mb-3">
+                                <div className="text-sm font-bold text-gray-800">Custom</div>
+                                <div className="text-xs text-gray-500">Dodaj własną pozycję z tytułem, opisem i ceną. Zostanie doliczona do tego stanu i pokaże się w PDF.</div>
+                            </div>
+                            <div className="space-y-3">
+                                {stateSections.map((sec) => (
+                                    <div key={sec.id} className="border border-gray-200 p-3 space-y-2 bg-gray-50/50">
+                                        <div className="flex items-center gap-2">
+                                            <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold bg-white" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value }, stateKey)} placeholder="Tytuł" />
+                                            <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600 bg-white" onClick={() => removeCustomSection(sec.id, stateKey)} title="Usuń">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                        <textarea rows={2} className="w-full p-2 border border-gray-200 text-xs bg-white" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value }, stateKey)} placeholder="Opis" />
+                                        <div>
+                                            <div className="text-[11px] text-gray-500 mb-1">Cena netto (PLN)</div>
+                                            <input type="number" className="w-full p-2 border border-gray-200 text-sm bg-white" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) }, stateKey)} placeholder="0" />
+                                        </div>
+                                    </div>
+                                ))}
+                                <button type="button" onClick={() => addCustomSection(stateKey)} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj pozycję custom</button>
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
@@ -1163,6 +1188,23 @@ export const OfferGenerator: React.FC = () => {
                 sum += cost;
                 list.push({ name: item.name, variant: `${val} ${item.unit || ''}`, price: cost });
             }
+        });
+
+        const customConfigSections = (sectionsSource || [])
+            .map(s => ({
+                title: (s.title || '').trim(),
+                text: (s.text || '').trim(),
+                price: Number(s.price) || 0,
+            }))
+            .filter(s => s.title || s.text || s.price !== 0);
+
+        customConfigSections.forEach(s => {
+            sum += s.price;
+            list.push({
+                name: s.title || 'Pozycja niestandardowa',
+                variant: s.text || '-',
+                price: s.price,
+            });
         });
 
         extras.forEach(e => {
