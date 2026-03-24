@@ -488,16 +488,24 @@ export const OfferGenerator: React.FC = () => {
     const [individualProjectName, setIndividualProjectName] = useState('Projekt Indywidualny');
     const displayHouseName = selectedHouse.id === 'individual_house' ? (individualProjectName.trim() || 'Projekt Indywidualny') : selectedHouse.name;
     const isIndividualProject = selectedHouse.id === 'individual_house';
+    const [buildMode, setBuildMode] = useState<'surowy' | 'deweloperski' | 'both'>('surowy');
     const [isDeveloperState, setIsDeveloperState] = useState(false); 
     // TRYB EDYCJI (dla wszystkich domów)
     const [isEditMode, setIsEditMode] = useState(false);
     // Nadpisania (edytowalne nazwy/opcje/ceny) per dom
     const [itemsByHouse, setItemsByHouse] = useState<Record<string, OfferItem[]>>({});
     const [basePricesByHouse, setBasePricesByHouse] = useState<Record<string, { surowy: number; deweloperski: number }>>({});
+    type BuildStateKey = 'surowy' | 'deweloperski';
+    type CustomSectionItem = { id: string; title: string; text: string; price: number };
+    type CustomExtraItem = { label: string; price: number };
+    const createCustomSection = (): CustomSectionItem => ({ id: `sec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title: 'Zakres / opis', text: '', price: 0 });
+    const createCustomExtra = (): CustomExtraItem => ({ label: '', price: 0 });
     // Projekt indywidualny - sekcje opisowe + cena
-    const [customSections, setCustomSections] = useState<Array<{ id: string; title: string; text: string; price: number }>>([
-        { id: 'sec-1', title: 'Zakres / opis', text: '', price: 0 },
-    ]);
+    const [customSections, setCustomSections] = useState<CustomSectionItem[]>([createCustomSection()]);
+    const [customSectionsDual, setCustomSectionsDual] = useState<Record<BuildStateKey, CustomSectionItem[]>>({
+        surowy: [createCustomSection()],
+        deweloperski: [createCustomSection()],
+    });
 
 
     // MEDIA
@@ -558,11 +566,13 @@ export const OfferGenerator: React.FC = () => {
 
     // CONFIG STATE - Updated to handle Radio/Number/Checkbox
     const [offerConfig, setOfferConfig] = useState<Record<string, any>>({});
+    const [offerConfigDual, setOfferConfigDual] = useState<Record<BuildStateKey, Record<string, any>>>({ surowy: {}, deweloperski: {} });
 
     useEffect(() => {
         // Dla projektu indywidualnego konfiguracja opcji nie jest potrzebna
         if (selectedHouse.id === 'individual_house') {
             setOfferConfig({});
+            setOfferConfigDual({ surowy: {}, deweloperski: {} });
             return;
         }
         const items = getOfferItemsForHouse(selectedHouse);
@@ -571,6 +581,7 @@ export const OfferGenerator: React.FC = () => {
             newConfig[item.code] = item.defaultValue;
         });
         setOfferConfig(newConfig);
+        setOfferConfigDual({ surowy: { ...newConfig }, deweloperski: { ...newConfig } });
     }, [selectedHouse]);
 
     // Inicjalizacja edytowalnych danych per dom (pierwsze wejście)
@@ -590,6 +601,17 @@ export const OfferGenerator: React.FC = () => {
     const handleConfigChange = (code: string, value: any) => {
         setOfferConfig(prev => ({ ...prev, [code]: value }));
     };
+
+    const handleConfigChangeForState = (stateKey: BuildStateKey, code: string, value: any) => {
+        setOfferConfigDual(prev => ({
+            ...prev,
+            [stateKey]: { ...(prev[stateKey] || {}), [code]: value }
+        }));
+    };
+
+    const getConfigForState = (stateKey: BuildStateKey) => buildMode === 'both' ? (offerConfigDual[stateKey] || {}) : offerConfig;
+    const getCustomSectionsForState = (stateKey: BuildStateKey) => buildMode === 'both' ? (customSectionsDual[stateKey] || []) : customSections;
+    const getCustomExtrasForState = (stateKey: BuildStateKey) => buildMode === 'both' ? (customExtrasDual[stateKey] || []) : customExtras;
 
     // --- EDYCJA OPcji i CEN ---
     const updateBasePrice = (field: 'surowy' | 'deweloperski', value: number) => {
@@ -652,19 +674,221 @@ export const OfferGenerator: React.FC = () => {
     };
 
     // --- Projekt indywidualny: sekcje ---
-    const addCustomSection = () => {
-        setCustomSections(prev => [...prev, { id: `sec-${Date.now()}`, title: 'Nowa sekcja', text: '', price: 0 }]);
+    const addCustomSection = (stateKey?: BuildStateKey) => {
+        if (stateKey) {
+            setCustomSectionsDual(prev => ({ ...prev, [stateKey]: [...(prev[stateKey] || []), createCustomSection()] }));
+            return;
+        }
+        setCustomSections(prev => [...prev, createCustomSection()]);
     };
-    const removeCustomSection = (id: string) => {
+    const removeCustomSection = (id: string, stateKey?: BuildStateKey) => {
+        if (stateKey) {
+            setCustomSectionsDual(prev => ({
+                ...prev,
+                [stateKey]: (prev[stateKey] || []).length <= 1 ? (prev[stateKey] || []) : (prev[stateKey] || []).filter(s => s.id !== id)
+            }));
+            return;
+        }
         setCustomSections(prev => prev.length <= 1 ? prev : prev.filter(s => s.id !== id));
     };
-    const updateCustomSection = (id: string, patch: Partial<{ title: string; text: string; price: number }>) => {
+    const updateCustomSection = (id: string, patch: Partial<{ title: string; text: string; price: number }>, stateKey?: BuildStateKey) => {
+        if (stateKey) {
+            setCustomSectionsDual(prev => ({
+                ...prev,
+                [stateKey]: (prev[stateKey] || []).map(s => s.id === id ? { ...s, ...patch } : s)
+            }));
+            return;
+        }
         setCustomSections(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
     };
 
+    const updateCustomExtra = (index: number, patch: Partial<CustomExtraItem>, stateKey?: BuildStateKey) => {
+        if (stateKey) {
+            setCustomExtrasDual(prev => ({
+                ...prev,
+                [stateKey]: (prev[stateKey] || []).map((item, i) => i === index ? { ...item, ...patch } : item)
+            }));
+            return;
+        }
+        setCustomExtras(prev => prev.map((item, i) => i === index ? { ...item, ...patch } : item));
+    };
+    const addCustomExtra = (stateKey?: BuildStateKey) => {
+        if (stateKey) {
+            setCustomExtrasDual(prev => ({ ...prev, [stateKey]: [...(prev[stateKey] || []), createCustomExtra()] }));
+            return;
+        }
+        setCustomExtras(prev => [...prev, createCustomExtra()]);
+    };
+    const removeCustomExtra = (index: number, stateKey?: BuildStateKey) => {
+        if (stateKey) {
+            setCustomExtrasDual(prev => ({
+                ...prev,
+                [stateKey]: (prev[stateKey] || []).length <= 1 ? [createCustomExtra()] : (prev[stateKey] || []).filter((_, i) => i !== index)
+            }));
+            return;
+        }
+        setCustomExtras(prev => prev.length <= 1 ? [createCustomExtra()] : prev.filter((_, i) => i !== index));
+    };
+
+    const renderConfigEditor = (stateKey: BuildStateKey) => {
+        const stateLabel = stateKey === 'surowy' ? 'Surowy zamknięty' : 'Deweloperski';
+        const stateConfig = getConfigForState(stateKey);
+        const stateSections = getCustomSectionsForState(stateKey);
+        return (
+            <div className="border border-gray-200 p-3 space-y-4 bg-white">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-[#6E8809]">{stateLabel}</div>
+                {selectedHouse.id === 'individual_house' ? (
+                    <div className="space-y-3">
+                        {stateSections.map((sec) => (
+                            <div key={sec.id} className="border border-gray-200 p-3 space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value }, stateKey)} placeholder="Tytuł sekcji" />
+                                    <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600" onClick={() => removeCustomSection(sec.id, stateKey)} title="Usuń">
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
+                                <textarea rows={3} className="w-full p-2 border border-gray-200 text-xs" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value }, stateKey)} placeholder="Opis / szczegóły" />
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <div className="text-[11px] text-gray-500 mb-1">Cena netto (PLN)</div>
+                                        <input type="number" className="w-full p-2 border border-gray-200 text-sm" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) }, stateKey)} />
+                                    </div>
+                                    <div className="text-[11px] text-gray-400 flex items-end">Ta kwota zostanie doliczona do podsumowania dla tego stanu.</div>
+                                </div>
+                            </div>
+                        ))}
+                        <button type="button" onClick={() => addCustomSection(stateKey)} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj sekcję</button>
+                    </div>
+                ) : (
+                    <div className="space-y-5">
+                        {availableItems.map((item) => (
+                            <div key={`${stateKey}-${item.code}`} className="border-b border-gray-100 pb-5 last:border-0 last:pb-0">
+                                {isEditMode ? (
+                                    <input type="text" className="w-full p-2 border border-gray-200 text-sm font-bold" value={item.name} onChange={(e) => updateItem(item.code, { name: e.target.value })} />
+                                ) : (
+                                    <h4 className="font-bold text-gray-800 text-sm mb-1">{item.name}</h4>
+                                )}
+                                <p className="text-xs text-gray-500 mb-3">{item.description}</p>
+                                {item.type === 'radio' && item.options && (
+                                    <div className="space-y-2">
+                                        {item.options.map(opt => (
+                                            <label key={`${stateKey}-${opt.id}`} className="flex items-start gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                                <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${stateConfig[item.code] === opt.id ? 'border-[#6E8809]' : 'border-gray-300'}`}>
+                                                    {stateConfig[item.code] === opt.id && <div className="w-2 h-2 rounded-full bg-[#6E8809]" />}
+                                                </div>
+                                                <input type="radio" className="hidden" name={`${stateKey}-${item.code}`} checked={stateConfig[item.code] === opt.id} onChange={() => handleConfigChangeForState(stateKey, item.code, opt.id)} />
+                                                <div className="flex-1">
+                                                    {isEditMode ? (
+                                                        <input type="text" className="w-full p-2 border border-gray-200 text-xs font-medium" value={opt.name} onChange={(e) => updateOption(item.code, opt.id, { name: e.target.value })} />
+                                                    ) : (
+                                                        <div className="text-xs font-medium text-gray-700">{opt.name}</div>
+                                                    )}
+                                                    {isEditMode ? (
+                                                        <input type="number" className="w-full p-2 border border-gray-200 text-xs font-bold text-[#6E8809]" value={opt.price} onChange={(e) => updateOption(item.code, opt.id, { price: Number(e.target.value) })} />
+                                                    ) : (
+                                                        <div className="text-xs font-bold text-[#6E8809]">{opt.price === 0 ? '0 zł' : `+ ${opt.price.toLocaleString()} zł`}</div>
+                                                    )}
+                                                </div>
+                                            </label>
+                                        ))}
+                                        <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
+                                            <div className="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 border-gray-300">
+                                                {(stateConfig[item.code] === 'none' || !stateConfig[item.code]) && <div className="w-2 h-2 rounded-full bg-gray-300" />}
+                                            </div>
+                                            <input type="radio" className="hidden" name={`${stateKey}-${item.code}`} checked={stateConfig[item.code] === 'none'} onChange={() => handleConfigChangeForState(stateKey, item.code, 'none')} />
+                                            <span className="text-xs text-gray-400">Brak wyboru / Domyślne</span>
+                                        </label>
+                                    </div>
+                                )}
+                                {item.type === 'checkbox' && (
+                                    <label className={`flex items-center justify-between p-3 border rounded cursor-pointer ${stateConfig[item.code] ? 'bg-[#f7faf3] border-[#6E8809]' : 'bg-white border-gray-200'}`}>
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-5 h-5 border rounded flex items-center justify-center ${stateConfig[item.code] ? 'bg-[#6E8809] border-[#6E8809]' : 'bg-white border-gray-300'}`}>
+                                                {stateConfig[item.code] && <Check className="w-3 h-3 text-white" />}
+                                            </div>
+                                            <span className="text-xs font-bold text-gray-700">Dodaj do oferty</span>
+                                            <input type="checkbox" className="hidden" checked={!!stateConfig[item.code]} onChange={(e) => handleConfigChangeForState(stateKey, item.code, e.target.checked)} />
+                                        </div>
+                                        {isEditMode ? (
+                                            <input type="number" className="w-28 p-2 border border-gray-200 text-xs font-bold text-[#6E8809]" value={item.price ?? 0} onClick={(e) => e.stopPropagation()} onChange={(e) => updateItem(item.code, { price: Number(e.target.value) })} />
+                                        ) : (
+                                            <span className="text-xs font-bold text-[#6E8809]">+ {item.price?.toLocaleString()} zł</span>
+                                        )}
+                                    </label>
+                                )}
+                                {item.type === 'number' && (
+                                    <div className="flex items-center gap-4 bg-gray-50 p-2 rounded">
+                                        <div className="flex items-center">
+                                            <button onClick={() => handleConfigChangeForState(stateKey, item.code, Math.max(0, (stateConfig[item.code] || 0) - 1))} className="w-8 h-8 bg-white border border-gray-200 hover:text-[#6E8809] flex items-center justify-center"><Minus className="w-3 h-3" /></button>
+                                            <input type="number" className="w-12 text-center bg-transparent text-sm font-bold" value={stateConfig[item.code] || 0} readOnly />
+                                            <button onClick={() => handleConfigChangeForState(stateKey, item.code, (stateConfig[item.code] || 0) + 1)} className="w-8 h-8 bg-white border border-gray-200 hover:text-[#6E8809] flex items-center justify-center"><Plus className="w-3 h-3" /></button>
+                                        </div>
+                                        <div className="text-right flex-1">
+                                            <div className="text-xs text-gray-500">{isEditMode ? (
+                                                <span className="inline-flex items-center gap-2">
+                                                    <input type="number" className="w-24 p-1 border border-gray-200 text-xs" value={item.price ?? 0} onChange={(e) => updateItem(item.code, { price: Number(e.target.value) })} />
+                                                    <span>zł / {item.unit}</span>
+                                                </span>
+                                            ) : (
+                                                <span>{item.price?.toLocaleString()} zł / {item.unit}</span>
+                                            )}</div>
+                                            <div className="text-xs font-bold text-[#6E8809]">Razem: {((stateConfig[item.code] || 0) * (item.price || 0)).toLocaleString()} zł</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderCustomExtrasEditor = (stateKey: BuildStateKey) => {
+        const stateLabel = stateKey === 'surowy' ? 'Surowy zamknięty' : 'Deweloperski';
+        const extras = getCustomExtrasForState(stateKey);
+        return (
+            <div className="border border-gray-200 p-3 space-y-3 bg-white">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-[#6E8809]">{stateLabel}</div>
+                {extras.map((extra, index) => (
+                    <div key={`${stateKey}-${index}`} className="border border-gray-200 p-2">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa</div>
+                            <button type="button" title="Usuń pozycję" onClick={() => removeCustomExtra(index, stateKey)} className="p-1 text-gray-400 hover:text-gray-900">
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Np. Transport"
+                            className="w-full text-xs p-2 border border-gray-200 mb-2"
+                            value={extra.label}
+                            onChange={(e) => updateCustomExtra(index, { label: e.target.value }, stateKey)}
+                        />
+                        <label className="text-[10px] font-bold text-gray-400 uppercase">Cena netto (zł)</label>
+                        <input
+                            type="number"
+                            placeholder="0"
+                            className="w-full text-xs p-2 border border-gray-200"
+                            value={extra.price}
+                            onChange={(e) => updateCustomExtra(index, { price: Number(e.target.value) }, stateKey)}
+                        />
+                    </div>
+                ))}
+                <button type="button" onClick={() => addCustomExtra(stateKey)} className="flex items-center gap-2 text-xs font-bold text-[#6E8809]">
+                    <Plus className="w-4 h-4" />
+                    Dodaj kolejną pozycję
+                </button>
+            </div>
+        );
+    };
 
     // NEEDS (Page 2)
-    const [customExtras, setCustomExtras] = useState([{ label: '', price: 0 }]);
+    const [customExtras, setCustomExtras] = useState<CustomExtraItem[]>([createCustomExtra()]);
+    const [customExtrasDual, setCustomExtrasDual] = useState<Record<BuildStateKey, CustomExtraItem[]>>({
+        surowy: [createCustomExtra()],
+        deweloperski: [createCustomExtra()],
+    });
     const [needs, setNeeds] = useState([
         { id: '1', icon: 'Maximize', text: 'Dom o powierzchni do 70m2 zabudowy' },
         { id: '2', icon: 'BedDouble', text: '2 sypialnie' },
@@ -735,7 +959,7 @@ export const OfferGenerator: React.FC = () => {
 
     const getPdfFilename = (suffix?: string) => {
         const house = displayHouseName.replace(/\s+/g, '-').toLowerCase();
-        const state = isDeveloperState ? 'deweloperski' : 'surowy-zamkniety';
+        const state = buildMode === 'both' ? 'surowy-i-deweloperski' : (isDeveloperState ? 'deweloperski' : 'surowy-zamkniety');
         const client = (clientName || 'oferta').trim().replace(/\s+/g, '-');
         const tail = suffix ? `-${suffix}` : '';
         return `starterhome-${client}-${house}-${state}${tail}.pdf`;
@@ -756,15 +980,7 @@ export const OfferGenerator: React.FC = () => {
         );
     };
 
-    const savePdf = async (opts?: { compressed?: boolean; quality?: number }) => {
-        if (!pdfRootRef.current) return;
-
-        const source = pdfRootRef.current;
-        const quality = opts?.quality ?? 0.98;
-        const filename = getPdfFilename(opts?.compressed ? 'skompresowany' : undefined);
-
-        // Render page-by-page to avoid the classic html2pdf "blank page every other page" bug.
-        // Each .a4-page becomes exactly one PDF page.
+    const prepareExportClone = (source: HTMLElement) => {
         const exportHost = document.createElement('div');
         exportHost.style.position = 'fixed';
         exportHost.style.left = '-10000px';
@@ -786,7 +1002,6 @@ export const OfferGenerator: React.FC = () => {
             el.style.margin = '0';
             el.style.marginBottom = '0';
             el.style.boxShadow = 'none';
-            // Make sure the DOM page has deterministic dimensions
             el.style.width = '210mm';
             el.style.height = '297mm';
             el.style.overflow = 'hidden';
@@ -794,16 +1009,16 @@ export const OfferGenerator: React.FC = () => {
 
         exportHost.appendChild(clone);
         document.body.appendChild(exportHost);
+        return { exportHost, clone };
+    };
 
+    const appendPagesToPdf = async (pdf: jsPDF, source: HTMLElement, quality: number, addPageBeforeFirst = false) => {
+        const { exportHost, clone } = prepareExportClone(source);
         try {
             await waitForImages(clone);
-            // Give the browser a moment to layout fonts/images
             await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-
             const pages = Array.from(clone.querySelectorAll('.a4-page')) as HTMLElement[];
             const targets = pages.length ? pages : [clone];
-
-            const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
             const pageWidth = 210;
             const pageHeight = 297;
 
@@ -821,20 +1036,50 @@ export const OfferGenerator: React.FC = () => {
                     windowHeight: pageEl.scrollHeight,
                 });
                 const imgData = canvas.toDataURL('image/jpeg', quality);
-                if (i > 0) pdf.addPage();
+                if (addPageBeforeFirst || i > 0) pdf.addPage();
                 pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+                addPageBeforeFirst = false;
+            }
+        } finally {
+            try { document.body.removeChild(exportHost); } catch {}
+        }
+    };
+
+    const waitForRenderTick = async () => {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    };
+
+    const savePdf = async (opts?: { compressed?: boolean; quality?: number }) => {
+        if (!pdfRootRef.current) return;
+
+        const source = pdfRootRef.current;
+        const quality = opts?.quality ?? 0.98;
+        const filename = getPdfFilename(opts?.compressed ? 'skompresowany' : undefined);
+
+        try {
+            const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+            if (buildMode === 'both') {
+                const previousState = isDeveloperState;
+
+                setIsDeveloperState(false);
+                await waitForRenderTick();
+                await appendPagesToPdf(pdf, source, quality, false);
+
+                setIsDeveloperState(true);
+                await waitForRenderTick();
+                await appendPagesToPdf(pdf, source, quality, true);
+
+                setIsDeveloperState(previousState);
+                await waitForRenderTick();
+            } else {
+                await appendPagesToPdf(pdf, source, quality, false);
             }
 
             pdf.save(filename);
         } catch (e) {
             console.error(e);
             alert('Nie udało się zapisać PDF. Spróbuj ponownie.');
-        } finally {
-            try {
-                document.body.removeChild(exportHost);
-            } catch {
-                // no-op
-            }
         }
     };
 
@@ -859,31 +1104,30 @@ export const OfferGenerator: React.FC = () => {
         reader.readAsDataURL(file);
     };
 
-    const basePrice = useMemo(() => {
-        const bp = basePricesByHouse[selectedHouse.id];
-        const surowy = bp?.surowy ?? selectedHouse.basePrice;
-        const deweloperski = bp?.deweloperski ?? selectedHouse.developerPrice;
-        return isDeveloperState ? deweloperski : surowy;
-    }, [selectedHouse, isDeveloperState, basePricesByHouse]);
-    
-    // --- CALCULATE PRICES ---
     const availableItems = useMemo(() => {
         return itemsByHouse[selectedHouse.id] ?? getOfferItemsForHouse(selectedHouse);
     }, [selectedHouse, itemsByHouse]);
-    
-    const { totalNetPrice, selectedItemsList } = useMemo(() => {
-        const extras = (customExtras || []).map(e => ({
+
+    const calculateOfferForState = (developerState: boolean) => {
+        const bp = basePricesByHouse[selectedHouse.id];
+        const surowy = bp?.surowy ?? selectedHouse.basePrice;
+        const deweloperski = bp?.deweloperski ?? selectedHouse.developerPrice;
+        const calculatedBasePrice = developerState ? deweloperski : surowy;
+        const stateKey: BuildStateKey = developerState ? 'deweloperski' : 'surowy';
+        const configSource = buildMode === 'both' ? (offerConfigDual[stateKey] || {}) : offerConfig;
+        const sectionsSource = buildMode === 'both' ? (customSectionsDual[stateKey] || []) : customSections;
+        const extrasSource = buildMode === 'both' ? (customExtrasDual[stateKey] || []) : customExtras;
+
+        const extras = (extrasSource || []).map(e => ({
             label: (e.label || '').trim(),
             price: Number(e.price) || 0,
         })).filter(e => e.label || e.price !== 0);
 
         const extrasTotal = extras.reduce((acc, e) => acc + e.price, 0);
 
-        // Projekt indywidualny: suma = cena bazowa + ceny sekcji + dodatki
         if (selectedHouse.id === 'individual_house') {
-            const sumSections = customSections.reduce((acc, s) => acc + (Number(s.price) || 0), 0);
-
-            const list = customSections
+            const sumSections = sectionsSource.reduce((acc, s) => acc + (Number(s.price) || 0), 0);
+            const list = sectionsSource
                 .filter(s => (s.title?.trim() || s.text?.trim() || (Number(s.price) || 0) !== 0))
                 .map(s => ({
                     name: s.title || 'Sekcja',
@@ -893,14 +1137,18 @@ export const OfferGenerator: React.FC = () => {
 
             extras.forEach(e => list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price }));
 
-            return { totalNetPrice: basePrice + sumSections + extrasTotal, selectedItemsList: list };
+            return {
+                basePrice: calculatedBasePrice,
+                totalNetPrice: calculatedBasePrice + sumSections + extrasTotal,
+                selectedItemsList: list,
+            };
         }
 
-        let sum = basePrice;
+        let sum = calculatedBasePrice;
         const list: { name: string; variant?: string; price: number }[] = [];
 
         availableItems.forEach(item => {
-            const val = offerConfig[item.code];
+            const val = configSource[item.code];
             if (item.type === 'checkbox' && val) {
                 sum += item.price || 0;
                 list.push({ name: item.name, price: item.price || 0 });
@@ -922,11 +1170,20 @@ export const OfferGenerator: React.FC = () => {
             list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price });
         });
 
-        return { totalNetPrice: sum, selectedItemsList: list };
-    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections, customExtras]);
+        return { basePrice: calculatedBasePrice, totalNetPrice: sum, selectedItemsList: list };
+    };
 
+    const currentOffer = useMemo(() => calculateOfferForState(isDeveloperState), [selectedHouse, isDeveloperState, basePricesByHouse, offerConfig, offerConfigDual, availableItems, customSections, customSectionsDual, customExtras, customExtrasDual, buildMode]);
+    const dualSurowyOffer = useMemo(() => calculateOfferForState(false), [selectedHouse, basePricesByHouse, offerConfig, offerConfigDual, availableItems, customSections, customSectionsDual, customExtras, customExtrasDual, buildMode]);
+    const dualDeweloperskiOffer = useMemo(() => calculateOfferForState(true), [selectedHouse, basePricesByHouse, offerConfig, offerConfigDual, availableItems, customSections, customSectionsDual, customExtras, customExtrasDual, buildMode]);
+
+    const basePrice = currentOffer.basePrice;
+    const totalNetPrice = currentOffer.totalNetPrice;
+    const selectedItemsList = currentOffer.selectedItemsList;
     const totalVat = totalNetPrice * 0.08;
     const totalGross = totalNetPrice + totalVat;
+    const dualSurowyGross = dualSurowyOffer.totalNetPrice * 0.08 + dualSurowyOffer.totalNetPrice;
+    const dualDeweloperskiGross = dualDeweloperskiOffer.totalNetPrice * 0.08 + dualDeweloperskiOffer.totalNetPrice;
 
     // Helpers for UI
     const toggleAccordion = (section: string) => setOpenSection(openSection === section ? '' : section);
@@ -935,21 +1192,11 @@ export const OfferGenerator: React.FC = () => {
     const removeNeed = (id: string) => setNeeds(needs.filter(n => n.id !== id));
     const addNeed = () => setNeeds([...needs, { id: Date.now().toString(), icon: 'Check', text: 'Nowa potrzeba' }]);
 
-    const renderPreviewDocument = (previewDeveloperState: boolean) => {
-        const previewOffer = calculateOfferForState(previewDeveloperState);
-        const previewBasePrice = previewOffer.basePrice;
-        const previewTotalNetPrice = previewOffer.totalNetPrice;
-        const previewSelectedItemsList = previewOffer.selectedItemsList;
-        const previewTotalVat = previewTotalNetPrice * 0.08;
-        const previewTotalGross = previewTotalNetPrice + previewTotalVat;
-        const previewStateLabel = previewDeveloperState ? 'Deweloperski' : 'Surowy zamknięty';
-        const previewStateHeading = previewDeveloperState ? 'DEWELOPERSKI' : 'SUROWY ZAMKNIĘTY';
-        const showStateSuffix = buildMode === 'both';
 
+    const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
+        const previewOffer = calculateOfferForState(previewIsDeveloperState);
         return (
             <>
-
-                    
                     {/* PAGE 1: OKŁADKA */}
                     <A4Page className="flex flex-col a4-page">
                         <LeafDecor src={images.decorLeaf} />
@@ -1319,7 +1566,7 @@ export const OfferGenerator: React.FC = () => {
                              <div className="bg-gray-50 border-t-4 border-[#6E8809] flex-1 flex flex-col mb-4 overflow-hidden">
                                 <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center shrink-0">
                                     <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Wybrany Model</span>
-                                    <span className="font-black text-xl text-gray-900">{displayHouseName}</span>
+                                    <span className="font-black text-xl text-gray-900">{displayHouseName}{showStateSuffix ? ` — ${previewIsDeveloperState ? 'DEWELOPERSKI' : 'SUROWY ZAMKNIĘTY'}` : ''}</span>
                                 </div>
                                 
                                 {/* SCROLLABLE CONTENT AREA */}
@@ -1334,11 +1581,11 @@ export const OfferGenerator: React.FC = () => {
                                         </thead>
                                         <tbody style={{ fontSize: `${12 * fontScale}px` }}>
                                             <tr className="border-b border-gray-200 leading-loose">
-                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({previewDeveloperState ? 'Deweloperski' : 'Surowy zamknięty'})</td>
+                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({previewIsDeveloperState ? 'Deweloperski' : 'Surowy zamknięty'})</td>
                                                 <td className="py-2 text-gray-500">-</td>
-                                                <td className="py-2 text-right font-bold text-gray-900">{previewBasePrice.toLocaleString()} zł</td>
+                                                <td className="py-2 text-right font-bold text-gray-900">{previewOffer.basePrice.toLocaleString()} zł</td>
                                             </tr>
-                                            {previewSelectedItemsList.map((item, idx) => (
+                                            {previewOffer.selectedItemsList.map((item, idx) => (
                                                 <tr key={idx} className="border-b border-gray-200 leading-loose">
                                                     <td className="py-2 font-medium text-gray-700">{item.name}</td>
                                                     <td className="py-2 text-gray-500 italic">{item.variant || '-'}</td>
@@ -1350,10 +1597,10 @@ export const OfferGenerator: React.FC = () => {
 
                                      <div className="mt-6">
                                          <div className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">
-                                             {previewDeveloperState ? 'Stan deweloperski zawiera:' : 'Stan surowy zamknięty zawiera:'}
+                                             {previewIsDeveloperState ? 'Stan deweloperski zawiera:' : 'Stan surowy zamknięty zawiera:'}
                                          </div>
                                          <ul className="list-disc pl-5 space-y-1 text-gray-600" style={{ fontSize: `${11 * fontScale}px` }}>
-                                             {previewDeveloperState ? (
+                                             {previewIsDeveloperState ? (
                                                  <>
                                                      <li>Konstrukcja z certyfikowanego drewna C24</li>
                                                      <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
@@ -1383,15 +1630,15 @@ export const OfferGenerator: React.FC = () => {
                                 <div className="p-6 bg-white border-t border-gray-200 mt-auto shrink-0">
                                      <div className="flex justify-between items-center mb-2">
                                         <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto</span>
-                                        <span className="text-xl font-bold text-gray-900">{previewTotalNetPrice.toLocaleString()} zł</span>
+                                        <span className="text-xl font-bold text-gray-900">{previewOffer.totalNetPrice.toLocaleString()} zł</span>
                                      </div>
                                      <div className="flex justify-between items-center mb-6">
                                         <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
-                                        <span className="text-sm text-gray-500">{previewTotalVat.toLocaleString()} zł</span>
+                                        <span className="text-sm text-gray-500">{previewOffer.totalVat.toLocaleString()} zł</span>
                                      </div>
                                      <div className="flex justify-between items-center p-4 bg-[#6E8809] text-white rounded-lg">
                                         <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto</span>
-                                        <span className="text-3xl font-black">{previewTotalGross.toLocaleString()} zł</span>
+                                        <span className="text-3xl font-black">{previewOffer.totalGross.toLocaleString()} zł</span>
                                      </div>
                                 </div>
                              </div>
@@ -1464,10 +1711,10 @@ export const OfferGenerator: React.FC = () => {
                          </div>
                     </A4Page>
 
+
             </>
         );
     };
-
 
     return (
         <div className="flex h-screen bg-gray-100 font-sans print:block print:h-auto print:overflow-visible">
@@ -1517,7 +1764,16 @@ export const OfferGenerator: React.FC = () => {
                                     />
                                 </div>
                             )}
-                            <div className="flex border border-gray-200"><button onClick={() => setIsDeveloperState(false)} className={`flex-1 py-2 text-xs font-bold uppercase ${!isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Surowy zamknięty</button><button onClick={() => setIsDeveloperState(true)} className={`flex-1 py-2 text-xs font-bold uppercase ${isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Deweloperski</button></div>
+                            <div className="grid grid-cols-3 border border-gray-200">
+                                <button onClick={() => { setBuildMode('surowy'); setIsDeveloperState(false); }} className={`py-2 text-xs font-bold uppercase ${buildMode === 'surowy' ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Surowy zamknięty</button>
+                                <button onClick={() => { setBuildMode('deweloperski'); setIsDeveloperState(true); }} className={`py-2 text-xs font-bold uppercase border-l border-r border-gray-200 ${buildMode === 'deweloperski' ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Deweloperski</button>
+                                <button onClick={() => { setBuildMode('both'); setIsDeveloperState(false); }} className={`py-2 px-2 text-[11px] leading-tight font-bold uppercase ${buildMode === 'both' ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Surowy zamknięty lub deweloperski</button>
+                            </div>
+                            {buildMode === 'both' && (
+                                <div className="text-[11px] text-gray-500 leading-relaxed">
+                                    W PDF zostaną wygenerowane dwie pełne oferty: najpierw <span className="font-bold">surowy zamknięty</span>, potem <span className="font-bold">deweloperski</span>.
+                                </div>
+                            )}
                             <div className="mt-3">
                                 <div className="text-[11px] text-gray-500 mb-1 font-bold uppercase tracking-widest">Typ klienta</div>
                                 <div className="flex border border-gray-200">
@@ -1564,7 +1820,14 @@ export const OfferGenerator: React.FC = () => {
                     {/* CONFIGURATION - Dynamic based on selected House */}
                     <AccordionItem title="2. Konfiguracja i Ceny" icon={Settings} isOpen={openSection === 'config'} onToggle={() => toggleAccordion('config')}>
                         <div className="space-y-6">
-                            {selectedHouse.id === 'individual_house' ? (
+                            {buildMode === 'both' ? (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {renderConfigEditor('surowy')}
+                                        {renderConfigEditor('deweloperski')}
+                                    </div>
+                                </div>
+                            ) : selectedHouse.id === 'individual_house' ? (
                                 <div className="space-y-3">
                                     <div className="text-xs text-gray-500">Wybierz <b>Edytuj</b>, aby zmienić również ceny bazowe w sekcji 1.</div>
                                     {customSections.map((sec) => (
@@ -1585,94 +1848,10 @@ export const OfferGenerator: React.FC = () => {
                                             </div>
                                         </div>
                                     ))}
-                                    <button type="button" onClick={addCustomSection} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj sekcję</button>
+                                    <button type="button" onClick={() => addCustomSection()} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj sekcję</button>
                                 </div>
                             ) : (
-                                <>
-                            {availableItems.map((item) => (
-                                <div key={item.code} className="border-b border-gray-100 pb-6 last:border-0 last:pb-0">
-                                    {isEditMode ? (
-                                        <input type="text" className="w-full p-2 border border-gray-200 text-sm font-bold" value={item.name} onChange={(e) => updateItem(item.code, { name: e.target.value })} />
-                                    ) : (
-                                        <h4 className="font-bold text-gray-800 text-sm mb-1">{item.name}</h4>
-                                    )}
-                                    <p className="text-xs text-gray-500 mb-3">{item.description}</p>
-                                    
-                                    {/* RADIO */}
-                                    {item.type === 'radio' && item.options && (
-                                        <div className="space-y-2">
-                                            {item.options.map(opt => (
-                                                <label key={opt.id} className="flex items-start gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                                                    <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${offerConfig[item.code] === opt.id ? 'border-[#6E8809]' : 'border-gray-300'}`}>
-                                                        {offerConfig[item.code] === opt.id && <div className="w-2 h-2 rounded-full bg-[#6E8809]" />}
-                                                    </div>
-                                                    <input type="radio" className="hidden" name={item.code} checked={offerConfig[item.code] === opt.id} onChange={() => handleConfigChange(item.code, opt.id)} />
-                                                    <div className="flex-1">
-                                                        {isEditMode ? (
-                                                            <input type="text" className="w-full p-2 border border-gray-200 text-xs font-medium" value={opt.name} onChange={(e) => updateOption(item.code, opt.id, { name: e.target.value })} />
-                                                        ) : (
-                                                            <div className="text-xs font-medium text-gray-700">{opt.name}</div>
-                                                        )}
-                                                        {isEditMode ? (
-                                                            <input type="number" className="w-full p-2 border border-gray-200 text-xs font-bold text-[#6E8809]" value={opt.price} onChange={(e) => updateOption(item.code, opt.id, { price: Number(e.target.value) })} />
-                                                        ) : (
-                                                            <div className="text-xs font-bold text-[#6E8809]">{opt.price === 0 ? '0 zł' : `+ ${opt.price.toLocaleString()} zł`}</div>
-                                                        )}
-                                                    </div>
-                                                </label>
-                                            ))}
-                                            <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded">
-                                                 <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${offerConfig[item.code] === 'none' || !offerConfig[item.code] ? 'border-gray-300' : 'border-gray-300'}`}>
-                                                        {(offerConfig[item.code] === 'none' || !offerConfig[item.code]) && <div className="w-2 h-2 rounded-full bg-gray-300" />}
-                                                 </div>
-                                                 <input type="radio" className="hidden" name={item.code} checked={offerConfig[item.code] === 'none'} onChange={() => handleConfigChange(item.code, 'none')} />
-                                                 <span className="text-xs text-gray-400">Brak wyboru / Domyślne</span>
-                                            </label>
-                                        </div>
-                                    )}
-
-                                    {/* CHECKBOX */}
-                                    {item.type === 'checkbox' && (
-                                        <label className={`flex items-center justify-between p-3 border rounded cursor-pointer ${offerConfig[item.code] ? 'bg-[#f7faf3] border-[#6E8809]' : 'bg-white border-gray-200'}`}>
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-5 h-5 border rounded flex items-center justify-center ${offerConfig[item.code] ? 'bg-[#6E8809] border-[#6E8809]' : 'bg-white border-gray-300'}`}>
-                                                    {offerConfig[item.code] && <Check className="w-3 h-3 text-white" />}
-                                                </div>
-                                                <span className="text-xs font-bold text-gray-700">Dodaj do oferty</span>
-                                                <input type="checkbox" className="hidden" checked={!!offerConfig[item.code]} onChange={(e) => handleConfigChange(item.code, e.target.checked)} />
-                                            </div>
-                                            {isEditMode ? (
-                                                <input type="number" className="w-28 p-2 border border-gray-200 text-xs font-bold text-[#6E8809]" value={item.price ?? 0} onClick={(e) => e.stopPropagation()} onChange={(e) => updateItem(item.code, { price: Number(e.target.value) })} />
-                                            ) : (
-                                                <span className="text-xs font-bold text-[#6E8809]">+ {item.price?.toLocaleString()} zł</span>
-                                            )}
-                                        </label>
-                                    )}
-
-                                    {/* NUMBER */}
-                                    {item.type === 'number' && (
-                                        <div className="flex items-center gap-4 bg-gray-50 p-2 rounded">
-                                            <div className="flex items-center">
-                                                <button onClick={() => handleConfigChange(item.code, Math.max(0, (offerConfig[item.code] || 0) - 1))} className="w-8 h-8 bg-white border border-gray-200 hover:text-[#6E8809] flex items-center justify-center"><Minus className="w-3 h-3" /></button>
-                                                <input type="number" className="w-12 text-center bg-transparent text-sm font-bold" value={offerConfig[item.code] || 0} readOnly />
-                                                <button onClick={() => handleConfigChange(item.code, (offerConfig[item.code] || 0) + 1)} className="w-8 h-8 bg-white border border-gray-200 hover:text-[#6E8809] flex items-center justify-center"><Plus className="w-3 h-3" /></button>
-                                            </div>
-                                            <div className="text-right flex-1">
-                                                <div className="text-xs text-gray-500">{isEditMode ? (
-                                                    <span className="inline-flex items-center gap-2">
-                                                        <input type="number" className="w-24 p-1 border border-gray-200 text-xs" value={item.price ?? 0} onChange={(e) => updateItem(item.code, { price: Number(e.target.value) })} />
-                                                        <span>zł / {item.unit}</span>
-                                                    </span>
-                                                ) : (
-                                                    <span>{item.price?.toLocaleString()} zł / {item.unit}</span>
-                                                )}</div>
-                                                <div className="text-xs font-bold text-[#6E8809]">Razem: {((offerConfig[item.code] || 0) * (item.price || 0)).toLocaleString()} zł</div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                                </>
+                                renderConfigEditor('surowy')
                             )}
                         </div>
                     </AccordionItem>
@@ -1762,78 +1941,44 @@ export const OfferGenerator: React.FC = () => {
                     {/* SCOPE */}
                     <AccordionItem title="9. Inne (Strona 9)" icon={Briefcase} isOpen={openSection === 'scope'} onToggle={() => toggleAccordion('scope')}>
                          <div className="space-y-4">
-                             {customExtras.map((extra, index) => (
-                                 <div key={index} className="border border-gray-200 p-2">
-                                     <div className="flex items-center justify-between mb-2">
-                                         <div className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa</div>
-                                         <button
-                                             type="button"
-                                             title="Usuń pozycję"
-                                             onClick={() => {
-                                                 if (customExtras.length === 1) {
-                                                     setCustomExtras([{ label: '', price: 0 }]);
-                                                     return;
-                                                 }
-                                                 const updated = customExtras.filter((_, i) => i !== index);
-                                                 setCustomExtras(updated);
-                                             }}
-                                             className="p-1 text-gray-400 hover:text-gray-900"
-                                         >
-                                             <Trash2 className="w-4 h-4" />
-                                         </button>
-                                     </div>
-                                     <div className="flex items-center justify-between mb-2">
-                                         <div className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa</div>
-                                         <button
-                                             type="button"
-                                             title="Usuń pozycję"
-                                             onClick={() => {
-                                                 if (customExtras.length === 1) {
-                                                     setCustomExtras([{ label: '', price: 0 }]);
-                                                     return;
-                                                 }
-                                                 const updated = customExtras.filter((_, i) => i !== index);
-                                                 setCustomExtras(updated);
-                                             }}
-                                             className="p-1 text-gray-400 hover:text-gray-900"
-                                         >
-                                             <Trash2 className="w-4 h-4" />
-                                         </button>
-                                     </div>
-                                     
-                                     <input
-                                         type="text"
-                                         placeholder="Np. Transport"
-                                         className="w-full text-xs p-2 border border-gray-200 mb-2"
-                                         value={extra.label}
-                                         onChange={(e) => {
-                                             const updated = [...customExtras];
-                                             updated[index].label = e.target.value;
-                                             setCustomExtras(updated);
-                                         }}
-                                     />
-                                     <label className="text-[10px] font-bold text-gray-400 uppercase">Cena netto (zł)</label>
-                                     <input
-                                         type="number"
-                                         placeholder="0"
-                                         className="w-full text-xs p-2 border border-gray-200"
-                                         value={extra.price}
-                                         onChange={(e) => {
-                                             const updated = [...customExtras];
-                                             updated[index].price = Number(e.target.value);
-                                             setCustomExtras(updated);
-                                         }}
-                                     />
-                                 </div>
-                             ))}
-                             <button
-                                 type="button"
-                                 onClick={() => setCustomExtras([...customExtras, { label: '', price: 0 }])}
-                                 className="flex items-center gap-2 text-xs font-bold text-[#6E8809]"
-                             >
-                                 <Plus className="w-4 h-4" />
-                                 Dodaj kolejną pozycję
-                             </button>
+                             {buildMode === 'both' ? (
+                                <>
+                                    {renderCustomExtrasEditor('surowy')}
+                                    {renderCustomExtrasEditor('deweloperski')}
+                                </>
+                             ) : (
+                                <>
+                                    {customExtras.map((extra, index) => (
+                                        <div key={index} className="border border-gray-200 p-2">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa</div>
+                                                <button type="button" title="Usuń pozycję" onClick={() => removeCustomExtra(index)} className="p-1 text-gray-400 hover:text-gray-900">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                placeholder="Np. Transport"
+                                                className="w-full text-xs p-2 border border-gray-200 mb-2"
+                                                value={extra.label}
+                                                onChange={(e) => updateCustomExtra(index, { label: e.target.value })}
+                                            />
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase">Cena netto (zł)</label>
+                                            <input
+                                                type="number"
+                                                placeholder="0"
+                                                className="w-full text-xs p-2 border border-gray-200"
+                                                value={extra.price}
+                                                onChange={(e) => updateCustomExtra(index, { price: Number(e.target.value) })}
+                                            />
+                                        </div>
+                                    ))}
+                                    <button type="button" onClick={() => addCustomExtra()} className="flex items-center gap-2 text-xs font-bold text-[#6E8809]">
+                                        <Plus className="w-4 h-4" />
+                                        Dodaj kolejną pozycję
+                                    </button>
+                                </>
+                             )}
                          </div>
                      </AccordionItem>
 
@@ -1868,7 +2013,15 @@ export const OfferGenerator: React.FC = () => {
                 </div>
 
                 <div className="p-4 border-t border-gray-200 bg-white space-y-3">
-                    <div className="flex justify-between items-end mb-2"><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Brutto</span><span className="text-3xl font-black text-[#6E8809] tracking-tight"><CountUp value={totalGross} /> zł</span></div>
+                    {buildMode === 'both' ? (
+                        <div className="mb-2 text-right leading-snug">
+                            <div className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Brutto</div>
+                            <div className="text-xl font-black text-[#6E8809] tracking-tight">Surowy: <CountUp value={dualSurowyGross} /> zł</div>
+                            <div className="text-xl font-black text-[#6E8809] tracking-tight">Deweloperski: <CountUp value={dualDeweloperskiGross} /> zł</div>
+                        </div>
+                    ) : (
+                        <div className="flex justify-between items-end mb-2"><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Brutto</span><span className="text-3xl font-black text-[#6E8809] tracking-tight"><CountUp value={totalGross} /> zł</span></div>
+                    )}
                     <button
                         onClick={handleSavePdf}
                         className="w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs bg-gray-900 text-white hover:bg-black cursor-pointer"
@@ -1887,16 +2040,15 @@ export const OfferGenerator: React.FC = () => {
             {/* --- RIGHT PREVIEW (PDF) --- */}
             <div ref={previewRef} className="flex-1 bg-gray-200 overflow-y-auto p-12 print:p-0 print:bg-white print:overflow-visible print:w-full print:h-auto print:block custom-scrollbar">
                 <div ref={pdfRootRef} id="pdf-root" className="scale-100 origin-top mx-auto print:scale-100 max-w-[210mm]">
+                    
                     {buildMode === 'both' ? (
                         <>
-                            {renderPreviewDocument(false)}
-                            {renderPreviewDocument(true)}
+                            {renderPreviewPages(false, true)}
+                            {renderPreviewPages(true, true)}
                         </>
                     ) : (
-                        renderPreviewDocument(isDeveloperState)
+                        renderPreviewPages(isDeveloperState, false)
                     )}
-                </div>
-            </div>
                 </div>
             </div>
         </div>
