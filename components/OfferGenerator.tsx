@@ -263,537 +263,6 @@ const WelcomeModal: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
         return () => clearTimeout(timer);
     }, [onComplete]);
     if (!visible) return null;
-
-    const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
-        const isDeveloperState = previewIsDeveloperState;
-        const buildMode = showStateSuffix ? 'both' : (previewIsDeveloperState ? 'deweloperski' : 'surowy');
-        const previewOffer = calculateOfferForState(previewIsDeveloperState);
-        const basePrice = previewOffer.basePrice;
-        const totalNetPrice = previewOffer.totalNetPrice;
-        const selectedItemsList = previewOffer.selectedItemsList;
-        const totalVat = totalNetPrice * 0.08;
-        const totalGross = totalNetPrice + totalVat;
-
-        return (
-            <>
-                    {/* PAGE 1: OKŁADKA */}
-                    <A4Page className="flex flex-col a4-page">
-                        <LeafDecor src={images.decorLeaf} />
-                        <div className="p-20 flex flex-col h-full">
-                            <div className="flex justify-center mb-24"><img src={images.logo} alt="Starter Home" className="h-12 w-auto object-contain" /></div>
-                            <div className="mb-16 text-center">
-								<span className="inline-block bg-[#f7faf3] text-[#6E8809] font-bold px-6 py-2 uppercase tracking-widest text-sm mb-8 border border-[#e2e8da] rounded-full">
-									{selectedHouse.id === 'individual_house'
-										? `Szczegóły projektu ${displayHouseName}`
-										: `Szczegóły Projektu ${selectedHouse.name.replace(' HOUSE', '')}`}
-								</span>
-                                <h1 className="text-6xl font-black text-gray-900 leading-tight mb-6">Spersonalizowana <br/>Oferta</h1>
-                                {clientName && (<h2 className="text-2xl text-gray-400 font-light mt-4">Dla: <span className="text-gray-900 font-bold">{clientName}</span></h2>)}
-                            </div>
-                            <div className="flex items-center justify-center gap-8 mb-20">
-                                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#6E8809]"><img src={images.advisor} className="w-full h-full object-cover" alt="Doradca" /></div>
-                                <div className="text-left"><div className="font-black text-3xl text-gray-900 mb-1">Krystian Pogorzelski</div><div className="text-[#6E8809] font-bold text-base uppercase tracking-widest">Obsługa Klienta</div></div>
-                            </div>
-                            <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
-                                <img src={resolvePublicAsset(selectedHouse.image)} className="w-full h-full object-cover" alt="Zdjęcie główne" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                                <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{displayHouseName}</p></div>
-                            </div>
-                        </div>
-                    </A4Page>
-
-                    {/* PAGE 2: ANALIZA POTRZEB */}
-                    <A4Page className="flex flex-col p-12 a4-page">
-                        <div className="flex justify-between items-start mb-10"><img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" /></div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-8 leading-tight">{customTexts.page2Title}</h2>
-                        <div className="space-y-4 mb-8">
-                            {needs.map((item) => {
-                                const IconComponent = AVAILABLE_ICONS[item.icon] || AVAILABLE_ICONS['Circle'];
-                                return (<div key={item.id} className="flex items-center gap-4 text-gray-700" style={{ fontSize: `${16 * fontScale}px` }}><div className="w-8 h-8 bg-[#f7faf3] flex items-center justify-center text-[#6E8809] shrink-0"><IconComponent size={16} strokeWidth={2.5} /></div><span className="font-medium">{item.text}</span></div>);
-                            })}
-                        </div>
-
-                        {/* USPs SECTION (REPLACED LIST) */}
-                        <div className="mt-auto grid grid-cols-1 gap-6">
-                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
-                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
-                                     <ShieldCheck className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-gray-900 text-lg">Brak ukrytych kosztów</h4>
-                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Cena w umowie jest ostateczna i transparentna.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
-                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
-                                     <Lock className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-gray-900 text-lg">Gwarancja niezmienności ceny</h4>
-                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Pełne bezpieczeństwo finansowe Twojej inwestycji.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
-                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
-                                     <LayoutTemplate className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-gray-900 text-lg">Zmiana układu gratis</h4>
-                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Dopasuj wnętrze domu do swoich indywidualnych potrzeb.</p>
-                                </div>
-                            </div>
-                             <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
-                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
-                                     <FileSignature className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-gray-900 text-lg">Przejrzysta umowa</h4>
-                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Proste i zrozumiałe warunki współpracy.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <OfferFooter />
-                    </A4Page>
-
-                    {/* PAGE 3: 6 KROKÓW (NEW) */}
-                    <A4Page className="flex flex-col p-20 a4-page">
-                         <div className="flex justify-between items-center mb-12">
-                             <h2 className="text-3xl font-bold text-gray-900">Twój proces budowy</h2>
-                             <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
-                         </div>
-
-                         <div className="flex flex-1 justify-center items-start mt-6">
-                             <ProcessFlowTable type={processClientType} />
-                         </div>
-
-                         <OfferFooter />
-                    </A4Page>
-
-                    {/* PAGE 4: TECHNOLOGIA / PRZEKROJE (REDESIGNED 2x2) */}
-                    <A4Page className="flex flex-col p-12 a4-page">
-                         <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Technologia i Przekroje</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
-                         
-                         
-<div className="flex-1 flex flex-col gap-6">
-
-    {/* 1. PRZEKRÓJ ŚCIANY ZEWNĘTRZNEJ - szeroki */}
-    <div className="flex flex-col border border-gray-100 bg-white">
-        <div className="w-full overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-            <img src={resolvePublicAsset('przekroj-sciany-zewnetrznej-1.webp')} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
-        </div>
-        <div className="p-4">
-            <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
-                {customTexts.techWallExtTitle}
-            </h3>
-            <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
-                {customTexts.techWallExtDesc}
-            </p>
-        </div>
-    </div>
-
-    {/* 2 i 3 - Dach i Strop w 2 kolumnach */}
-    <div className="grid grid-cols-2 gap-6">
-
-        {/* Dach (przeniesiony niżej) */}
-        <div className="flex flex-col border border-gray-100 bg-white">
-            <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-                <img src={images.techRoof} className="max-h-full max-w-full object-contain" alt="Dach" />
-            </div>
-            <div className="p-3 flex-1">
-                <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
-                    {customTexts.techRoofTitle}
-                </h3>
-                <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
-                    {customTexts.techRoofDesc}
-                </p>
-            </div>
-        </div>
-
-        {/* Strop (bez zmian) */}
-        <div className="flex flex-col border border-gray-100 bg-white">
-            <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-                <img src={images.techFloor} className="max-h-full max-w-full object-contain" alt="Strop" />
-            </div>
-            <div className="p-3 flex-1">
-                <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
-                    {customTexts.techFloorTitle}
-                </h3>
-                <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
-                    {customTexts.techFloorDesc}
-                </p>
-            </div>
-        </div>
-
-    </div>
-
-</div>
-<OfferFooter />
-
-                    </A4Page>
-
-                    {/* PAGE 5: WIZUALIZACJE */}
-                    <A4Page className="flex flex-col a4-page bg-white">
-                        {/* Kolaż wizualizacji */}
-                        <div className="w-full relative px-12 pt-12">
-                            <div className="relative w-full">
-                                <img
-                                    src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
-                                    className="w-full h-auto object-contain"
-                                    style={{ maxHeight: '640px' }}
-                                    alt="Wizualizacja"
-                                />
-                                <div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">
-                                    Wizualizacja
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Tekst pod kolażem */}
-                        <div className="px-12 pt-8">
-                            <div
-                                style={{
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontSize: '24px',
-                                    fontWeight: 700,
-                                    color: 'rgb(17, 24, 39)'
-                                }}
-                            >
-                                Wizualizacja
-                            </div>
-                            <div
-                                style={{
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontSize: '20px',
-                                    fontWeight: 400,
-                                    color: '#6e8809',
-                                    marginTop: '8px'
-                                }}
-                            >
-                                Zdjęcia mają charakter podglądowy
-                            </div>
-                        </div>
-                    </A4Page>
-
-
-{/* PAGE 6: RZUT TECHNICZNY */}
-<A4Page className="flex flex-col a4-page bg-[#f9f9f9] p-12">
-
-    <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-        <Layers className="text-[#6E8809]" />
-        Rzut Techniczny
-    </h3>
-<p
-    style={{
-        fontFamily: "Inter, sans-serif",
-        fontSize: "20px",
-        color: "#6E8809",
-        marginBottom: "20px",
-        marginTop: "-10px"
-    }}
->
-    Układ pomieszczeń może zostać dostosowany do indywidualnych potrzeb klienta.
-</p>
-
-    <div className="flex flex-col items-center justify-start w-full gap-8 flex-1">
-
-        <div className="hidden">
-            {floorPlanCandidates.map((src) => (
-                <img
-                    key={src}
-                    src={src}
-                    onLoad={() =>
-                        setAvailableFloorPlans(prev =>
-                            prev.includes(src) ? prev : [...prev, src]
-                        )
-                    }
-                />
-            ))}
-        </div>
-
-        {availableFloorPlans.length > 0 ? (
-            availableFloorPlans.map((src, i) => (
-                <img
-                    key={src}
-                    src={src}
-                    className="max-w-full max-h-[1200px] object-contain mix-blend-multiply"
-                    alt={`Rzut ${i + 1}`}
-                />
-            ))
-        ) : (
-            <img
-                src={images.floorPlan}
-                className="max-w-full object-contain"
-                alt="Rzut"
-            />
-        )}
-
-    </div>
-
-</A4Page>
-
-                    {/* PAGE 6: TABELA STANÓW (COMPARISON) & ZAKRES (NEW) */}
-                    <A4Page className="flex flex-col p-12 a4-page">
-                        <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Porównanie Stanów</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
-                        
-                        <div className="mb-12">
-                            <img
-                                src={resolvePublicAsset('/assets/porownanie-stanow.png')}
-                                alt="Porównanie Stanów"
-                                className="w-full h-auto object-contain"
-                            />
-                        </div>
-
-                        {/*
-                          NOTE: This section is purely visual in the configurator.
-                          It replaces the previous "Po naszej stronie / Po stronie klienta" boxes.
-                        */}
-                        <div className="flex-1 flex items-center justify-center">
-                            <div className="transform scale-75 origin-center -mt-16">
-                            <div className="overflow-hidden rounded-xl border border-gray-200">
-                                <div className="bg-[#6e8809] text-white px-5 py-4">
-                                    <div className="text-xl font-bold tracking-tight">Koszty związane z budową</div>
-                                </div>
-
-                                <div className="divide-y divide-gray-100">
-                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
-                                        <div className="min-w-0">
-                                            <div className="text-base font-bold text-gray-900 leading-snug">Zlecenie mapy do celów projektowych</div>
-                                            <div className="text-[13px] text-gray-500 mt-0.5">(lokalny geodeta)</div>
-                                        </div>
-                                        <div className="shrink-0 text-base whitespace-nowrap">
-                                            <span className="font-bold text-gray-900">800 – 1200 zł</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-white">
-                                        <div className="min-w-0">
-                                            <div className="text-base font-bold text-gray-900 leading-snug">Wytyczenie budynku na działce</div>
-                                            <div className="text-[13px] text-gray-500 mt-0.5">(lokalny geodeta)</div>
-                                        </div>
-                                        <div className="shrink-0 text-base whitespace-nowrap">
-                                            <span className="font-bold text-gray-900">1000 – 2000 zł</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
-                                        <div className="min-w-0">
-                                            <div className="text-base font-bold text-gray-900 leading-snug">Zatrudnienie kierownika budowy</div>
-                                            <div className="text-[13px] text-gray-500 mt-0.5">(najlepiej lokalnego)</div>
-                                        </div>
-                                        <div className="shrink-0 text-base whitespace-nowrap">
-                                            <span className="font-bold text-gray-900">3000 – 5000 zł</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-white">
-                                        <div className="min-w-0">
-                                            <div className="text-base leading-snug text-gray-900">
-                                                <span className="font-bold">Przyłącza i Media</span>
-                                                <span className="font-normal"> - </span>
-                                                <span className="font-normal">Doprowadzenie prądu i wody do stawianego budynku</span>
-                                            </div>
-                                        </div>
-                                        <div className="shrink-0 text-base whitespace-nowrap">
-                                            <span className="text-gray-400">nasz koszt to <span className="font-bold text-gray-900">150zł/mb</span></span>
-                                        </div>
-                                    </div>
-
-                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
-                                        <div className="min-w-0">
-                                            <div className="text-base leading-snug text-gray-900">
-                                                <span className="font-bold">Ogrzewanie</span>
-                                                <span className="font-normal"> - </span>
-                                                <span className="font-normal">Wybór systemu ogrzewania</span>
-                                            </div>
-                                        </div>
-                                        <div className="shrink-0 text-base whitespace-nowrap">
-                                            <span className="text-gray-400 font-medium">sprawdź nasz konfigurator</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="px-6 py-6 bg-white">
-                                    <div className="bg-[#f7faf3] border border-[#e2e8da] px-5 py-4 text-[15px] text-gray-900">
-                                        <span className="font-bold">To należy do obowiązków</span> <span className="font-normal">inwestora</span>, <span className="font-normal">lecz możemy zrobić</span> <span className="font-bold">to za Ciebie</span>
-                                    </div>
-
-                                    <div className="mt-6">
-                                        <div className="text-2xl font-bold text-gray-900">Zero ukrytych kosztów:</div>
-                                        <div className="text-gray-700 mt-2 leading-relaxed">
-                                            Pokazujemy realne wydatki, nawet jeśli nie płacisz nam.
-                                            <br />
-                                            Chcemy, abyś wiedział, na co przygotować budżet.
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            </div>
-                        </div>
-                        <OfferFooter />
-                    </A4Page>
-
-                    {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
-                    <A4Page className="flex flex-col relative a4-page overflow-hidden">
-                        <LeafDecor src={images.decorLeaf} />
-                        <div className="flex-1 flex flex-col p-12 pb-8 h-full">
-                             <div className="flex justify-between items-start mb-8">
-                                <h2 className="text-3xl font-black text-gray-900">Podsumowanie Oferty</h2>
-                                <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
-                             </div>
-
-                             {/* DYNAMIC SPACER TABLE - EXPANDED */}
-                             <div className="bg-gray-50 border-t-4 border-[#6E8809] flex-1 flex flex-col mb-4 overflow-hidden">
-                                <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center shrink-0">
-                                    <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Wybrany Model</span>
-                                    <span className="font-black text-xl text-gray-900">{displayHouseName}{buildMode === 'both' ? ' — SUROWY ZAMKNIĘTY' : ''}</span>
-                                </div>
-                                
-                                {/* SCROLLABLE CONTENT AREA */}
-                                <div className="flex-1 overflow-visible p-8">
-                                     <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="text-gray-400 text-[10px] uppercase tracking-widest border-b border-gray-200">
-                                                <th className="pb-4 font-medium w-1/2">Pozycja</th>
-                                                <th className="pb-4 font-medium w-1/4">Szczegóły</th>
-                                                <th className="pb-4 font-medium w-1/4 text-right">Cena Netto</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody style={{ fontSize: `${12 * fontScale}px` }}>
-                                            <tr className="border-b border-gray-200 leading-loose">
-                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({buildMode === 'both' ? (isDeveloperState ? 'Deweloperski' : 'Surowy zamknięty') : (isDeveloperState ? 'Deweloperski' : 'Surowy zamknięty')})</td>
-                                                <td className="py-2 text-gray-500">-</td>
-                                                <td className="py-2 text-right font-bold text-gray-900">{basePrice.toLocaleString()} zł</td>
-                                            </tr>
-                                            {selectedItemsList.map((item, idx) => (
-                                                <tr key={idx} className="border-b border-gray-200 leading-loose">
-                                                    <td className="py-2 font-medium text-gray-700">{item.name}</td>
-                                                    <td className="py-2 text-gray-500 italic">{item.variant || '-'}</td>
-                                                    <td className="py-2 text-right font-bold text-gray-900">+ {item.price.toLocaleString()} zł</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                     </table>
-
-                                     <div className="mt-6">
-                                         <div className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">
-                                             {isDeveloperState ? 'Stan deweloperski zawiera:' : 'Stan surowy zamknięty zawiera:'}
-                                         </div>
-                                         <ul className="list-disc pl-5 space-y-1 text-gray-600" style={{ fontSize: `${11 * fontScale}px` }}>
-                                             {isDeveloperState ? (
-                                                 <>
-                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
-                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
-                                                     <li>Okna trzyszybowe</li>
-                                                     <li>Gotowa elewacja</li>
-                                                     <li>Instalacje sanitarne i elektryczne (15 pkt)</li>
-                                                     <li>Ściany działowe</li>
-                                                     <li>Płyty g-k na ścianach i sufitach</li>
-                                                     <li>Drzwi wejściowe w kolorze dachu</li>
-                                                 </>
-                                             ) : (
-                                                 <>
-                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
-                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
-                                                     <li>Okna trzyszybowe</li>
-                                                     <li>Gotowa elewacja</li>
-                                                     <li>Ściany działowe</li>
-                                                     <li>Drzwi wejściowe w kolorze dachu</li>
-                                                 </>
-                                             )}
-                                         </ul>
-                                     </div>
-
-                                </div>
-
-                                {/* TOTALS (Fixed at bottom of grey area) */}
-                                <div className="p-6 bg-white border-t border-gray-200 mt-auto shrink-0">
-                                     <div className="flex justify-between items-center mb-2">
-                                        <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto</span>
-                                        <span className="text-xl font-bold text-gray-900">{totalNetPrice.toLocaleString()} zł</span>
-                                     </div>
-                                     <div className="flex justify-between items-center mb-6">
-                                        <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
-                                        <span className="text-sm text-gray-500">{totalVat.toLocaleString()} zł</span>
-                                     </div>
-                                     <div className="flex justify-between items-center p-4 bg-[#6E8809] text-white rounded-lg">
-                                        <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto</span>
-                                        <span className="text-3xl font-black">{totalGross.toLocaleString()} zł</span>
-                                     </div>
-                                </div>
-                             </div>
-                        </div>
-                    </A4Page>
-
-                    {/* PAGE 8: HARMONOGRAM & CTA (NEW PAGE) */}
-                    <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
-                         <div className="flex justify-between items-center mb-16">
-                             <h2 className="text-3xl font-black text-gray-900">Harmonogram i Kontakt</h2>
-                             <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
-                         </div>
-
-                         
-                         {/* TRANCHES */}
-                         {processClientType === 'cash' ? (
-                         <div className="mb-auto space-y-4">
-                             <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                                 <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">I</div>
-                                 <div>
-                                     <h4 className="text-sm font-bold text-gray-900 mb-2">I Transza (30%)</h4>
-                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche1}</p>
-                                 </div>
-                             </div>
-                             <div className="flex items-start gap-6 p-4 bg-[#f7faf3] border border-[#dcfce7] rounded-xl">
-                                 <div className="w-12 h-12 bg-[#6E8809] text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">II</div>
-                                 <div>
-                                     <h4 className="text-sm font-bold text-gray-900 mb-2">II Transza (50%)</h4>
-                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche2}</p>
-                                 </div>
-                             </div>
-                             <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                                 <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">III</div>
-                                 <div>
-                                     <h4 className="text-sm font-bold text-gray-900 mb-2">III Transza (20%)</h4>
-                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche3}</p>
-                                 </div>
-                             </div>
-                         </div>
-                         ) : (
-                         <div className="mb-auto">
-                             <div className="px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl">
-                                 <div className="flex items-center gap-2 mb-2">
-                                     <div className="w-10 h-10 bg-[#f7faf3] border border-[#e2e8da] rounded-lg flex items-center justify-center text-[#6E8809] shrink-0">💳</div>
-                                     <div className="text-base font-bold text-gray-900">Zakup kredytowy</div>
-                                 </div>
-                                 <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>
-                                     Wpłata 30% po podpisaniu umowy, a reszta transz realizowana zgodnie z harmonogramem banku kredytującego.
-                                 </p>
-                             </div>
-                         </div>
-                         )}
-
-                         {/* CTA BIG */}
-                         <div className="mt-12 bg-white border-t-2 border-[#6E8809] pt-8">
-                             <div className="flex items-center gap-8">
-                                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100 shrink-0">
-                                      <img src={images.advisor} className="w-full h-full object-cover" />
-                                  </div>
-                                  <div className="flex-1">
-                                      <p className="font-medium text-gray-900 italic mb-4 leading-relaxed tracking-tight" style={{ fontSize: `${18 * fontScale}px` }}>
-                                          "{customTexts.cta}"
-                                      </p>
-                                      <div>
-                                          <div className="text-xs font-bold text-[#6E8809] uppercase tracking-widest mb-1">Twój Opiekun</div>
-                                          <div className="text-xl font-black text-gray-900">Krystian Pogorzelski</div>
-                                      </div>
-                                  </div>
-                             </div>
-                         </div>
-                    </A4Page>
-
-            </>
-        );
-    };
-
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900 transition-opacity duration-500 opacity-100 data-[closed=true]:opacity-0" data-closed={!visible}>
             <div className="text-center animate-fade-in">
@@ -1721,9 +1190,546 @@ export const OfferGenerator: React.FC = () => {
     const updateText = (key: keyof typeof customTexts, value: string) => setCustomTexts(prev => ({ ...prev, [key]: value }));
     const updateNeed = (id: string, field: 'icon' | 'text', value: string) => setNeeds(needs.map(n => n.id === id ? { ...n, [field]: value } : n));
     const removeNeed = (id: string) => setNeeds(needs.filter(n => n.id !== id));
-    const addNeed = () => setNeeds([...needs, { id: Date.now().toString(), icon: 'Check', text: 'Nowa potrzeba' }]);
+
+    const renderPreviewPages = ({
+        previewIsDeveloperState,
+        previewBasePrice,
+        previewSelectedItemsList,
+        previewTotalNetPrice,
+        previewTotalVat,
+        previewTotalGross,
+        stateTitleSuffix = '',
+        fragmentKey,
+    }: {
+        previewIsDeveloperState: boolean;
+        previewBasePrice: number;
+        previewSelectedItemsList: { name: string; variant?: string; price: number }[];
+        previewTotalNetPrice: number;
+        previewTotalVat: number;
+        previewTotalGross: number;
+        stateTitleSuffix?: string;
+        fragmentKey: string;
+    }) => (
+        <React.Fragment key={fragmentKey}>
+                    {/* PAGE 1: OKŁADKA */}
+                    <A4Page className="flex flex-col a4-page">
+                        <LeafDecor src={images.decorLeaf} />
+                        <div className="p-20 flex flex-col h-full">
+                            <div className="flex justify-center mb-24"><img src={images.logo} alt="Starter Home" className="h-12 w-auto object-contain" /></div>
+                            <div className="mb-16 text-center">
+								<span className="inline-block bg-[#f7faf3] text-[#6E8809] font-bold px-6 py-2 uppercase tracking-widest text-sm mb-8 border border-[#e2e8da] rounded-full">
+									{selectedHouse.id === 'individual_house'
+										? `Szczegóły projektu ${displayHouseName}`
+										: `Szczegóły Projektu ${selectedHouse.name.replace(' HOUSE', '')}`}
+								</span>
+                                <h1 className="text-6xl font-black text-gray-900 leading-tight mb-6">Spersonalizowana <br/>Oferta</h1>
+                                {clientName && (<h2 className="text-2xl text-gray-400 font-light mt-4">Dla: <span className="text-gray-900 font-bold">{clientName}</span></h2>)}
+                            </div>
+                            <div className="flex items-center justify-center gap-8 mb-20">
+                                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#6E8809]"><img src={images.advisor} className="w-full h-full object-cover" alt="Doradca" /></div>
+                                <div className="text-left"><div className="font-black text-3xl text-gray-900 mb-1">Krystian Pogorzelski</div><div className="text-[#6E8809] font-bold text-base uppercase tracking-widest">Obsługa Klienta</div></div>
+                            </div>
+                            <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
+                                <img src={resolvePublicAsset(selectedHouse.image)} className="w-full h-full object-cover" alt="Zdjęcie główne" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                                <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{displayHouseName}</p></div>
+                            </div>
+                        </div>
+                    </A4Page>
+
+                    {/* PAGE 2: ANALIZA POTRZEB */}
+                    <A4Page className="flex flex-col p-12 a4-page">
+                        <div className="flex justify-between items-start mb-10"><img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" /></div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-8 leading-tight">{customTexts.page2Title}</h2>
+                        <div className="space-y-4 mb-8">
+                            {needs.map((item) => {
+                                const IconComponent = AVAILABLE_ICONS[item.icon] || AVAILABLE_ICONS['Circle'];
+                                return (<div key={item.id} className="flex items-center gap-4 text-gray-700" style={{ fontSize: `${16 * fontScale}px` }}><div className="w-8 h-8 bg-[#f7faf3] flex items-center justify-center text-[#6E8809] shrink-0"><IconComponent size={16} strokeWidth={2.5} /></div><span className="font-medium">{item.text}</span></div>);
+                            })}
+                        </div>
+
+                        {/* USPs SECTION (REPLACED LIST) */}
+                        <div className="mt-auto grid grid-cols-1 gap-6">
+                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
+                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
+                                     <ShieldCheck className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-lg">Brak ukrytych kosztów</h4>
+                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Cena w umowie jest ostateczna i transparentna.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
+                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
+                                     <Lock className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-lg">Gwarancja niezmienności ceny</h4>
+                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Pełne bezpieczeństwo finansowe Twojej inwestycji.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
+                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
+                                     <LayoutTemplate className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-lg">Zmiana układu gratis</h4>
+                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Dopasuj wnętrze domu do swoich indywidualnych potrzeb.</p>
+                                </div>
+                            </div>
+                             <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
+                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
+                                     <FileSignature className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-lg">Przejrzysta umowa</h4>
+                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Proste i zrozumiałe warunki współpracy.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <OfferFooter />
+                    </A4Page>
+
+                    {/* PAGE 3: 6 KROKÓW (NEW) */}
+                    <A4Page className="flex flex-col p-20 a4-page">
+                         <div className="flex justify-between items-center mb-12">
+                             <h2 className="text-3xl font-bold text-gray-900">Twój proces budowy</h2>
+                             <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
+                         </div>
+
+                         <div className="flex flex-1 justify-center items-start mt-6">
+                             <ProcessFlowTable type={processClientType} />
+                         </div>
+
+                         <OfferFooter />
+                    </A4Page>
+
+                    {/* PAGE 4: TECHNOLOGIA / PRZEKROJE (REDESIGNED 2x2) */}
+                    <A4Page className="flex flex-col p-12 a4-page">
+                         <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Technologia i Przekroje</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
+                         
+                         
+<div className="flex-1 flex flex-col gap-6">
+
+    {/* 1. PRZEKRÓJ ŚCIANY ZEWNĘTRZNEJ - szeroki */}
+    <div className="flex flex-col border border-gray-100 bg-white">
+        <div className="w-full overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
+            <img src={resolvePublicAsset('przekroj-sciany-zewnetrznej-1.webp')} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
+        </div>
+        <div className="p-4">
+            <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                {customTexts.techWallExtTitle}
+            </h3>
+            <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                {customTexts.techWallExtDesc}
+            </p>
+        </div>
+    </div>
+
+    {/* 2 i 3 - Dach i Strop w 2 kolumnach */}
+    <div className="grid grid-cols-2 gap-6">
+
+        {/* Dach (przeniesiony niżej) */}
+        <div className="flex flex-col border border-gray-100 bg-white">
+            <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
+                <img src={images.techRoof} className="max-h-full max-w-full object-contain" alt="Dach" />
+            </div>
+            <div className="p-3 flex-1">
+                <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                    {customTexts.techRoofTitle}
+                </h3>
+                <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                    {customTexts.techRoofDesc}
+                </p>
+            </div>
+        </div>
+
+        {/* Strop (bez zmian) */}
+        <div className="flex flex-col border border-gray-100 bg-white">
+            <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
+                <img src={images.techFloor} className="max-h-full max-w-full object-contain" alt="Strop" />
+            </div>
+            <div className="p-3 flex-1">
+                <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                    {customTexts.techFloorTitle}
+                </h3>
+                <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                    {customTexts.techFloorDesc}
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+<OfferFooter />
+
+                    </A4Page>
+
+                    {/* PAGE 5: WIZUALIZACJE */}
+                    <A4Page className="flex flex-col a4-page bg-white">
+                        {/* Kolaż wizualizacji */}
+                        <div className="w-full relative px-12 pt-12">
+                            <div className="relative w-full">
+                                <img
+                                    src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
+                                    className="w-full h-auto object-contain"
+                                    style={{ maxHeight: '640px' }}
+                                    alt="Wizualizacja"
+                                />
+                                <div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">
+                                    Wizualizacja
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tekst pod kolażem */}
+                        <div className="px-12 pt-8">
+                            <div
+                                style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontSize: '24px',
+                                    fontWeight: 700,
+                                    color: 'rgb(17, 24, 39)'
+                                }}
+                            >
+                                Wizualizacja
+                            </div>
+                            <div
+                                style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontSize: '20px',
+                                    fontWeight: 400,
+                                    color: '#6e8809',
+                                    marginTop: '8px'
+                                }}
+                            >
+                                Zdjęcia mają charakter podglądowy
+                            </div>
+                        </div>
+                    </A4Page>
+
+
+{/* PAGE 6: RZUT TECHNICZNY */}
+<A4Page className="flex flex-col a4-page bg-[#f9f9f9] p-12">
+
+    <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+        <Layers className="text-[#6E8809]" />
+        Rzut Techniczny
+    </h3>
+<p
+    style={{
+        fontFamily: "Inter, sans-serif",
+        fontSize: "20px",
+        color: "#6E8809",
+        marginBottom: "20px",
+        marginTop: "-10px"
+    }}
+>
+    Układ pomieszczeń może zostać dostosowany do indywidualnych potrzeb klienta.
+</p>
+
+    <div className="flex flex-col items-center justify-start w-full gap-8 flex-1">
+
+        <div className="hidden">
+            {floorPlanCandidates.map((src) => (
+                <img
+                    key={src}
+                    src={src}
+                    onLoad={() =>
+                        setAvailableFloorPlans(prev =>
+                            prev.includes(src) ? prev : [...prev, src]
+                        )
+                    }
+                />
+            ))}
+        </div>
+
+        {availableFloorPlans.length > 0 ? (
+            availableFloorPlans.map((src, i) => (
+                <img
+                    key={src}
+                    src={src}
+                    className="max-w-full max-h-[1200px] object-contain mix-blend-multiply"
+                    alt={`Rzut ${i + 1}`}
+                />
+            ))
+        ) : (
+            <img
+                src={images.floorPlan}
+                className="max-w-full object-contain"
+                alt="Rzut"
+            />
+        )}
+
+    </div>
+
+</A4Page>
+
+                    {/* PAGE 6: TABELA STANÓW (COMPARISON) & ZAKRES (NEW) */}
+                    <A4Page className="flex flex-col p-12 a4-page">
+                        <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Porównanie Stanów</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
+                        
+                        <div className="mb-12">
+                            <img
+                                src={resolvePublicAsset('/assets/porownanie-stanow.png')}
+                                alt="Porównanie Stanów"
+                                className="w-full h-auto object-contain"
+                            />
+                        </div>
+
+                        {/*
+                          NOTE: This section is purely visual in the configurator.
+                          It replaces the previous "Po naszej stronie / Po stronie klienta" boxes.
+                        */}
+                        <div className="flex-1 flex items-center justify-center">
+                            <div className="transform scale-75 origin-center -mt-16">
+                            <div className="overflow-hidden rounded-xl border border-gray-200">
+                                <div className="bg-[#6e8809] text-white px-5 py-4">
+                                    <div className="text-xl font-bold tracking-tight">Koszty związane z budową</div>
+                                </div>
+
+                                <div className="divide-y divide-gray-100">
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
+                                        <div className="min-w-0">
+                                            <div className="text-base font-bold text-gray-900 leading-snug">Zlecenie mapy do celów projektowych</div>
+                                            <div className="text-[13px] text-gray-500 mt-0.5">(lokalny geodeta)</div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="font-bold text-gray-900">800 – 1200 zł</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-white">
+                                        <div className="min-w-0">
+                                            <div className="text-base font-bold text-gray-900 leading-snug">Wytyczenie budynku na działce</div>
+                                            <div className="text-[13px] text-gray-500 mt-0.5">(lokalny geodeta)</div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="font-bold text-gray-900">1000 – 2000 zł</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
+                                        <div className="min-w-0">
+                                            <div className="text-base font-bold text-gray-900 leading-snug">Zatrudnienie kierownika budowy</div>
+                                            <div className="text-[13px] text-gray-500 mt-0.5">(najlepiej lokalnego)</div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="font-bold text-gray-900">3000 – 5000 zł</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-white">
+                                        <div className="min-w-0">
+                                            <div className="text-base leading-snug text-gray-900">
+                                                <span className="font-bold">Przyłącza i Media</span>
+                                                <span className="font-normal"> - </span>
+                                                <span className="font-normal">Doprowadzenie prądu i wody do stawianego budynku</span>
+                                            </div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="text-gray-400">nasz koszt to <span className="font-bold text-gray-900">150zł/mb</span></span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
+                                        <div className="min-w-0">
+                                            <div className="text-base leading-snug text-gray-900">
+                                                <span className="font-bold">Ogrzewanie</span>
+                                                <span className="font-normal"> - </span>
+                                                <span className="font-normal">Wybór systemu ogrzewania</span>
+                                            </div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="text-gray-400 font-medium">sprawdź nasz konfigurator</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="px-6 py-6 bg-white">
+                                    <div className="bg-[#f7faf3] border border-[#e2e8da] px-5 py-4 text-[15px] text-gray-900">
+                                        <span className="font-bold">To należy do obowiązków</span> <span className="font-normal">inwestora</span>, <span className="font-normal">lecz możemy zrobić</span> <span className="font-bold">to za Ciebie</span>
+                                    </div>
+
+                                    <div className="mt-6">
+                                        <div className="text-2xl font-bold text-gray-900">Zero ukrytych kosztów:</div>
+                                        <div className="text-gray-700 mt-2 leading-relaxed">
+                                            Pokazujemy realne wydatki, nawet jeśli nie płacisz nam.
+                                            <br />
+                                            Chcemy, abyś wiedział, na co przygotować budżet.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                        <OfferFooter />
+                    </A4Page>
+
+                    {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
+                    <A4Page className="flex flex-col relative a4-page overflow-hidden">
+                        <LeafDecor src={images.decorLeaf} />
+                        <div className="flex-1 flex flex-col p-12 pb-8 h-full">
+                             <div className="flex justify-between items-start mb-8">
+                                <h2 className="text-3xl font-black text-gray-900">Podsumowanie Oferty</h2>
+                                <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
+                             </div>
+
+                             {/* DYNAMIC SPACER TABLE - EXPANDED */}
+                             <div className="bg-gray-50 border-t-4 border-[#6E8809] flex-1 flex flex-col mb-4 overflow-hidden">
+                                <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center shrink-0">
+                                    <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Wybrany Model</span>
+                                    <span className="font-black text-xl text-gray-900">{displayHouseName}{stateTitleSuffix}</span>
+                                </div>
+                                
+                                {/* SCROLLABLE CONTENT AREA */}
+                                <div className="flex-1 overflow-visible p-8">
+                                     <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="text-gray-400 text-[10px] uppercase tracking-widest border-b border-gray-200">
+                                                <th className="pb-4 font-medium w-1/2">Pozycja</th>
+                                                <th className="pb-4 font-medium w-1/4">Szczegóły</th>
+                                                <th className="pb-4 font-medium w-1/4 text-right">Cena Netto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style={{ fontSize: `${12 * fontScale}px` }}>
+                                            <tr className="border-b border-gray-200 leading-loose">
+                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({previewIsDeveloperState ? 'Deweloperski' : 'Surowy zamknięty'})</td>
+                                                <td className="py-2 text-gray-500">-</td>
+                                                <td className="py-2 text-right font-bold text-gray-900">{previewBasePrice.toLocaleString()} zł</td>
+                                            </tr>
+                                            {previewSelectedItemsList.map((item, idx) => (
+                                                <tr key={idx} className="border-b border-gray-200 leading-loose">
+                                                    <td className="py-2 font-medium text-gray-700">{item.name}</td>
+                                                    <td className="py-2 text-gray-500 italic">{item.variant || '-'}</td>
+                                                    <td className="py-2 text-right font-bold text-gray-900">+ {item.price.toLocaleString()} zł</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                     </table>
+
+                                     <div className="mt-6">
+                                         <div className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">
+                                             {previewIsDeveloperState ? 'Stan deweloperski zawiera:' : 'Stan surowy zamknięty zawiera:'}
+                                         </div>
+                                         <ul className="list-disc pl-5 space-y-1 text-gray-600" style={{ fontSize: `${11 * fontScale}px` }}>
+                                             {previewIsDeveloperState ? (
+                                                 <>
+                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
+                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
+                                                     <li>Okna trzyszybowe</li>
+                                                     <li>Gotowa elewacja</li>
+                                                     <li>Instalacje sanitarne i elektryczne (15 pkt)</li>
+                                                     <li>Ściany działowe</li>
+                                                     <li>Płyty g-k na ścianach i sufitach</li>
+                                                     <li>Drzwi wejściowe w kolorze dachu</li>
+                                                 </>
+                                             ) : (
+                                                 <>
+                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
+                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
+                                                     <li>Okna trzyszybowe</li>
+                                                     <li>Gotowa elewacja</li>
+                                                     <li>Ściany działowe</li>
+                                                     <li>Drzwi wejściowe w kolorze dachu</li>
+                                                 </>
+                                             )}
+                                         </ul>
+                                     </div>
+
+                                </div>
+
+                                {/* TOTALS (Fixed at bottom of grey area) */}
+                                <div className="p-6 bg-white border-t border-gray-200 mt-auto shrink-0">
+                                     <div className="flex justify-between items-center mb-2">
+                                        <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto</span>
+                                        <span className="text-xl font-bold text-gray-900">{previewTotalNetPrice.toLocaleString()} zł</span>
+                                     </div>
+                                     <div className="flex justify-between items-center mb-6">
+                                        <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
+                                        <span className="text-sm text-gray-500">{previewTotalVat.toLocaleString()} zł</span>
+                                     </div>
+                                     <div className="flex justify-between items-center p-4 bg-[#6E8809] text-white rounded-lg">
+                                        <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto</span>
+                                        <span className="text-3xl font-black">{previewTotalGross.toLocaleString()} zł</span>
+                                     </div>
+                                </div>
+                             </div>
+                        </div>
+                    </A4Page>
+
+                    {/* PAGE 8: HARMONOGRAM & CTA (NEW PAGE) */}
+                    <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
+                         <div className="flex justify-between items-center mb-16">
+                             <h2 className="text-3xl font-black text-gray-900">Harmonogram i Kontakt</h2>
+                             <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
+                         </div>
+
+                         
+                         {/* TRANCHES */}
+                         {processClientType === 'cash' ? (
+                         <div className="mb-auto space-y-4">
+                             <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                 <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">I</div>
+                                 <div>
+                                     <h4 className="text-sm font-bold text-gray-900 mb-2">I Transza (30%)</h4>
+                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche1}</p>
+                                 </div>
+                             </div>
+                             <div className="flex items-start gap-6 p-4 bg-[#f7faf3] border border-[#dcfce7] rounded-xl">
+                                 <div className="w-12 h-12 bg-[#6E8809] text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">II</div>
+                                 <div>
+                                     <h4 className="text-sm font-bold text-gray-900 mb-2">II Transza (50%)</h4>
+                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche2}</p>
+                                 </div>
+                             </div>
+                             <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                 <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">III</div>
+                                 <div>
+                                     <h4 className="text-sm font-bold text-gray-900 mb-2">III Transza (20%)</h4>
+                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche3}</p>
+                                 </div>
+                             </div>
+                         </div>
+                         ) : (
+                         <div className="mb-auto">
+                             <div className="px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                 <div className="flex items-center gap-2 mb-2">
+                                     <div className="w-10 h-10 bg-[#f7faf3] border border-[#e2e8da] rounded-lg flex items-center justify-center text-[#6E8809] shrink-0">💳</div>
+                                     <div className="text-base font-bold text-gray-900">Zakup kredytowy</div>
+                                 </div>
+                                 <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>
+                                     Wpłata 30% po podpisaniu umowy, a reszta transz realizowana zgodnie z harmonogramem banku kredytującego.
+                                 </p>
+                             </div>
+                         </div>
+                         )}
+
+                         {/* CTA BIG */}
+                         <div className="mt-12 bg-white border-t-2 border-[#6E8809] pt-8">
+                             <div className="flex items-center gap-8">
+                                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100 shrink-0">
+                                      <img src={images.advisor} className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="flex-1">
+                                      <p className="font-medium text-gray-900 italic mb-4 leading-relaxed tracking-tight" style={{ fontSize: `${18 * fontScale}px` }}>
+                                          "{customTexts.cta}"
+                                      </p>
+                                      <div>
+                                          <div className="text-xs font-bold text-[#6E8809] uppercase tracking-widest mb-1">Twój Opiekun</div>
+                                          <div className="text-xl font-black text-gray-900">Krystian Pogorzelski</div>
+                                      </div>
+                                  </div>
+                             </div>
+                         </div>
+                    </A4Page>
+
+        </React.Fragment>
+    );
 
     return (
+
         <div className="flex h-screen bg-gray-100 font-sans print:block print:h-auto print:overflow-visible">
             {!welcomeDone && <WelcomeModal onComplete={() => setWelcomeDone(true)} />}
             <CompressionModal
@@ -2047,14 +2053,520 @@ export const OfferGenerator: React.FC = () => {
             {/* --- RIGHT PREVIEW (PDF) --- */}
             <div ref={previewRef} className="flex-1 bg-gray-200 overflow-y-auto p-12 print:p-0 print:bg-white print:overflow-visible print:w-full print:h-auto print:block custom-scrollbar">
                 <div ref={pdfRootRef} id="pdf-root" className="scale-100 origin-top mx-auto print:scale-100 max-w-[210mm]">
-                    {buildMode === 'both' ? (
-                        <>
-                            {renderPreviewPages(false, true)}
-                            {renderPreviewPages(true, true)}
-                        </>
-                    ) : (
-                        renderPreviewPages(isDeveloperState, false)
-                    )}
+                    
+                    {/* PAGE 1: OKŁADKA */}
+                    <A4Page className="flex flex-col a4-page">
+                        <LeafDecor src={images.decorLeaf} />
+                        <div className="p-20 flex flex-col h-full">
+                            <div className="flex justify-center mb-24"><img src={images.logo} alt="Starter Home" className="h-12 w-auto object-contain" /></div>
+                            <div className="mb-16 text-center">
+								<span className="inline-block bg-[#f7faf3] text-[#6E8809] font-bold px-6 py-2 uppercase tracking-widest text-sm mb-8 border border-[#e2e8da] rounded-full">
+									{selectedHouse.id === 'individual_house'
+										? `Szczegóły projektu ${displayHouseName}`
+										: `Szczegóły Projektu ${selectedHouse.name.replace(' HOUSE', '')}`}
+								</span>
+                                <h1 className="text-6xl font-black text-gray-900 leading-tight mb-6">Spersonalizowana <br/>Oferta</h1>
+                                {clientName && (<h2 className="text-2xl text-gray-400 font-light mt-4">Dla: <span className="text-gray-900 font-bold">{clientName}</span></h2>)}
+                            </div>
+                            <div className="flex items-center justify-center gap-8 mb-20">
+                                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#6E8809]"><img src={images.advisor} className="w-full h-full object-cover" alt="Doradca" /></div>
+                                <div className="text-left"><div className="font-black text-3xl text-gray-900 mb-1">Krystian Pogorzelski</div><div className="text-[#6E8809] font-bold text-base uppercase tracking-widest">Obsługa Klienta</div></div>
+                            </div>
+                            <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
+                                <img src={resolvePublicAsset(selectedHouse.image)} className="w-full h-full object-cover" alt="Zdjęcie główne" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                                <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{displayHouseName}</p></div>
+                            </div>
+                        </div>
+                    </A4Page>
+
+                    {/* PAGE 2: ANALIZA POTRZEB */}
+                    <A4Page className="flex flex-col p-12 a4-page">
+                        <div className="flex justify-between items-start mb-10"><img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" /></div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-8 leading-tight">{customTexts.page2Title}</h2>
+                        <div className="space-y-4 mb-8">
+                            {needs.map((item) => {
+                                const IconComponent = AVAILABLE_ICONS[item.icon] || AVAILABLE_ICONS['Circle'];
+                                return (<div key={item.id} className="flex items-center gap-4 text-gray-700" style={{ fontSize: `${16 * fontScale}px` }}><div className="w-8 h-8 bg-[#f7faf3] flex items-center justify-center text-[#6E8809] shrink-0"><IconComponent size={16} strokeWidth={2.5} /></div><span className="font-medium">{item.text}</span></div>);
+                            })}
+                        </div>
+
+                        {/* USPs SECTION (REPLACED LIST) */}
+                        <div className="mt-auto grid grid-cols-1 gap-6">
+                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
+                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
+                                     <ShieldCheck className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-lg">Brak ukrytych kosztów</h4>
+                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Cena w umowie jest ostateczna i transparentna.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
+                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
+                                     <Lock className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-lg">Gwarancja niezmienności ceny</h4>
+                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Pełne bezpieczeństwo finansowe Twojej inwestycji.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
+                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
+                                     <LayoutTemplate className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-lg">Zmiana układu gratis</h4>
+                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Dopasuj wnętrze domu do swoich indywidualnych potrzeb.</p>
+                                </div>
+                            </div>
+                             <div className="flex items-center gap-6 p-6 bg-white border border-gray-100 rounded-xl">
+                                <div className="w-14 h-14 bg-[#f7faf3] text-[#6E8809] flex items-center justify-center rounded-full shrink-0">
+                                     <FileSignature className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-lg">Przejrzysta umowa</h4>
+                                    <p className="text-gray-500" style={{ fontSize: `${14 * fontScale}px` }}>Proste i zrozumiałe warunki współpracy.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <OfferFooter />
+                    </A4Page>
+
+                    {/* PAGE 3: 6 KROKÓW (NEW) */}
+                    <A4Page className="flex flex-col p-20 a4-page">
+                         <div className="flex justify-between items-center mb-12">
+                             <h2 className="text-3xl font-bold text-gray-900">Twój proces budowy</h2>
+                             <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
+                         </div>
+
+                         <div className="flex flex-1 justify-center items-start mt-6">
+                             <ProcessFlowTable type={processClientType} />
+                         </div>
+
+                         <OfferFooter />
+                    </A4Page>
+
+                    {/* PAGE 4: TECHNOLOGIA / PRZEKROJE (REDESIGNED 2x2) */}
+                    <A4Page className="flex flex-col p-12 a4-page">
+                         <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Technologia i Przekroje</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
+                         
+                         
+<div className="flex-1 flex flex-col gap-6">
+
+    {/* 1. PRZEKRÓJ ŚCIANY ZEWNĘTRZNEJ - szeroki */}
+    <div className="flex flex-col border border-gray-100 bg-white">
+        <div className="w-full overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
+            <img src={resolvePublicAsset('przekroj-sciany-zewnetrznej-1.webp')} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
+        </div>
+        <div className="p-4">
+            <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                {customTexts.techWallExtTitle}
+            </h3>
+            <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                {customTexts.techWallExtDesc}
+            </p>
+        </div>
+    </div>
+
+    {/* 2 i 3 - Dach i Strop w 2 kolumnach */}
+    <div className="grid grid-cols-2 gap-6">
+
+        {/* Dach (przeniesiony niżej) */}
+        <div className="flex flex-col border border-gray-100 bg-white">
+            <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
+                <img src={images.techRoof} className="max-h-full max-w-full object-contain" alt="Dach" />
+            </div>
+            <div className="p-3 flex-1">
+                <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                    {customTexts.techRoofTitle}
+                </h3>
+                <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                    {customTexts.techRoofDesc}
+                </p>
+            </div>
+        </div>
+
+        {/* Strop (bez zmian) */}
+        <div className="flex flex-col border border-gray-100 bg-white">
+            <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
+                <img src={images.techFloor} className="max-h-full max-w-full object-contain" alt="Strop" />
+            </div>
+            <div className="p-3 flex-1">
+                <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                    {customTexts.techFloorTitle}
+                </h3>
+                <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                    {customTexts.techFloorDesc}
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+<OfferFooter />
+
+                    </A4Page>
+
+                    {/* PAGE 5: WIZUALIZACJE */}
+                    <A4Page className="flex flex-col a4-page bg-white">
+                        {/* Kolaż wizualizacji */}
+                        <div className="w-full relative px-12 pt-12">
+                            <div className="relative w-full">
+                                <img
+                                    src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
+                                    className="w-full h-auto object-contain"
+                                    style={{ maxHeight: '640px' }}
+                                    alt="Wizualizacja"
+                                />
+                                <div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">
+                                    Wizualizacja
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tekst pod kolażem */}
+                        <div className="px-12 pt-8">
+                            <div
+                                style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontSize: '24px',
+                                    fontWeight: 700,
+                                    color: 'rgb(17, 24, 39)'
+                                }}
+                            >
+                                Wizualizacja
+                            </div>
+                            <div
+                                style={{
+                                    fontFamily: 'Inter, sans-serif',
+                                    fontSize: '20px',
+                                    fontWeight: 400,
+                                    color: '#6e8809',
+                                    marginTop: '8px'
+                                }}
+                            >
+                                Zdjęcia mają charakter podglądowy
+                            </div>
+                        </div>
+                    </A4Page>
+
+
+{/* PAGE 6: RZUT TECHNICZNY */}
+<A4Page className="flex flex-col a4-page bg-[#f9f9f9] p-12">
+
+    <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+        <Layers className="text-[#6E8809]" />
+        Rzut Techniczny
+    </h3>
+<p
+    style={{
+        fontFamily: "Inter, sans-serif",
+        fontSize: "20px",
+        color: "#6E8809",
+        marginBottom: "20px",
+        marginTop: "-10px"
+    }}
+>
+    Układ pomieszczeń może zostać dostosowany do indywidualnych potrzeb klienta.
+</p>
+
+    <div className="flex flex-col items-center justify-start w-full gap-8 flex-1">
+
+        <div className="hidden">
+            {floorPlanCandidates.map((src) => (
+                <img
+                    key={src}
+                    src={src}
+                    onLoad={() =>
+                        setAvailableFloorPlans(prev =>
+                            prev.includes(src) ? prev : [...prev, src]
+                        )
+                    }
+                />
+            ))}
+        </div>
+
+        {availableFloorPlans.length > 0 ? (
+            availableFloorPlans.map((src, i) => (
+                <img
+                    key={src}
+                    src={src}
+                    className="max-w-full max-h-[1200px] object-contain mix-blend-multiply"
+                    alt={`Rzut ${i + 1}`}
+                />
+            ))
+        ) : (
+            <img
+                src={images.floorPlan}
+                className="max-w-full object-contain"
+                alt="Rzut"
+            />
+        )}
+
+    </div>
+
+</A4Page>
+
+                    {/* PAGE 6: TABELA STANÓW (COMPARISON) & ZAKRES (NEW) */}
+                    <A4Page className="flex flex-col p-12 a4-page">
+                        <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Porównanie Stanów</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
+                        
+                        <div className="mb-12">
+                            <img
+                                src={resolvePublicAsset('/assets/porownanie-stanow.png')}
+                                alt="Porównanie Stanów"
+                                className="w-full h-auto object-contain"
+                            />
+                        </div>
+
+                        {/*
+                          NOTE: This section is purely visual in the configurator.
+                          It replaces the previous "Po naszej stronie / Po stronie klienta" boxes.
+                        */}
+                        <div className="flex-1 flex items-center justify-center">
+                            <div className="transform scale-75 origin-center -mt-16">
+                            <div className="overflow-hidden rounded-xl border border-gray-200">
+                                <div className="bg-[#6e8809] text-white px-5 py-4">
+                                    <div className="text-xl font-bold tracking-tight">Koszty związane z budową</div>
+                                </div>
+
+                                <div className="divide-y divide-gray-100">
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
+                                        <div className="min-w-0">
+                                            <div className="text-base font-bold text-gray-900 leading-snug">Zlecenie mapy do celów projektowych</div>
+                                            <div className="text-[13px] text-gray-500 mt-0.5">(lokalny geodeta)</div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="font-bold text-gray-900">800 – 1200 zł</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-white">
+                                        <div className="min-w-0">
+                                            <div className="text-base font-bold text-gray-900 leading-snug">Wytyczenie budynku na działce</div>
+                                            <div className="text-[13px] text-gray-500 mt-0.5">(lokalny geodeta)</div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="font-bold text-gray-900">1000 – 2000 zł</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
+                                        <div className="min-w-0">
+                                            <div className="text-base font-bold text-gray-900 leading-snug">Zatrudnienie kierownika budowy</div>
+                                            <div className="text-[13px] text-gray-500 mt-0.5">(najlepiej lokalnego)</div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="font-bold text-gray-900">3000 – 5000 zł</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-white">
+                                        <div className="min-w-0">
+                                            <div className="text-base leading-snug text-gray-900">
+                                                <span className="font-bold">Przyłącza i Media</span>
+                                                <span className="font-normal"> - </span>
+                                                <span className="font-normal">Doprowadzenie prądu i wody do stawianego budynku</span>
+                                            </div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="text-gray-400">nasz koszt to <span className="font-bold text-gray-900">150zł/mb</span></span>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-6 flex items-start justify-between gap-6 bg-[#f7faf3]">
+                                        <div className="min-w-0">
+                                            <div className="text-base leading-snug text-gray-900">
+                                                <span className="font-bold">Ogrzewanie</span>
+                                                <span className="font-normal"> - </span>
+                                                <span className="font-normal">Wybór systemu ogrzewania</span>
+                                            </div>
+                                        </div>
+                                        <div className="shrink-0 text-base whitespace-nowrap">
+                                            <span className="text-gray-400 font-medium">sprawdź nasz konfigurator</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="px-6 py-6 bg-white">
+                                    <div className="bg-[#f7faf3] border border-[#e2e8da] px-5 py-4 text-[15px] text-gray-900">
+                                        <span className="font-bold">To należy do obowiązków</span> <span className="font-normal">inwestora</span>, <span className="font-normal">lecz możemy zrobić</span> <span className="font-bold">to za Ciebie</span>
+                                    </div>
+
+                                    <div className="mt-6">
+                                        <div className="text-2xl font-bold text-gray-900">Zero ukrytych kosztów:</div>
+                                        <div className="text-gray-700 mt-2 leading-relaxed">
+                                            Pokazujemy realne wydatki, nawet jeśli nie płacisz nam.
+                                            <br />
+                                            Chcemy, abyś wiedział, na co przygotować budżet.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                        <OfferFooter />
+                    </A4Page>
+
+                    {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
+                    <A4Page className="flex flex-col relative a4-page overflow-hidden">
+                        <LeafDecor src={images.decorLeaf} />
+                        <div className="flex-1 flex flex-col p-12 pb-8 h-full">
+                             <div className="flex justify-between items-start mb-8">
+                                <h2 className="text-3xl font-black text-gray-900">Podsumowanie Oferty</h2>
+                                <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
+                             </div>
+
+                             {/* DYNAMIC SPACER TABLE - EXPANDED */}
+                             <div className="bg-gray-50 border-t-4 border-[#6E8809] flex-1 flex flex-col mb-4 overflow-hidden">
+                                <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center shrink-0">
+                                    <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Wybrany Model</span>
+                                    <span className="font-black text-xl text-gray-900">{displayHouseName}{buildMode === 'both' ? ' — SUROWY ZAMKNIĘTY' : ''}</span>
+                                </div>
+                                
+                                {/* SCROLLABLE CONTENT AREA */}
+                                <div className="flex-1 overflow-visible p-8">
+                                     <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="text-gray-400 text-[10px] uppercase tracking-widest border-b border-gray-200">
+                                                <th className="pb-4 font-medium w-1/2">Pozycja</th>
+                                                <th className="pb-4 font-medium w-1/4">Szczegóły</th>
+                                                <th className="pb-4 font-medium w-1/4 text-right">Cena Netto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style={{ fontSize: `${12 * fontScale}px` }}>
+                                            <tr className="border-b border-gray-200 leading-loose">
+                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({buildMode === 'both' ? (isDeveloperState ? 'Deweloperski' : 'Surowy zamknięty') : (isDeveloperState ? 'Deweloperski' : 'Surowy zamknięty')})</td>
+                                                <td className="py-2 text-gray-500">-</td>
+                                                <td className="py-2 text-right font-bold text-gray-900">{basePrice.toLocaleString()} zł</td>
+                                            </tr>
+                                            {selectedItemsList.map((item, idx) => (
+                                                <tr key={idx} className="border-b border-gray-200 leading-loose">
+                                                    <td className="py-2 font-medium text-gray-700">{item.name}</td>
+                                                    <td className="py-2 text-gray-500 italic">{item.variant || '-'}</td>
+                                                    <td className="py-2 text-right font-bold text-gray-900">+ {item.price.toLocaleString()} zł</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                     </table>
+
+                                     <div className="mt-6">
+                                         <div className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">
+                                             {isDeveloperState ? 'Stan deweloperski zawiera:' : 'Stan surowy zamknięty zawiera:'}
+                                         </div>
+                                         <ul className="list-disc pl-5 space-y-1 text-gray-600" style={{ fontSize: `${11 * fontScale}px` }}>
+                                             {isDeveloperState ? (
+                                                 <>
+                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
+                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
+                                                     <li>Okna trzyszybowe</li>
+                                                     <li>Gotowa elewacja</li>
+                                                     <li>Instalacje sanitarne i elektryczne (15 pkt)</li>
+                                                     <li>Ściany działowe</li>
+                                                     <li>Płyty g-k na ścianach i sufitach</li>
+                                                     <li>Drzwi wejściowe w kolorze dachu</li>
+                                                 </>
+                                             ) : (
+                                                 <>
+                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
+                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
+                                                     <li>Okna trzyszybowe</li>
+                                                     <li>Gotowa elewacja</li>
+                                                     <li>Ściany działowe</li>
+                                                     <li>Drzwi wejściowe w kolorze dachu</li>
+                                                 </>
+                                             )}
+                                         </ul>
+                                     </div>
+
+                                </div>
+
+                                {/* TOTALS (Fixed at bottom of grey area) */}
+                                <div className="p-6 bg-white border-t border-gray-200 mt-auto shrink-0">
+                                     <div className="flex justify-between items-center mb-2">
+                                        <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto</span>
+                                        <span className="text-xl font-bold text-gray-900">{totalNetPrice.toLocaleString()} zł</span>
+                                     </div>
+                                     <div className="flex justify-between items-center mb-6">
+                                        <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
+                                        <span className="text-sm text-gray-500">{totalVat.toLocaleString()} zł</span>
+                                     </div>
+                                     <div className="flex justify-between items-center p-4 bg-[#6E8809] text-white rounded-lg">
+                                        <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto</span>
+                                        <span className="text-3xl font-black">{totalGross.toLocaleString()} zł</span>
+                                     </div>
+                                </div>
+                             </div>
+                        </div>
+                    </A4Page>
+
+                    {/* PAGE 8: HARMONOGRAM & CTA (NEW PAGE) */}
+                    <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
+                         <div className="flex justify-between items-center mb-16">
+                             <h2 className="text-3xl font-black text-gray-900">Harmonogram i Kontakt</h2>
+                             <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
+                         </div>
+
+                         
+                         {/* TRANCHES */}
+                         {processClientType === 'cash' ? (
+                         <div className="mb-auto space-y-4">
+                             <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                 <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">I</div>
+                                 <div>
+                                     <h4 className="text-sm font-bold text-gray-900 mb-2">I Transza (30%)</h4>
+                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche1}</p>
+                                 </div>
+                             </div>
+                             <div className="flex items-start gap-6 p-4 bg-[#f7faf3] border border-[#dcfce7] rounded-xl">
+                                 <div className="w-12 h-12 bg-[#6E8809] text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">II</div>
+                                 <div>
+                                     <h4 className="text-sm font-bold text-gray-900 mb-2">II Transza (50%)</h4>
+                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche2}</p>
+                                 </div>
+                             </div>
+                             <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                 <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">III</div>
+                                 <div>
+                                     <h4 className="text-sm font-bold text-gray-900 mb-2">III Transza (20%)</h4>
+                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche3}</p>
+                                 </div>
+                             </div>
+                         </div>
+                         ) : (
+                         <div className="mb-auto">
+                             <div className="px-5 py-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                 <div className="flex items-center gap-2 mb-2">
+                                     <div className="w-10 h-10 bg-[#f7faf3] border border-[#e2e8da] rounded-lg flex items-center justify-center text-[#6E8809] shrink-0">💳</div>
+                                     <div className="text-base font-bold text-gray-900">Zakup kredytowy</div>
+                                 </div>
+                                 <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>
+                                     Wpłata 30% po podpisaniu umowy, a reszta transz realizowana zgodnie z harmonogramem banku kredytującego.
+                                 </p>
+                             </div>
+                         </div>
+                         )}
+
+                         {/* CTA BIG */}
+                         <div className="mt-12 bg-white border-t-2 border-[#6E8809] pt-8">
+                             <div className="flex items-center gap-8">
+                                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gray-100 shrink-0">
+                                      <img src={images.advisor} className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="flex-1">
+                                      <p className="font-medium text-gray-900 italic mb-4 leading-relaxed tracking-tight" style={{ fontSize: `${18 * fontScale}px` }}>
+                                          "{customTexts.cta}"
+                                      </p>
+                                      <div>
+                                          <div className="text-xs font-bold text-[#6E8809] uppercase tracking-widest mb-1">Twój Opiekun</div>
+                                          <div className="text-xl font-black text-gray-900">Krystian Pogorzelski</div>
+                                      </div>
+                                  </div>
+                             </div>
+                         </div>
+                    </A4Page>
 
                 </div>
             </div>
