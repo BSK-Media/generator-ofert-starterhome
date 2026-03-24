@@ -488,7 +488,10 @@ export const OfferGenerator: React.FC = () => {
     const [individualProjectName, setIndividualProjectName] = useState('Projekt Indywidualny');
     const displayHouseName = selectedHouse.id === 'individual_house' ? (individualProjectName.trim() || 'Projekt Indywidualny') : selectedHouse.name;
     const isIndividualProject = selectedHouse.id === 'individual_house';
-    const [isDeveloperState, setIsDeveloperState] = useState(false); 
+    const [offerVariantMode, setOfferVariantMode] = useState<'surowy' | 'deweloperski' | 'both'>('surowy');
+    const [exportStateOverride, setExportStateOverride] = useState<boolean | null>(null);
+    const isDualStateMode = offerVariantMode === 'both';
+    const isDeveloperState = exportStateOverride ?? (offerVariantMode === 'deweloperski');
     // TRYB EDYCJI (dla wszystkich domów)
     const [isEditMode, setIsEditMode] = useState(false);
     // Nadpisania (edytowalne nazwy/opcje/ceny) per dom
@@ -735,7 +738,7 @@ export const OfferGenerator: React.FC = () => {
 
     const getPdfFilename = (suffix?: string) => {
         const house = displayHouseName.replace(/\s+/g, '-').toLowerCase();
-        const state = isDeveloperState ? 'deweloperski' : 'surowy-zamkniety';
+        const state = isDualStateMode ? 'surowy-i-deweloperski' : (isDeveloperState ? 'deweloperski' : 'surowy-zamkniety');
         const client = (clientName || 'oferta').trim().replace(/\s+/g, '-');
         const tail = suffix ? `-${suffix}` : '';
         return `starterhome-${client}-${house}-${state}${tail}.pdf`;
@@ -756,15 +759,7 @@ export const OfferGenerator: React.FC = () => {
         );
     };
 
-    const savePdf = async (opts?: { compressed?: boolean; quality?: number }) => {
-        if (!pdfRootRef.current) return;
-
-        const source = pdfRootRef.current;
-        const quality = opts?.quality ?? 0.98;
-        const filename = getPdfFilename(opts?.compressed ? 'skompresowany' : undefined);
-
-        // Render page-by-page to avoid the classic html2pdf "blank page every other page" bug.
-        // Each .a4-page becomes exactly one PDF page.
+    const addRenderedPagesToPdf = async ({ source, pdf, quality }: { source: HTMLElement; pdf: jsPDF; quality: number }) => {
         const exportHost = document.createElement('div');
         exportHost.style.position = 'fixed';
         exportHost.style.left = '-10000px';
@@ -786,7 +781,6 @@ export const OfferGenerator: React.FC = () => {
             el.style.margin = '0';
             el.style.marginBottom = '0';
             el.style.boxShadow = 'none';
-            // Make sure the DOM page has deterministic dimensions
             el.style.width = '210mm';
             el.style.height = '297mm';
             el.style.overflow = 'hidden';
@@ -797,13 +791,10 @@ export const OfferGenerator: React.FC = () => {
 
         try {
             await waitForImages(clone);
-            // Give the browser a moment to layout fonts/images
             await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 
             const pages = Array.from(clone.querySelectorAll('.a4-page')) as HTMLElement[];
             const targets = pages.length ? pages : [clone];
-
-            const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
             const pageWidth = 210;
             const pageHeight = 297;
 
@@ -821,8 +812,45 @@ export const OfferGenerator: React.FC = () => {
                     windowHeight: pageEl.scrollHeight,
                 });
                 const imgData = canvas.toDataURL('image/jpeg', quality);
-                if (i > 0) pdf.addPage();
+                if (pdf.getNumberOfPages() > 0) pdf.addPage();
                 pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+            }
+        } finally {
+            try {
+                document.body.removeChild(exportHost);
+            } catch {
+                // no-op
+            }
+        }
+    };
+
+    const waitForStateRender = async () => {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    };
+
+    const savePdf = async (opts?: { compressed?: boolean; quality?: number }) => {
+        if (!pdfRootRef.current) return;
+
+        const source = pdfRootRef.current;
+        const quality = opts?.quality ?? 0.98;
+        const filename = getPdfFilename(opts?.compressed ? 'skompresowany' : undefined);
+        const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+        pdf.deletePage(1);
+
+        try {
+            if (isDualStateMode) {
+                setExportStateOverride(false);
+                await waitForStateRender();
+                await addRenderedPagesToPdf({ source, pdf, quality });
+
+                setExportStateOverride(true);
+                await waitForStateRender();
+                await addRenderedPagesToPdf({ source, pdf, quality });
+
+                setExportStateOverride(null);
+                await waitForStateRender();
+            } else {
+                await addRenderedPagesToPdf({ source, pdf, quality });
             }
 
             pdf.save(filename);
@@ -830,11 +858,7 @@ export const OfferGenerator: React.FC = () => {
             console.error(e);
             alert('Nie udało się zapisać PDF. Spróbuj ponownie.');
         } finally {
-            try {
-                document.body.removeChild(exportHost);
-            } catch {
-                // no-op
-            }
+            setExportStateOverride(null);
         }
     };
 
@@ -859,19 +883,17 @@ export const OfferGenerator: React.FC = () => {
         reader.readAsDataURL(file);
     };
 
-    const basePrice = useMemo(() => {
-        const bp = basePricesByHouse[selectedHouse.id];
-        const surowy = bp?.surowy ?? selectedHouse.basePrice;
-        const deweloperski = bp?.deweloperski ?? selectedHouse.developerPrice;
-        return isDeveloperState ? deweloperski : surowy;
-    }, [selectedHouse, isDeveloperState, basePricesByHouse]);
-    
     // --- CALCULATE PRICES ---
     const availableItems = useMemo(() => {
         return itemsByHouse[selectedHouse.id] ?? getOfferItemsForHouse(selectedHouse);
     }, [selectedHouse, itemsByHouse]);
-    
-    const { totalNetPrice, selectedItemsList } = useMemo(() => {
+
+    const calculateOfferData = (developerState: boolean) => {
+        const bp = basePricesByHouse[selectedHouse.id];
+        const surowy = bp?.surowy ?? selectedHouse.basePrice;
+        const deweloperski = bp?.deweloperski ?? selectedHouse.developerPrice;
+        const basePrice = developerState ? deweloperski : surowy;
+
         const extras = (customExtras || []).map(e => ({
             label: (e.label || '').trim(),
             price: Number(e.price) || 0,
@@ -879,7 +901,6 @@ export const OfferGenerator: React.FC = () => {
 
         const extrasTotal = extras.reduce((acc, e) => acc + e.price, 0);
 
-        // Projekt indywidualny: suma = cena bazowa + ceny sekcji + dodatki
         if (selectedHouse.id === 'individual_house') {
             const sumSections = customSections.reduce((acc, s) => acc + (Number(s.price) || 0), 0);
 
@@ -893,7 +914,11 @@ export const OfferGenerator: React.FC = () => {
 
             extras.forEach(e => list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price }));
 
-            return { totalNetPrice: basePrice + sumSections + extrasTotal, selectedItemsList: list };
+            const totalNetPrice = basePrice + sumSections + extrasTotal;
+            const totalVat = totalNetPrice * 0.08;
+            const totalGross = totalNetPrice + totalVat;
+
+            return { basePrice, totalNetPrice, selectedItemsList: list, totalVat, totalGross };
         }
 
         let sum = basePrice;
@@ -922,11 +947,27 @@ export const OfferGenerator: React.FC = () => {
             list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price });
         });
 
-        return { totalNetPrice: sum, selectedItemsList: list };
-    }, [basePrice, offerConfig, availableItems, selectedHouse, customSections, customExtras]);
+        const totalNetPrice = sum;
+        const totalVat = totalNetPrice * 0.08;
+        const totalGross = totalNetPrice + totalVat;
 
-    const totalVat = totalNetPrice * 0.08;
-    const totalGross = totalNetPrice + totalVat;
+        return { basePrice, totalNetPrice, selectedItemsList: list, totalVat, totalGross };
+    };
+
+    const currentOfferData = useMemo(
+        () => calculateOfferData(isDeveloperState),
+        [selectedHouse, basePricesByHouse, customExtras, customSections, availableItems, offerConfig, isDeveloperState]
+    );
+
+    const bothOfferData = useMemo(
+        () => ({
+            surowy: calculateOfferData(false),
+            deweloperski: calculateOfferData(true),
+        }),
+        [selectedHouse, basePricesByHouse, customExtras, customSections, availableItems, offerConfig]
+    );
+
+    const { basePrice, totalNetPrice, selectedItemsList, totalVat, totalGross } = currentOfferData;
 
     // Helpers for UI
     const toggleAccordion = (section: string) => setOpenSection(openSection === section ? '' : section);
@@ -983,7 +1024,16 @@ export const OfferGenerator: React.FC = () => {
                                     />
                                 </div>
                             )}
-                            <div className="flex border border-gray-200"><button onClick={() => setIsDeveloperState(false)} className={`flex-1 py-2 text-xs font-bold uppercase ${!isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Surowy zamknięty</button><button onClick={() => setIsDeveloperState(true)} className={`flex-1 py-2 text-xs font-bold uppercase ${isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Deweloperski</button></div>
+                            <div className="grid grid-cols-3 border border-gray-200">
+                                <button onClick={() => setOfferVariantMode('surowy')} className={`py-2 text-[11px] font-bold uppercase ${offerVariantMode === 'surowy' ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Surowy zamknięty</button>
+                                <button onClick={() => setOfferVariantMode('deweloperski')} className={`py-2 text-[11px] font-bold uppercase border-x border-gray-200 ${offerVariantMode === 'deweloperski' ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Deweloperski</button>
+                                <button onClick={() => setOfferVariantMode('both')} className={`py-2 text-[11px] font-bold uppercase ${offerVariantMode === 'both' ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Surowy zamknięty lub deweloperski</button>
+                            </div>
+                            {isDualStateMode && (
+                                <div className="text-[11px] text-gray-500 leading-relaxed">
+                                    W PDF zostaną wygenerowane dwie pełne oferty: najpierw <b>surowy zamknięty</b>, potem <b>deweloperski</b>.
+                                </div>
+                            )}
                             <div className="mt-3">
                                 <div className="text-[11px] text-gray-500 mb-1 font-bold uppercase tracking-widest">Typ klienta</div>
                                 <div className="flex border border-gray-200">
@@ -1334,7 +1384,17 @@ export const OfferGenerator: React.FC = () => {
                 </div>
 
                 <div className="p-4 border-t border-gray-200 bg-white space-y-3">
-                    <div className="flex justify-between items-end mb-2"><span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Brutto</span><span className="text-3xl font-black text-[#6E8809] tracking-tight"><CountUp value={totalGross} /> zł</span></div>
+                    <div className="flex justify-between items-end mb-2">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Brutto</span>
+                        {isDualStateMode ? (
+                            <div className="text-right text-[#6E8809] tracking-tight leading-tight">
+                                <div className="text-sm font-bold">Surowy: {bothOfferData.surowy.totalGross.toLocaleString()} zł</div>
+                                <div className="text-sm font-bold">Deweloperski: {bothOfferData.deweloperski.totalGross.toLocaleString()} zł</div>
+                            </div>
+                        ) : (
+                            <span className="text-3xl font-black text-[#6E8809] tracking-tight"><CountUp value={totalGross} /> zł</span>
+                        )}
+                    </div>
                     <button
                         onClick={handleSavePdf}
                         className="w-full py-3 flex items-center justify-center gap-2 transition-all font-bold uppercase tracking-widest text-xs bg-gray-900 text-white hover:bg-black cursor-pointer"
