@@ -734,6 +734,13 @@ export const OfferGenerator: React.FC = () => {
         const stateLabel = stateKey === 'surowy' ? 'Surowy zamknięty' : 'Deweloperski';
         const stateConfig = getConfigForState(stateKey);
         const customStateKey = buildMode === 'both' ? stateKey : undefined;
+        const applyConfigChange = (code: string, value: any) => {
+            if (buildMode === 'both') {
+                handleConfigChangeForState(stateKey, code, value);
+            } else {
+                handleConfigChange(code, value);
+            }
+        };
         const stateSections = getCustomSectionsForState(stateKey);
         return (
             <div className="border border-gray-200 p-3 space-y-4 bg-white">
@@ -777,7 +784,7 @@ export const OfferGenerator: React.FC = () => {
                                                 <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${stateConfig[item.code] === opt.id ? 'border-[#6E8809]' : 'border-gray-300'}`}>
                                                     {stateConfig[item.code] === opt.id && <div className="w-2 h-2 rounded-full bg-[#6E8809]" />}
                                                 </div>
-                                                <input type="radio" className="hidden" name={`${stateKey}-${item.code}`} checked={stateConfig[item.code] === opt.id} onChange={() => handleConfigChangeForState(stateKey, item.code, opt.id)} />
+                                                <input type="radio" className="hidden" name={`${stateKey}-${item.code}`} checked={stateConfig[item.code] === opt.id} onChange={() => applyConfigChange(item.code, opt.id)} />
                                                 <div className="flex-1">
                                                     {isEditMode ? (
                                                         <input type="text" className="w-full p-2 border border-gray-200 text-xs font-medium" value={opt.name} onChange={(e) => updateOption(item.code, opt.id, { name: e.target.value })} />
@@ -796,7 +803,7 @@ export const OfferGenerator: React.FC = () => {
                                             <div className="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 border-gray-300">
                                                 {(stateConfig[item.code] === 'none' || !stateConfig[item.code]) && <div className="w-2 h-2 rounded-full bg-gray-300" />}
                                             </div>
-                                            <input type="radio" className="hidden" name={`${stateKey}-${item.code}`} checked={stateConfig[item.code] === 'none'} onChange={() => handleConfigChangeForState(stateKey, item.code, 'none')} />
+                                            <input type="radio" className="hidden" name={`${stateKey}-${item.code}`} checked={stateConfig[item.code] === 'none'} onChange={() => applyConfigChange(item.code, 'none')} />
                                             <span className="text-xs text-gray-400">Brak wyboru / Domyślne</span>
                                         </label>
                                     </div>
@@ -808,7 +815,7 @@ export const OfferGenerator: React.FC = () => {
                                                 {stateConfig[item.code] && <Check className="w-3 h-3 text-white" />}
                                             </div>
                                             <span className="text-xs font-bold text-gray-700">Dodaj do oferty</span>
-                                            <input type="checkbox" className="hidden" checked={!!stateConfig[item.code]} onChange={(e) => handleConfigChangeForState(stateKey, item.code, e.target.checked)} />
+                                            <input type="checkbox" className="hidden" checked={!!stateConfig[item.code]} onChange={(e) => applyConfigChange(item.code, e.target.checked)} />
                                         </div>
                                         {isEditMode ? (
                                             <input type="number" className="w-28 p-2 border border-gray-200 text-xs font-bold text-[#6E8809]" value={item.price ?? 0} onClick={(e) => e.stopPropagation()} onChange={(e) => updateItem(item.code, { price: Number(e.target.value) })} />
@@ -820,9 +827,9 @@ export const OfferGenerator: React.FC = () => {
                                 {item.type === 'number' && (
                                     <div className="flex items-center gap-4 bg-gray-50 p-2 rounded">
                                         <div className="flex items-center">
-                                            <button onClick={() => handleConfigChangeForState(stateKey, item.code, Math.max(0, (stateConfig[item.code] || 0) - 1))} className="w-8 h-8 bg-white border border-gray-200 hover:text-[#6E8809] flex items-center justify-center"><Minus className="w-3 h-3" /></button>
+                                            <button onClick={() => applyConfigChange(item.code, Math.max(0, (stateConfig[item.code] || 0) - 1))} className="w-8 h-8 bg-white border border-gray-200 hover:text-[#6E8809] flex items-center justify-center"><Minus className="w-3 h-3" /></button>
                                             <input type="number" className="w-12 text-center bg-transparent text-sm font-bold" value={stateConfig[item.code] || 0} readOnly />
-                                            <button onClick={() => handleConfigChangeForState(stateKey, item.code, (stateConfig[item.code] || 0) + 1)} className="w-8 h-8 bg-white border border-gray-200 hover:text-[#6E8809] flex items-center justify-center"><Plus className="w-3 h-3" /></button>
+                                            <button onClick={() => applyConfigChange(item.code, (stateConfig[item.code] || 0) + 1)} className="w-8 h-8 bg-white border border-gray-200 hover:text-[#6E8809] flex items-center justify-center"><Plus className="w-3 h-3" /></button>
                                         </div>
                                         <div className="text-right flex-1">
                                             <div className="text-xs text-gray-500">{isEditMode ? (
