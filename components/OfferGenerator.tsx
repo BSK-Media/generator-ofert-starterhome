@@ -1294,7 +1294,7 @@ export const OfferGenerator: React.FC = () => {
                                 <div className="text-left"><div className="font-black text-3xl text-gray-900 mb-1">Krystian Pogorzelski</div><div className="text-[#6E8809] font-bold text-base uppercase tracking-widest">Obsługa Klienta</div></div>
                             </div>
                             <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
-                                <img src={resolvePublicAsset(selectedHouse.image)} className="w-full h-full object-cover" alt="Zdjęcie główne" />
+                                <img src={images.main} className="w-full h-full object-cover" alt="Zdjęcie główne" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                                 <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{displayHouseName}</p></div>
                             </div>
@@ -1430,47 +1430,43 @@ export const OfferGenerator: React.FC = () => {
 
                     </A4Page>
 
-                    {/* PAGE 5: WIZUALIZACJE */}
-                    <A4Page className="flex flex-col a4-page bg-white">
-                        {/* Kolaż wizualizacji */}
-                        <div className="w-full relative px-12 pt-12">
-                            <div className="relative w-full">
-                                <img
-                                    src={resolvePublicAsset(selectedHouse.images?.[0] || selectedHouse.image)}
-                                    className="w-full h-auto object-contain"
-                                    style={{ maxHeight: '640px' }}
-                                    alt="Wizualizacja"
-                                />
-                                <div className="absolute top-8 left-8 bg-white px-4 py-2 font-bold uppercase tracking-widest text-xs">
-                                    Wizualizacja
+                    {/* PAGE 5: MULTIMEDIA / GALERIA */}
+                    <A4Page className="flex flex-col a4-page bg-white p-12">
+                        <div className="flex justify-between items-center mb-8">
+                            <h2 className="text-3xl font-bold text-gray-900">Multimedia projektu</h2>
+                            <img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-6 flex-1">
+                            <div className="border border-gray-100 bg-white overflow-hidden">
+                                <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Zdjęcie główne</div>
+                                <div className="h-[380px] bg-gray-50">
+                                    <img src={images.main} className="w-full h-full object-cover" alt="Zdjęcie główne" />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="border border-gray-100 bg-white overflow-hidden">
+                                    <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Galeria 1</div>
+                                    <div className="h-[220px] bg-gray-50">
+                                        <img src={images.gallery1} className="w-full h-full object-cover" alt="Galeria 1" />
+                                    </div>
+                                </div>
+                                <div className="border border-gray-100 bg-white overflow-hidden">
+                                    <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Galeria 2</div>
+                                    <div className="h-[220px] bg-gray-50">
+                                        <img src={images.gallery2} className="w-full h-full object-cover" alt="Galeria 2" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Tekst pod kolażem */}
-                        <div className="px-12 pt-8">
-                            <div
-                                style={{
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontSize: '24px',
-                                    fontWeight: 700,
-                                    color: 'rgb(17, 24, 39)'
-                                }}
-                            >
-                                Wizualizacja
-                            </div>
-                            <div
-                                style={{
-                                    fontFamily: 'Inter, sans-serif',
-                                    fontSize: '20px',
-                                    fontWeight: 400,
-                                    color: '#6e8809',
-                                    marginTop: '8px'
-                                }}
-                            >
+                        <div className="pt-6">
+                            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '20px', fontWeight: 400, color: '#6e8809' }}>
                                 Zdjęcia mają charakter podglądowy
                             </div>
                         </div>
+                        <OfferFooter />
                     </A4Page>
 
 
