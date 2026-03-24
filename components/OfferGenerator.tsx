@@ -733,6 +733,7 @@ export const OfferGenerator: React.FC = () => {
     const renderConfigEditor = (stateKey: BuildStateKey) => {
         const stateLabel = stateKey === 'surowy' ? 'Surowy zamknięty' : 'Deweloperski';
         const stateConfig = getConfigForState(stateKey);
+        const customStateKey = buildMode === 'both' ? stateKey : undefined;
         const stateSections = getCustomSectionsForState(stateKey);
         return (
             <div className="border border-gray-200 p-3 space-y-4 bg-white">
@@ -742,22 +743,22 @@ export const OfferGenerator: React.FC = () => {
                         {stateSections.map((sec) => (
                             <div key={sec.id} className="border border-gray-200 p-3 space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value }, stateKey)} placeholder="Tytuł sekcji" />
-                                    <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600" onClick={() => removeCustomSection(sec.id, stateKey)} title="Usuń">
+                                    <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value }, customStateKey)} placeholder="Tytuł sekcji" />
+                                    <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600" onClick={() => removeCustomSection(sec.id, customStateKey)} title="Usuń">
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
-                                <textarea rows={3} className="w-full p-2 border border-gray-200 text-xs" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value }, stateKey)} placeholder="Opis / szczegóły" />
+                                <textarea rows={3} className="w-full p-2 border border-gray-200 text-xs" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value }, customStateKey)} placeholder="Opis / szczegóły" />
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
                                         <div className="text-[11px] text-gray-500 mb-1">Cena netto (PLN)</div>
-                                        <input type="number" className="w-full p-2 border border-gray-200 text-sm" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) }, stateKey)} />
+                                        <input type="number" className="w-full p-2 border border-gray-200 text-sm" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) }, customStateKey)} />
                                     </div>
                                     <div className="text-[11px] text-gray-400 flex items-end">Ta kwota zostanie doliczona do podsumowania dla tego stanu.</div>
                                 </div>
                             </div>
                         ))}
-                        <button type="button" onClick={() => addCustomSection(stateKey)} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj sekcję</button>
+                        <button type="button" onClick={() => addCustomSection(customStateKey)} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj sekcję</button>
                     </div>
                 ) : (
                     <div className="space-y-5">
@@ -848,19 +849,19 @@ export const OfferGenerator: React.FC = () => {
                                 {stateSections.map((sec) => (
                                     <div key={sec.id} className="border border-gray-200 p-3 space-y-2 bg-gray-50/50">
                                         <div className="flex items-center gap-2">
-                                            <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold bg-white" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value }, stateKey)} placeholder="Tytuł" />
-                                            <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600 bg-white" onClick={() => removeCustomSection(sec.id, stateKey)} title="Usuń">
+                                            <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold bg-white" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value }, customStateKey)} placeholder="Tytuł" />
+                                            <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600 bg-white" onClick={() => removeCustomSection(sec.id, customStateKey)} title="Usuń">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
-                                        <textarea rows={2} className="w-full p-2 border border-gray-200 text-xs bg-white" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value }, stateKey)} placeholder="Opis" />
+                                        <textarea rows={2} className="w-full p-2 border border-gray-200 text-xs bg-white" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value }, customStateKey)} placeholder="Opis" />
                                         <div>
                                             <div className="text-[11px] text-gray-500 mb-1">Cena netto (PLN)</div>
-                                            <input type="number" className="w-full p-2 border border-gray-200 text-sm bg-white" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) }, stateKey)} placeholder="0" />
+                                            <input type="number" className="w-full p-2 border border-gray-200 text-sm bg-white" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) }, customStateKey)} placeholder="0" />
                                         </div>
                                     </div>
                                 ))}
-                                <button type="button" onClick={() => addCustomSection(stateKey)} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj pozycję custom</button>
+                                <button type="button" onClick={() => addCustomSection(customStateKey)} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj pozycję custom</button>
                             </div>
                         </div>
                     </div>
@@ -871,6 +872,7 @@ export const OfferGenerator: React.FC = () => {
 
     const renderCustomExtrasEditor = (stateKey: BuildStateKey) => {
         const stateLabel = stateKey === 'surowy' ? 'Surowy zamknięty' : 'Deweloperski';
+        const customStateKey = buildMode === 'both' ? stateKey : undefined;
         const extras = getCustomExtrasForState(stateKey);
         return (
             <div className="border border-gray-200 p-3 space-y-3 bg-white">
@@ -879,7 +881,7 @@ export const OfferGenerator: React.FC = () => {
                     <div key={`${stateKey}-${index}`} className="border border-gray-200 p-2">
                         <div className="flex items-center justify-between mb-2">
                             <div className="text-[10px] font-bold text-gray-400 uppercase">Pozycja niestandardowa</div>
-                            <button type="button" title="Usuń pozycję" onClick={() => removeCustomExtra(index, stateKey)} className="p-1 text-gray-400 hover:text-gray-900">
+                            <button type="button" title="Usuń pozycję" onClick={() => removeCustomExtra(index, customStateKey)} className="p-1 text-gray-400 hover:text-gray-900">
                                 <Trash2 className="w-4 h-4" />
                             </button>
                         </div>
@@ -888,7 +890,7 @@ export const OfferGenerator: React.FC = () => {
                             placeholder="Np. Transport"
                             className="w-full text-xs p-2 border border-gray-200 mb-2"
                             value={extra.label}
-                            onChange={(e) => updateCustomExtra(index, { label: e.target.value }, stateKey)}
+                            onChange={(e) => updateCustomExtra(index, { label: e.target.value }, customStateKey)}
                         />
                         <label className="text-[10px] font-bold text-gray-400 uppercase">Cena netto (zł)</label>
                         <input
@@ -896,11 +898,11 @@ export const OfferGenerator: React.FC = () => {
                             placeholder="0"
                             className="w-full text-xs p-2 border border-gray-200"
                             value={extra.price}
-                            onChange={(e) => updateCustomExtra(index, { price: Number(e.target.value) }, stateKey)}
+                            onChange={(e) => updateCustomExtra(index, { price: Number(e.target.value) }, customStateKey)}
                         />
                     </div>
                 ))}
-                <button type="button" onClick={() => addCustomExtra(stateKey)} className="flex items-center gap-2 text-xs font-bold text-[#6E8809]">
+                <button type="button" onClick={() => addCustomExtra(customStateKey)} className="flex items-center gap-2 text-xs font-bold text-[#6E8809]">
                     <Plus className="w-4 h-4" />
                     Dodaj kolejną pozycję
                 </button>
