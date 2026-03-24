@@ -484,7 +484,10 @@ export const OfferGenerator: React.FC = () => {
     // -- STATES --
     const [openSection, setOpenSection] = useState<string>('config');
     const [clientName, setClientName] = useState('');
-    const [selectedHouse, setSelectedHouse] = useState<House>(HOUSES[1]); 
+    const [selectedHouse, setSelectedHouse] = useState<House>(HOUSES[1]);
+    const [individualProjectName, setIndividualProjectName] = useState('Projekt Indywidualny');
+    const displayHouseName = selectedHouse.id === 'individual_house' ? (individualProjectName.trim() || 'Projekt Indywidualny') : selectedHouse.name;
+    const isIndividualProject = selectedHouse.id === 'individual_house';
     const [isDeveloperState, setIsDeveloperState] = useState(false); 
     // TRYB EDYCJI (dla wszystkich domów)
     const [isEditMode, setIsEditMode] = useState(false);
@@ -731,7 +734,7 @@ export const OfferGenerator: React.FC = () => {
     };
 
     const getPdfFilename = (suffix?: string) => {
-        const house = selectedHouse.name.replace(/\s+/g, '-').toLowerCase();
+        const house = displayHouseName.replace(/\s+/g, '-').toLowerCase();
         const state = isDeveloperState ? 'deweloperski' : 'surowy-zamkniety';
         const client = (clientName || 'oferta').trim().replace(/\s+/g, '-');
         const tail = suffix ? `-${suffix}` : '';
@@ -968,6 +971,18 @@ export const OfferGenerator: React.FC = () => {
                         <div className="space-y-4">
                             <input type="text" placeholder="Imię i Nazwisko" className="w-full p-3 border border-gray-200 text-sm" value={clientName} onChange={(e) => setClientName(e.target.value)} />
                             <div className="grid grid-cols-2 gap-2">{HOUSES.map(house => (<button key={house.id} onClick={() => setSelectedHouse(house)} className={`p-2 border text-xs font-bold uppercase ${selectedHouse.id === house.id ? 'border-[#6E8809] bg-[#f7faf3] text-[#6E8809]' : 'border-gray-200 text-gray-500'}`}>{house.name}</button>))}</div>
+                            {isIndividualProject && (
+                                <div className="mt-3">
+                                    <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">Nazwa projektu indywidualnego</label>
+                                    <input
+                                        type="text"
+                                        value={individualProjectName}
+                                        onChange={(e) => setIndividualProjectName(e.target.value)}
+                                        placeholder="Wpisz nazwę projektu"
+                                        className="w-full p-3 border border-gray-200 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-[#6E8809]"
+                                    />
+                                </div>
+                            )}
                             <div className="flex border border-gray-200"><button onClick={() => setIsDeveloperState(false)} className={`flex-1 py-2 text-xs font-bold uppercase ${!isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Surowy zamknięty</button><button onClick={() => setIsDeveloperState(true)} className={`flex-1 py-2 text-xs font-bold uppercase ${isDeveloperState ? 'bg-gray-100 text-gray-900' : 'text-gray-400'}`}>Deweloperski</button></div>
                             <div className="mt-3">
                                 <div className="text-[11px] text-gray-500 mb-1 font-bold uppercase tracking-widest">Typ klienta</div>
@@ -1347,7 +1362,7 @@ export const OfferGenerator: React.FC = () => {
                             <div className="mb-16 text-center">
 								<span className="inline-block bg-[#f7faf3] text-[#6E8809] font-bold px-6 py-2 uppercase tracking-widest text-sm mb-8 border border-[#e2e8da] rounded-full">
 									{selectedHouse.id === 'individual_house'
-										? 'Szczegóły projektu indywidualnego'
+										? `Szczegóły projektu ${displayHouseName}`
 										: `Szczegóły Projektu ${selectedHouse.name.replace(' HOUSE', '')}`}
 								</span>
                                 <h1 className="text-6xl font-black text-gray-900 leading-tight mb-6">Spersonalizowana <br/>Oferta</h1>
@@ -1360,7 +1375,7 @@ export const OfferGenerator: React.FC = () => {
                             <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
                                 <img src={resolvePublicAsset(selectedHouse.image)} className="w-full h-full object-cover" alt="Zdjęcie główne" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                                <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{selectedHouse.name}</p></div>
+                                <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{displayHouseName}</p></div>
                             </div>
                         </div>
                     </A4Page>
@@ -1708,7 +1723,7 @@ export const OfferGenerator: React.FC = () => {
                              <div className="bg-gray-50 border-t-4 border-[#6E8809] flex-1 flex flex-col mb-4 overflow-hidden">
                                 <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center shrink-0">
                                     <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Wybrany Model</span>
-                                    <span className="font-black text-xl text-gray-900">{selectedHouse.name}</span>
+                                    <span className="font-black text-xl text-gray-900">{displayHouseName}</span>
                                 </div>
                                 
                                 {/* SCROLLABLE CONTENT AREA */}
