@@ -110,6 +110,31 @@ const getFloorPlanSrc = (houseId: string, index: number) => {
 };
 
 
+
+
+const NEED_TEXT_PRESETS = [
+    'Dom o powierzchni do 70m2 zabudowy',
+    '2 sypialnie',
+    '3 sypialnie',
+    'Stan surowy zamknięty',
+    'Stan deweloperski',
+    'Projekt indywidualny',
+    'Płyta fundamentowa',
+    'Lokalizacja: Cała Polska',
+    'Pompa ciepła',
+    'Ogrzewanie podłogowe',
+    'Rekuperacja',
+    'Fotowoltaika',
+    'Taras',
+    'Garaż',
+    'Antresola',
+    'Duże przeszklenia',
+    'Wysoki salon',
+    'Dodatkowa łazienka',
+    'Biuro / gabinet',
+    'Kredyt hipoteczny',
+];
+
 const ICON_LABELS_PL: Record<string, string> = {
     Maximize: 'Powiększenie / Metraż',
     BedDouble: 'Sypialnia / Łóżko',
@@ -1914,10 +1939,31 @@ export const OfferGenerator: React.FC = () => {
                          <div className="space-y-4">
                              <textarea rows={2} className="w-full text-xs p-2 border border-gray-200" value={customTexts.page2Title} onChange={e => updateText('page2Title', e.target.value)} />
                              <div className="space-y-2">{needs.map((need, idx) => (
-                                <div key={need.id} className="flex gap-2 items-center">
-                                    <div className="w-16 shrink-0"><select value={need.icon} onChange={(e) => updateNeed(need.id, 'icon', e.target.value)} className="w-full text-[9px] border border-gray-200 p-1 bg-white h-8">{Object.keys(AVAILABLE_ICONS).map(iconKey => (<option key={iconKey} value={iconKey}>{ICON_LABELS_PL[iconKey] || iconKey}</option>))}</select></div>
-                                    <input className="flex-1 text-xs p-1 border border-gray-200 h-8" value={need.text} onChange={(e) => updateNeed(need.id, 'text', e.target.value)} />
-                                    <button onClick={() => removeNeed(need.id)} className="text-red-500"><Trash2 className="w-3 h-3" /></button>
+                                <div key={need.id} className="flex gap-2 items-start">
+                                    <div className="w-16 shrink-0">
+                                        <select value={need.icon} onChange={(e) => updateNeed(need.id, 'icon', e.target.value)} className="w-full text-[9px] border border-gray-200 p-1 bg-white h-8">
+                                            {Object.keys(AVAILABLE_ICONS).map(iconKey => (<option key={iconKey} value={iconKey}>{ICON_LABELS_PL[iconKey] || iconKey}</option>))}
+                                        </select>
+                                    </div>
+                                    <div className="flex-1 space-y-1">
+                                        <select
+                                            value=""
+                                            onChange={(e) => { if (e.target.value) updateNeed(need.id, 'text', e.target.value); }}
+                                            className="w-full text-[10px] border border-gray-200 p-1 bg-white h-8 text-gray-600"
+                                        >
+                                            <option value="">Wybierz z listy lub wpisz własne poniżej</option>
+                                            {NEED_TEXT_PRESETS.map((preset) => (
+                                                <option key={preset} value={preset}>{preset}</option>
+                                            ))}
+                                        </select>
+                                        <input
+                                            className="w-full text-xs p-2 border border-gray-200 h-9"
+                                            value={need.text}
+                                            placeholder="Wpisz własną potrzebę"
+                                            onChange={(e) => updateNeed(need.id, 'text', e.target.value)}
+                                        />
+                                    </div>
+                                    <button onClick={() => removeNeed(need.id)} className="text-red-500 pt-2"><Trash2 className="w-3 h-3" /></button>
                                 </div>
                              ))}<button onClick={addNeed} className="w-full py-2 border border-dashed text-xs text-gray-400">+ Dodaj</button></div>
                         </div>
