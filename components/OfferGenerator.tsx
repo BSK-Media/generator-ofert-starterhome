@@ -1195,6 +1195,8 @@ export const OfferGenerator: React.FC = () => {
 
     const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
         const previewOffer = calculateOfferForState(previewIsDeveloperState);
+        const previewVat = previewOffer.totalNetPrice * 0.08;
+        const previewGross = previewOffer.totalNetPrice + previewVat;
         return (
             <>
                     {/* PAGE 1: OKŁADKA */}
@@ -1634,11 +1636,11 @@ export const OfferGenerator: React.FC = () => {
                                      </div>
                                      <div className="flex justify-between items-center mb-6">
                                         <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
-                                        <span className="text-sm text-gray-500">{previewOffer.totalVat.toLocaleString()} zł</span>
+                                        <span className="text-sm text-gray-500">{previewVat.toLocaleString()} zł</span>
                                      </div>
                                      <div className="flex justify-between items-center p-4 bg-[#6E8809] text-white rounded-lg">
                                         <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto</span>
-                                        <span className="text-3xl font-black">{previewOffer.totalGross.toLocaleString()} zł</span>
+                                        <span className="text-3xl font-black">{previewGross.toLocaleString()} zł</span>
                                      </div>
                                 </div>
                              </div>
