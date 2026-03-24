@@ -1193,18 +1193,8 @@ export const OfferGenerator: React.FC = () => {
     const addNeed = () => setNeeds([...needs, { id: Date.now().toString(), icon: 'Check', text: 'Nowa potrzeba' }]);
 
 
-    const renderPreviewPages = (previewIsDeveloperState: boolean) => {
+    const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
         const previewOffer = calculateOfferForState(previewIsDeveloperState);
-        const previewBasePrice = previewOffer.basePrice;
-        const previewSelectedItemsList = previewOffer.selectedItemsList;
-        const previewTotalNetPrice = previewOffer.totalNetPrice;
-        const previewTotalVat = previewTotalNetPrice * 0.08;
-        const previewTotalGross = previewTotalNetPrice + previewTotalVat;
-        const previewDisplayHouseName = displayHouseName;
-        const previewModelSuffix = buildMode === 'both'
-            ? (previewIsDeveloperState ? ' — DEWELOPERSKI' : ' — SUROWY ZAMKNIĘTY')
-            : '';
-
         return (
             <>
                     {/* PAGE 1: OKŁADKA */}
@@ -1215,7 +1205,7 @@ export const OfferGenerator: React.FC = () => {
                             <div className="mb-16 text-center">
 								<span className="inline-block bg-[#f7faf3] text-[#6E8809] font-bold px-6 py-2 uppercase tracking-widest text-sm mb-8 border border-[#e2e8da] rounded-full">
 									{selectedHouse.id === 'individual_house'
-										? `Szczegóły projektu ${previewDisplayHouseName}`
+										? `Szczegóły projektu ${displayHouseName}`
 										: `Szczegóły Projektu ${selectedHouse.name.replace(' HOUSE', '')}`}
 								</span>
                                 <h1 className="text-6xl font-black text-gray-900 leading-tight mb-6">Spersonalizowana <br/>Oferta</h1>
@@ -1228,7 +1218,7 @@ export const OfferGenerator: React.FC = () => {
                             <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
                                 <img src={resolvePublicAsset(selectedHouse.image)} className="w-full h-full object-cover" alt="Zdjęcie główne" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                                <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{previewDisplayHouseName}</p></div>
+                                <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{displayHouseName}</p></div>
                             </div>
                         </div>
                     </A4Page>
@@ -1576,7 +1566,7 @@ export const OfferGenerator: React.FC = () => {
                              <div className="bg-gray-50 border-t-4 border-[#6E8809] flex-1 flex flex-col mb-4 overflow-hidden">
                                 <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center shrink-0">
                                     <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Wybrany Model</span>
-                                    <span className="font-black text-xl text-gray-900">{previewDisplayHouseName}{previewModelSuffix}</span>
+                                    <span className="font-black text-xl text-gray-900">{displayHouseName}{showStateSuffix ? ` — ${previewIsDeveloperState ? 'DEWELOPERSKI' : 'SUROWY ZAMKNIĘTY'}` : ''}</span>
                                 </div>
                                 
                                 {/* SCROLLABLE CONTENT AREA */}
@@ -1591,11 +1581,11 @@ export const OfferGenerator: React.FC = () => {
                                         </thead>
                                         <tbody style={{ fontSize: `${12 * fontScale}px` }}>
                                             <tr className="border-b border-gray-200 leading-loose">
-                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({buildMode === 'both' ? (previewIsDeveloperState ? 'Deweloperski' : 'Surowy zamknięty') : (previewIsDeveloperState ? 'Deweloperski' : 'Surowy zamknięty')})</td>
+                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({previewIsDeveloperState ? 'Deweloperski' : 'Surowy zamknięty'})</td>
                                                 <td className="py-2 text-gray-500">-</td>
-                                                <td className="py-2 text-right font-bold text-gray-900">{previewBasePrice.toLocaleString()} zł</td>
+                                                <td className="py-2 text-right font-bold text-gray-900">{previewOffer.basePrice.toLocaleString()} zł</td>
                                             </tr>
-                                            {previewSelectedItemsList.map((item, idx) => (
+                                            {previewOffer.selectedItemsList.map((item, idx) => (
                                                 <tr key={idx} className="border-b border-gray-200 leading-loose">
                                                     <td className="py-2 font-medium text-gray-700">{item.name}</td>
                                                     <td className="py-2 text-gray-500 italic">{item.variant || '-'}</td>
@@ -1640,15 +1630,15 @@ export const OfferGenerator: React.FC = () => {
                                 <div className="p-6 bg-white border-t border-gray-200 mt-auto shrink-0">
                                      <div className="flex justify-between items-center mb-2">
                                         <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto</span>
-                                        <span className="text-xl font-bold text-gray-900">{previewTotalNetPrice.toLocaleString()} zł</span>
+                                        <span className="text-xl font-bold text-gray-900">{previewOffer.totalNetPrice.toLocaleString()} zł</span>
                                      </div>
                                      <div className="flex justify-between items-center mb-6">
                                         <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
-                                        <span className="text-sm text-gray-500">{previewTotalVat.toLocaleString()} zł</span>
+                                        <span className="text-sm text-gray-500">{previewOffer.totalVat.toLocaleString()} zł</span>
                                      </div>
                                      <div className="flex justify-between items-center p-4 bg-[#6E8809] text-white rounded-lg">
                                         <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto</span>
-                                        <span className="text-3xl font-black">{previewTotalGross.toLocaleString()} zł</span>
+                                        <span className="text-3xl font-black">{previewOffer.totalGross.toLocaleString()} zł</span>
                                      </div>
                                 </div>
                              </div>
@@ -1861,7 +1851,7 @@ export const OfferGenerator: React.FC = () => {
                                     <button type="button" onClick={() => addCustomSection()} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj sekcję</button>
                                 </div>
                             ) : (
-                                renderConfigEditor('surowy')
+                                renderConfigEditor(isDeveloperState ? 'deweloperski' : 'surowy')
                             )}
                         </div>
                     </AccordionItem>
@@ -2053,11 +2043,11 @@ export const OfferGenerator: React.FC = () => {
                     
                     {buildMode === 'both' ? (
                         <>
-                            {renderPreviewPages(false)}
-                            {renderPreviewPages(true)}
+                            {renderPreviewPages(false, true)}
+                            {renderPreviewPages(true, true)}
                         </>
                     ) : (
-                        renderPreviewPages(isDeveloperState)
+                        renderPreviewPages(isDeveloperState, false)
                     )}
                 </div>
             </div>
