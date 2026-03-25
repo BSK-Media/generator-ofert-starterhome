@@ -563,7 +563,7 @@ export const OfferGenerator: React.FC = () => {
         techRoof: '/assets/G_F_4.png',
         techWallExt: 'https://starterhome.pl/wp-content/uploads/2025/12/G_F_2.png',
         techWallInt: 'https://starterhome.pl/wp-content/uploads/2025/12/G_2.png',
-        techFloor: '/assets/G_F_5.png' // Strop
+        techFloor: '/przekroj-stropu2503.webp' // Strop
     });
 
     const defaultMainImage = selectedHouse.image;
@@ -1411,7 +1411,7 @@ export const OfferGenerator: React.FC = () => {
     {/* 1. PRZEKRÓJ ŚCIANY ZEWNĘTRZNEJ - szeroki */}
     <div className="flex flex-col border border-gray-100 bg-white">
         <div className="w-full overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-            <img src={resolvePublicAsset('przekroj-sciany-zewnetrznej-1.webp')} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
+            <img src={resolvePublicAsset('przekroj-sciany-zewnetrznej2503.webp')} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
         </div>
         <div className="p-4">
             <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
