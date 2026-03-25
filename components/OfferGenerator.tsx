@@ -614,7 +614,7 @@ export const OfferGenerator: React.FC = () => {
         setIsCustomFloorPlanUploaded(false);
         setIsCompressed(false);
         setCompressionStatus('idle');
-    }, [selectedHouse, shouldUseIndividualDualConfig, individualConfigTemplateHouse]);
+    }, [selectedHouse]);
 
     // CONFIG STATE - Updated to handle Radio/Number/Checkbox
     const [offerConfig, setOfferConfig] = useState<Record<string, any>>({});
@@ -640,7 +640,8 @@ export const OfferGenerator: React.FC = () => {
     // Inicjalizacja edytowalnych danych per dom (pierwsze wejście)
     useEffect(() => {
         setItemsByHouse((prev) => {
-            if (prev[selectedHouse.id]) return prev;
+            const currentItems = prev[selectedHouse.id];
+            if (currentItems && currentItems.length > 0) return prev;
             const sourceHouse = shouldUseIndividualDualConfig ? individualConfigTemplateHouse : selectedHouse;
             const cloned = JSON.parse(JSON.stringify(getOfferItemsForHouse(sourceHouse))) as OfferItem[];
             return { ...prev, [selectedHouse.id]: cloned };
@@ -649,7 +650,7 @@ export const OfferGenerator: React.FC = () => {
             if (prev[selectedHouse.id]) return prev;
             return { ...prev, [selectedHouse.id]: { surowy: selectedHouse.basePrice, deweloperski: selectedHouse.developerPrice } };
         });
-    }, [selectedHouse]);
+    }, [selectedHouse, shouldUseIndividualDualConfig, individualConfigTemplateHouse]);
 
 
     const handleConfigChange = (code: string, value: any) => {
