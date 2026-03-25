@@ -1407,7 +1407,7 @@ export const OfferGenerator: React.FC = () => {
         );
     };
 
-    const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
+    const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false, insertAdditionalSummary: boolean = false, additionalSummaryIsDeveloperState: boolean = false) => {
         const previewOffer = calculateOfferForState(previewIsDeveloperState);
         const previewVat = previewOffer.totalNetPrice * 0.08;
         const previewGross = previewOffer.totalNetPrice + previewVat;
@@ -1519,7 +1519,7 @@ export const OfferGenerator: React.FC = () => {
                             {/* PRZEKRÓJ ŚCIANY ZEWNĘTRZNEJ - pełna szerokość */}
                             <div className="flex flex-col border border-gray-100 bg-white">
                                 <div className="w-full overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-                                    <img src={resolvePublicAsset('przekroj-sciany-zewnetrznej2503.webp')} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
+                                    <img src={images.techWallExt} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
                                 </div>
                                 <div className="p-4">
                                     <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
@@ -1788,7 +1788,7 @@ export const OfferGenerator: React.FC = () => {
 
                     {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
                     {renderSummaryPage(previewIsDeveloperState, showStateSuffix)}
-                    {buildMode === 'both' && !previewIsDeveloperState && renderSummaryPage(true, true)}
+                    {insertAdditionalSummary && renderSummaryPage(additionalSummaryIsDeveloperState, true)}
 
                     {/* PAGE 8: HARMONOGRAM & CTA (NEW PAGE) */}
                     <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
@@ -2212,7 +2212,7 @@ export const OfferGenerator: React.FC = () => {
                 <div ref={pdfRootRef} id="pdf-root" className="scale-100 origin-top mx-auto print:scale-100 max-w-[210mm]">
                     
                     {buildMode === 'both' ? (
-                        renderPreviewPages(false, true)
+                        renderPreviewPages(false, true, true, true)
                     ) : (
                         renderPreviewPages(isDeveloperState, false)
                     )}
