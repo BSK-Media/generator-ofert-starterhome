@@ -1312,12 +1312,21 @@ export const OfferGenerator: React.FC = () => {
     const addNeed = () => setNeeds([...needs, { id: Date.now().toString(), icon: 'Check', text: 'Nowa potrzeba' }]);
 
 
-    const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
+    const renderPreviewPages = (
+        previewIsDeveloperState: boolean,
+        showStateSuffix: boolean = false,
+        renderMode: 'full' | 'common' | 'summary' | 'ending' = 'full'
+    ) => {
         const previewOffer = calculateOfferForState(previewIsDeveloperState);
         const previewVat = previewOffer.totalNetPrice * 0.08;
         const previewGross = previewOffer.totalNetPrice + previewVat;
+        const showCommonPages = renderMode === 'full' || renderMode === 'common';
+        const showSummaryPage = renderMode === 'full' || renderMode === 'summary';
+        const showEndingPage = renderMode === 'full' || renderMode === 'ending';
         return (
             <>
+                    {showCommonPages && (
+                    <>
                     {/* PAGE 1: OKŁADKA */}
                     <A4Page className="flex flex-col a4-page">
                         <LeafDecor src={images.decorLeaf} />
@@ -1691,6 +1700,11 @@ export const OfferGenerator: React.FC = () => {
                         <OfferFooter />
                     </A4Page>
 
+                    </>
+                    )}
+
+                    {showSummaryPage && (
+                    <>
                     {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
                     <A4Page className="flex flex-col relative a4-page overflow-hidden">
                         <LeafDecor src={images.decorLeaf} />
@@ -1783,6 +1797,11 @@ export const OfferGenerator: React.FC = () => {
                         </div>
                     </A4Page>
 
+                    </>
+                    )}
+
+                    {showEndingPage && (
+                    <>
                     {/* PAGE 8: HARMONOGRAM & CTA (NEW PAGE) */}
                     <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
                          <div className="flex justify-between items-center mb-16">
@@ -1840,7 +1859,8 @@ export const OfferGenerator: React.FC = () => {
                              </div>
                          </div>
                     </A4Page>
-
+                    </>
+                    )}
 
             </>
         );
@@ -1901,7 +1921,7 @@ export const OfferGenerator: React.FC = () => {
                             </div>
                             {buildMode === 'both' && (
                                 <div className="text-[11px] text-gray-500 leading-relaxed">
-                                    W PDF zostaną wygenerowane dwie pełne oferty: najpierw <span className="font-bold">surowy zamknięty</span>, potem <span className="font-bold">deweloperski</span>.
+                                    W PDF zostanie dodana tylko <span className="font-bold">jedna dodatkowa karta</span>: najpierw podsumowanie <span className="font-bold">surowego zamkniętego</span>, a zaraz pod nim podsumowanie <span className="font-bold">deweloperskiego</span>.
                                 </div>
                             )}
                             <div className="mt-3">
@@ -2190,8 +2210,10 @@ export const OfferGenerator: React.FC = () => {
                     
                     {buildMode === 'both' ? (
                         <>
-                            {renderPreviewPages(false, true)}
-                            {renderPreviewPages(true, true)}
+                            {renderPreviewPages(false, true, 'common')}
+                            {renderPreviewPages(false, true, 'summary')}
+                            {renderPreviewPages(true, true, 'summary')}
+                            {renderPreviewPages(false, true, 'ending')}
                         </>
                     ) : (
                         renderPreviewPages(isDeveloperState, false)
