@@ -540,8 +540,14 @@ export const OfferGenerator: React.FC = () => {
     type BuildStateKey = 'surowy' | 'deweloperski';
     type CustomSectionItem = { id: string; title: string; text: string; price: number };
     type CustomExtraItem = { label: string; price: number };
+    type FinanceTranche = { id: string; title: string; description: string };
     const createCustomSection = (): CustomSectionItem => ({ id: `sec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title: 'Zakres / opis', text: '', price: 0 });
     const createCustomExtra = (): CustomExtraItem => ({ label: '', price: 0 });
+    const createFinanceTranche = (title = '', description = ''): FinanceTranche => ({ id: `tranche-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title, description });
+    const getRomanNumeral = (value: number) => {
+        const numerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+        return numerals[value - 1] || `${value}`;
+    };
     // Projekt indywidualny - sekcje opisowe + cena
     const [customSections, setCustomSections] = useState<CustomSectionItem[]>([createCustomSection()]);
     const [customSectionsDual, setCustomSectionsDual] = useState<Record<BuildStateKey, CustomSectionItem[]>>({
@@ -963,7 +969,7 @@ export const OfferGenerator: React.FC = () => {
         scopeOurSide: "Projekt, Prefabrykacja, Transport, Montaż, Dach, Stolarka, Elewacja.",
         scopeClientSide: "Przygotowanie działki, Przyłącza mediów, Odbiory końcowe.",
         
-        // Tranches
+        // Tranches (legacy fields kept for backwards compatibility)
         tranche1: "30% 7 dni po podpisaniu umowy",
         tranche2: "50% 7 dni po zrobieniu płyty fundamentowej oraz postawieniu konstrukcji budynku",
         tranche3: "20% 7 dni po wykonaniu instalacji elektrycznych i hydraulicznych",
@@ -989,6 +995,13 @@ export const OfferGenerator: React.FC = () => {
         techFloorTitle: "Przekrój Stropu",
         techFloorDesc: "Konstrukcja Międzykondygnacyjna U = 0.20 W/m²K. Wykończenie góra: Panele 8mm. Poszycie nośne: Płyta OSB 22mm. Konstrukcja drewniana C24. Izolacja akustyczna: Wełna. Wykończenie dół: Ruszt + GK."
     });
+    const [financeTranches, setFinanceTranches] = useState<FinanceTranche[]>([
+        createFinanceTranche('Opłata rezerwacyjna 10%', 'W terminie 7 dni od daty podpisania umowy.'),
+        createFinanceTranche('Uruchomienie procesu produkcyjnego 40%', 'W terminie 7 dni po finalnej adaptacji i akceptacji projektu przez Klienta.'),
+        createFinanceTranche('Mobilizacja logistyczna 10%', 'W terminie 7 dni przed planowanym transportem i rozpoczęciem prac na działce.'),
+        createFinanceTranche('Montaż konstrukcji 30%', 'W terminie 7 dni po zakończeniu montażu konstrukcji budynku.'),
+        createFinanceTranche('Standard Deweloperski (Instalacje) 10%', 'Po zakończeniu prac przy instalacjach elektrycznych oraz sanitarnych.'),
+    ]);
     // -- LOGIC --
     const openCompressionModal = () => { setIsCompressionModalOpen(true); setCompressionStatus('idle'); setCompressionLogs([]); setCompressionProgress(0); setCurrentProcessingFile(''); setProcessingDetail(''); setCompressionStats({ original: 0, compressed: 0 }); };
     const handleCancelCompression = () => { abortRef.current = true; setCompressionStatus('idle'); setIsCompressionModalOpen(false); };
@@ -1254,6 +1267,15 @@ export const OfferGenerator: React.FC = () => {
     // Helpers for UI
     const toggleAccordion = (section: string) => setOpenSection(openSection === section ? '' : section);
     const updateText = (key: keyof typeof customTexts, value: string) => setCustomTexts(prev => ({ ...prev, [key]: value }));
+    const updateFinanceTranche = (id: string, patch: Partial<FinanceTranche>) => {
+        setFinanceTranches(prev => prev.map(item => item.id === id ? { ...item, ...patch } : item));
+    };
+    const addFinanceTranche = () => {
+        setFinanceTranches(prev => [...prev, createFinanceTranche(`Nowa transza`, '')]);
+    };
+    const removeFinanceTranche = (id: string) => {
+        setFinanceTranches(prev => prev.length > 1 ? prev.filter(item => item.id !== id) : prev);
+    };
     const updateNeed = (id: string, field: 'icon' | 'text', value: string) => setNeeds(needs.map(n => n.id === id ? { ...n, [field]: value } : n));
     const removeNeed = (id: string) => setNeeds(needs.filter(n => n.id !== id));
     const addNeed = () => setNeeds([...needs, { id: Date.now().toString(), icon: 'Check', text: 'Nowa potrzeba' }]);
@@ -1737,27 +1759,19 @@ export const OfferGenerator: React.FC = () => {
                          {/* TRANCHES */}
                          {processClientType === 'cash' ? (
                          <div className="mb-auto space-y-4">
-                             <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                                 <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">I</div>
-                                 <div>
-                                     <h4 className="text-sm font-bold text-gray-900 mb-2">I Transza (30%)</h4>
-                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche1}</p>
-                                 </div>
-                             </div>
-                             <div className="flex items-start gap-6 p-4 bg-[#f7faf3] border border-[#dcfce7] rounded-xl">
-                                 <div className="w-12 h-12 bg-[#6E8809] text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">II</div>
-                                 <div>
-                                     <h4 className="text-sm font-bold text-gray-900 mb-2">II Transza (50%)</h4>
-                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche2}</p>
-                                 </div>
-                             </div>
-                             <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                                 <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">III</div>
-                                 <div>
-                                     <h4 className="text-sm font-bold text-gray-900 mb-2">III Transza (20%)</h4>
-                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche3}</p>
-                                 </div>
-                             </div>
+                             {financeTranches.map((tranche, index) => {
+                                 const roman = getRomanNumeral(index + 1);
+                                 const isAccent = index % 2 === 1;
+                                 return (
+                                     <div key={tranche.id} className={`flex items-start gap-6 p-4 rounded-xl border ${isAccent ? 'bg-[#f7faf3] border-[#dcfce7]' : 'bg-gray-50 border-gray-200'}`}>
+                                         <div className={`w-12 h-12 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0 ${isAccent ? 'bg-[#6E8809]' : 'bg-gray-900'}`}>{roman}</div>
+                                         <div>
+                                             <h4 className="text-sm font-bold text-gray-900 mb-2">{roman} {tranche.title}</h4>
+                                             <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{tranche.description}</p>
+                                         </div>
+                                     </div>
+                                 );
+                             })}
                          </div>
                          ) : (
                          <div className="mb-auto">
@@ -2049,9 +2063,43 @@ export const OfferGenerator: React.FC = () => {
                     {/* TRANCHES & CTA */}
                     <AccordionItem title="7. FINANSE" icon={Banknote} isOpen={openSection === 'finance'} onToggle={() => toggleAccordion('finance')}>
                         <div className="space-y-4">
-                            <div><label className="text-[10px] font-bold text-gray-400 uppercase">Transza 1 (30%)</label><textarea rows={2} className="w-full text-xs p-2 border border-gray-200" value={customTexts.tranche1} onChange={e => updateText('tranche1', e.target.value)} /></div>
-                            <div><label className="text-[10px] font-bold text-gray-400 uppercase">Transza 2 (50%)</label><textarea rows={2} className="w-full text-xs p-2 border border-gray-200" value={customTexts.tranche2} onChange={e => updateText('tranche2', e.target.value)} /></div>
-                            <div><label className="text-[10px] font-bold text-gray-400 uppercase">Transza 3 (20%)</label><textarea rows={2} className="w-full text-xs p-2 border border-gray-200" value={customTexts.tranche3} onChange={e => updateText('tranche3', e.target.value)} /></div>
+                            {financeTranches.map((tranche, index) => (
+                                <div key={tranche.id} className="border border-gray-200 p-3 bg-white space-y-2">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">Transza {index + 1}</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeFinanceTranche(tranche.id)}
+                                            className="p-1 text-gray-400 hover:text-gray-900 disabled:opacity-40"
+                                            disabled={financeTranches.length === 1}
+                                            title="Usuń transzę"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">Tytuł transzy</label>
+                                        <input
+                                            type="text"
+                                            className="w-full text-xs p-2 border border-gray-200"
+                                            value={tranche.title}
+                                            onChange={e => updateFinanceTranche(tranche.id, { title: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase">Opis / warunek płatności</label>
+                                        <textarea
+                                            rows={3}
+                                            className="w-full text-xs p-2 border border-gray-200"
+                                            value={tranche.description}
+                                            onChange={e => updateFinanceTranche(tranche.id, { description: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                            <button type="button" onClick={addFinanceTranche} className="w-full border border-dashed border-gray-300 py-3 text-xs font-bold text-gray-700 hover:border-[#6E8809] hover:text-[#6E8809]">
+                                DODAJ KOLEJNĄ TRANSZĘ
+                            </button>
                             <div><label className="text-[10px] font-bold text-gray-400 uppercase">CTA (Ostatnia strona)</label><textarea rows={3} className="w-full text-xs p-2 border border-gray-200" value={customTexts.cta} onChange={e => updateText('cta', e.target.value)} /></div>
                         </div>
                     </AccordionItem>
