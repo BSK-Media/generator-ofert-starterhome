@@ -1312,21 +1312,12 @@ export const OfferGenerator: React.FC = () => {
     const addNeed = () => setNeeds([...needs, { id: Date.now().toString(), icon: 'Check', text: 'Nowa potrzeba' }]);
 
 
-    const renderPreviewPages = (
-        previewIsDeveloperState: boolean,
-        showStateSuffix: boolean = false,
-        renderMode: 'full' | 'common' | 'summary' | 'ending' = 'full'
-    ) => {
+    const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
         const previewOffer = calculateOfferForState(previewIsDeveloperState);
         const previewVat = previewOffer.totalNetPrice * 0.08;
         const previewGross = previewOffer.totalNetPrice + previewVat;
-        const showCommonPages = renderMode === 'full' || renderMode === 'common';
-        const showSummaryPage = renderMode === 'full' || renderMode === 'summary';
-        const showEndingPage = renderMode === 'full' || renderMode === 'ending';
         return (
             <>
-                    {showCommonPages && (
-                    <>
                     {/* PAGE 1: OKŁADKA */}
                     <A4Page className="flex flex-col a4-page">
                         <LeafDecor src={images.decorLeaf} />
@@ -1345,13 +1336,13 @@ export const OfferGenerator: React.FC = () => {
                                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#6E8809]"><img src={images.advisor} className="w-full h-full object-cover" alt="Doradca" /></div>
                                 <div className="text-left"><div className="font-black text-3xl text-gray-900 mb-1">Krystian Pogorzelski</div><div className="text-[#6E8809] font-bold text-base uppercase tracking-widest">Obsługa Klienta</div></div>
                             </div>
-                            <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px] bg-[#eef2e8]">
+                            <div className="relative mt-auto -mx-20 -mb-20 bg-[#eef2e8]">
                                 <img
                                     src={images.main}
-                                    className={`w-full h-full ${isDefaultMainImageActive ? 'object-contain object-center' : 'object-cover'}`}
+                                    className={`w-full ${isDefaultMainImageActive ? 'h-auto object-contain object-center' : 'h-[400px] object-cover'}`}
                                     alt="Zdjęcie główne"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
                                 <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{displayHouseName}</p></div>
                             </div>
                         </div>
@@ -1700,11 +1691,6 @@ export const OfferGenerator: React.FC = () => {
                         <OfferFooter />
                     </A4Page>
 
-                    </>
-                    )}
-
-                    {showSummaryPage && (
-                    <>
                     {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
                     <A4Page className="flex flex-col relative a4-page overflow-hidden">
                         <LeafDecor src={images.decorLeaf} />
@@ -1797,11 +1783,6 @@ export const OfferGenerator: React.FC = () => {
                         </div>
                     </A4Page>
 
-                    </>
-                    )}
-
-                    {showEndingPage && (
-                    <>
                     {/* PAGE 8: HARMONOGRAM & CTA (NEW PAGE) */}
                     <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
                          <div className="flex justify-between items-center mb-16">
@@ -1860,27 +1841,6 @@ export const OfferGenerator: React.FC = () => {
                          </div>
                     </A4Page>
 
-                    {/* PAGE 9: NASZE REALIZACJE */}
-                    <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
-                        <div className="flex justify-between items-center mb-8">
-                            <h2 className="text-3xl font-black text-gray-900">Nasze Realizacje</h2>
-                            <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 flex-1">
-                            {[1,2,3,4,5,6,7,8].map((num) => (
-                                <div key={num} className="bg-white border border-gray-100 overflow-hidden rounded-sm">
-                                    <img
-                                        src={resolvePublicAsset(`realizacja${num}.webp`)}
-                                        alt={`Realizacja ${num}`}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </A4Page>
-                    </>
-                    )}
 
             </>
         );
@@ -1941,7 +1901,7 @@ export const OfferGenerator: React.FC = () => {
                             </div>
                             {buildMode === 'both' && (
                                 <div className="text-[11px] text-gray-500 leading-relaxed">
-                                    W PDF zostanie dodana tylko <span className="font-bold">jedna dodatkowa karta</span>: najpierw podsumowanie <span className="font-bold">surowego zamkniętego</span>, a zaraz pod nim podsumowanie <span className="font-bold">deweloperskiego</span>.
+                                    W PDF zostaną wygenerowane dwie pełne oferty: najpierw <span className="font-bold">surowy zamknięty</span>, potem <span className="font-bold">deweloperski</span>.
                                 </div>
                             )}
                             <div className="mt-3">
@@ -2230,10 +2190,8 @@ export const OfferGenerator: React.FC = () => {
                     
                     {buildMode === 'both' ? (
                         <>
-                            {renderPreviewPages(false, true, 'common')}
-                            {renderPreviewPages(false, true, 'summary')}
-                            {renderPreviewPages(true, true, 'summary')}
-                            {renderPreviewPages(false, true, 'ending')}
+                            {renderPreviewPages(false, true)}
+                            {renderPreviewPages(true, true)}
                         </>
                     ) : (
                         renderPreviewPages(isDeveloperState, false)
