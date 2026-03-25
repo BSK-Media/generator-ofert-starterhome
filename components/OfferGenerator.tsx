@@ -1788,6 +1788,7 @@ export const OfferGenerator: React.FC = () => {
 
                     {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
                     {renderSummaryPage(previewIsDeveloperState, showStateSuffix)}
+                    {buildMode === 'both' && !previewIsDeveloperState && renderSummaryPage(true, true)}
 
                     {/* PAGE 8: HARMONOGRAM & CTA (NEW PAGE) */}
                     <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
@@ -2211,10 +2212,7 @@ export const OfferGenerator: React.FC = () => {
                 <div ref={pdfRootRef} id="pdf-root" className="scale-100 origin-top mx-auto print:scale-100 max-w-[210mm]">
                     
                     {buildMode === 'both' ? (
-                        <>
-                            {renderPreviewPages(false, true)}
-                            {renderSummaryPage(true, true)}
-                        </>
+                        renderPreviewPages(false, true)
                     ) : (
                         renderPreviewPages(isDeveloperState, false)
                     )}
