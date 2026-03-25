@@ -528,9 +528,9 @@ export const OfferGenerator: React.FC = () => {
     const [individualProjectName, setIndividualProjectName] = useState('Projekt Indywidualny');
     const displayHouseName = selectedHouse.id === 'individual_house' ? (individualProjectName.trim() || 'Projekt Indywidualny') : selectedHouse.name;
     const isIndividualProject = selectedHouse.id === 'individual_house';
+    const [buildMode, setBuildMode] = useState<'surowy' | 'deweloperski' | 'both'>('surowy');
     const individualConfigTemplateHouse = useMemo(() => HOUSES.find(h => h.id === 'nest_house') || HOUSES[0], []);
     const shouldUseIndividualDualConfig = selectedHouse.id === 'individual_house' && buildMode === 'both';
-    const [buildMode, setBuildMode] = useState<'surowy' | 'deweloperski' | 'both'>('surowy');
     const [isDeveloperState, setIsDeveloperState] = useState(false); 
     // TRYB EDYCJI (dla wszystkich domów)
     const [isEditMode, setIsEditMode] = useState(false);
@@ -538,23 +538,6 @@ export const OfferGenerator: React.FC = () => {
     const [itemsByHouse, setItemsByHouse] = useState<Record<string, OfferItem[]>>({});
     const [basePricesByHouse, setBasePricesByHouse] = useState<Record<string, { surowy: number; deweloperski: number }>>({});
     type BuildStateKey = 'surowy' | 'deweloperski';
-
-type FinanceTranche = {
-    id: string;
-    title: string;
-    description: string;
-};
-
-const createFinanceTranche = (title: string, description: string): FinanceTranche => ({
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    title,
-    description,
-});
-
-const toRoman = (num: number): string => {
-    const romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-    return romans[num - 1] || String(num);
-};
     type CustomSectionItem = { id: string; title: string; text: string; price: number };
     type CustomExtraItem = { label: string; price: number };
     const createCustomSection = (): CustomSectionItem => ({ id: `sec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title: 'Zakres / opis', text: '', price: 0 });
@@ -631,7 +614,7 @@ const toRoman = (num: number): string => {
         setIsCustomFloorPlanUploaded(false);
         setIsCompressed(false);
         setCompressionStatus('idle');
-    }, [selectedHouse]);
+    }, [selectedHouse, shouldUseIndividualDualConfig, individualConfigTemplateHouse]);
 
     // CONFIG STATE - Updated to handle Radio/Number/Checkbox
     const [offerConfig, setOfferConfig] = useState<Record<string, any>>({});
@@ -1009,6 +992,11 @@ const toRoman = (num: number): string => {
         scopeOurSide: "Projekt, Prefabrykacja, Transport, Montaż, Dach, Stolarka, Elewacja.",
         scopeClientSide: "Przygotowanie działki, Przyłącza mediów, Odbiory końcowe.",
         
+        // Tranches
+        tranche1: "30% 7 dni po podpisaniu umowy",
+        tranche2: "50% 7 dni po zrobieniu płyty fundamentowej oraz postawieniu konstrukcji budynku",
+        tranche3: "20% 7 dni po wykonaniu instalacji elektrycznych i hydraulicznych",
+
         // Steps (Now 6)
         step1: "Analiza działki",
         step2: "Rezerwacja terminu (zaliczka)",
@@ -1313,53 +1301,6 @@ const toRoman = (num: number): string => {
 
     // Helpers for UI
     const toggleAccordion = (section: string) => setOpenSection(openSection === section ? '' : section);
-    const createDefaultFinanceTranches = (): FinanceTranche[] => ([
-        createFinanceTranche('I Transza (30%)', '30% 7 dni po podpisaniu umowy'),
-        createFinanceTranche('II Transza (50%)', '50% 7 dni po zrobieniu płyty fundamentowej oraz postawieniu konstrukcji budynku'),
-        createFinanceTranche('III Transza (20%)', '20% 7 dni po wykonaniu instalacji elektrycznych i hydraulicznych'),
-    ]);
-
-    const getFinanceContextKey = (houseId: string, mode: BuildMode) => `${houseId}__${mode}`;
-
-    const [financeTranchesByContext, setFinanceTranchesByContext] = useState<Record<string, FinanceTranche[]>>({});
-
-    const financeContextKey = getFinanceContextKey(selectedHouse.id, buildMode);
-    const financeTranches = financeTranchesByContext[financeContextKey] ?? createDefaultFinanceTranches();
-
-    useEffect(() => {
-        setFinanceTranchesByContext(prev => {
-            if (prev[financeContextKey]) return prev;
-            return { ...prev, [financeContextKey]: createDefaultFinanceTranches() };
-        });
-    }, [financeContextKey]);
-
-    const updateFinanceTranche = (index: number, patch: Partial<FinanceTranche>) => {
-        setFinanceTranchesByContext(prev => ({
-            ...prev,
-            [financeContextKey]: (prev[financeContextKey] ?? createDefaultFinanceTranches()).map((item, i) => i === index ? { ...item, ...patch } : item),
-        }));
-    };
-
-    const addFinanceTranche = () => {
-        setFinanceTranchesByContext(prev => {
-            const current = prev[financeContextKey] ?? createDefaultFinanceTranches();
-            return {
-                ...prev,
-                [financeContextKey]: [
-                    ...current,
-                    createFinanceTranche(`${toRoman(current.length + 1)} Transza`, ''),
-                ],
-            };
-        });
-    };
-
-    const removeFinanceTranche = (index: number) => {
-        setFinanceTranchesByContext(prev => ({
-            ...prev,
-            [financeContextKey]: (prev[financeContextKey] ?? createDefaultFinanceTranches()).filter((_, i) => i !== index),
-        }));
-    };
-
     const updateText = (key: keyof typeof customTexts, value: string) => setCustomTexts(prev => ({ ...prev, [key]: value }));
     const updateNeed = (id: string, field: 'icon' | 'text', value: string) => setNeeds(needs.map(n => n.id === id ? { ...n, [field]: value } : n));
     const removeNeed = (id: string) => setNeeds(needs.filter(n => n.id !== id));
@@ -1844,18 +1785,27 @@ const toRoman = (num: number): string => {
                          {/* TRANCHES */}
                          {processClientType === 'cash' ? (
                          <div className="mb-auto space-y-4">
-                             {financeTranches.map((tranche, index) => {
-                                 const highlighted = index % 2 === 1;
-                                 return (
-                                     <div key={tranche.id} className={`flex items-start gap-6 p-4 rounded-xl border ${highlighted ? 'bg-[#f7faf3] border-[#dcfce7]' : 'bg-gray-50 border-gray-200'}`}>
-                                         <div className={`w-12 h-12 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0 ${highlighted ? 'bg-[#6E8809]' : 'bg-gray-900'}`}>{toRoman(index + 1)}</div>
-                                         <div>
-                                             <h4 className="text-sm font-bold text-gray-900 mb-2">{tranche.title || `${toRoman(index + 1)} Transza`}</h4>
-                                             <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{tranche.description}</p>
-                                         </div>
-                                     </div>
-                                 );
-                             })}
+                             <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                 <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">I</div>
+                                 <div>
+                                     <h4 className="text-sm font-bold text-gray-900 mb-2">I Transza (30%)</h4>
+                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche1}</p>
+                                 </div>
+                             </div>
+                             <div className="flex items-start gap-6 p-4 bg-[#f7faf3] border border-[#dcfce7] rounded-xl">
+                                 <div className="w-12 h-12 bg-[#6E8809] text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">II</div>
+                                 <div>
+                                     <h4 className="text-sm font-bold text-gray-900 mb-2">II Transza (50%)</h4>
+                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche2}</p>
+                                 </div>
+                             </div>
+                             <div className="flex items-start gap-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                 <div className="w-12 h-12 bg-gray-900 text-white flex items-center justify-center text-xl font-black rounded-lg shrink-0">III</div>
+                                 <div>
+                                     <h4 className="text-sm font-bold text-gray-900 mb-2">III Transza (20%)</h4>
+                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${12 * fontScale}px` }}>{customTexts.tranche3}</p>
+                                 </div>
+                             </div>
                          </div>
                          ) : (
                          <div className="mb-auto">
@@ -2170,43 +2120,9 @@ const toRoman = (num: number): string => {
                     {/* TRANCHES & CTA */}
                     <AccordionItem title="7. FINANSE" icon={Banknote} isOpen={openSection === 'finance'} onToggle={() => toggleAccordion('finance')}>
                         <div className="space-y-4">
-                            <div className="space-y-3">
-                                {financeTranches.map((tranche, index) => (
-                                    <div key={tranche.id} className="border border-gray-200 p-3">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="text-[10px] font-bold text-gray-400 uppercase">Transza {index + 1}</div>
-                                            {financeTranches.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    title="Usuń transzę"
-                                                    onClick={() => removeFinanceTranche(index)}
-                                                    className="p-1 text-gray-400 hover:text-gray-900"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            )}
-                                        </div>
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase">Tytuł transzy</label>
-                                        <input
-                                            type="text"
-                                            className="w-full text-xs p-2 border border-gray-200 mb-2"
-                                            value={tranche.title}
-                                            onChange={e => updateFinanceTranche(index, { title: e.target.value })}
-                                        />
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase">Opis transzy</label>
-                                        <textarea
-                                            rows={2}
-                                            className="w-full text-xs p-2 border border-gray-200"
-                                            value={tranche.description}
-                                            onChange={e => updateFinanceTranche(index, { description: e.target.value })}
-                                        />
-                                    </div>
-                                ))}
-                                <button type="button" onClick={addFinanceTranche} className="flex items-center gap-2 text-xs font-bold text-[#6E8809]">
-                                    <Plus className="w-4 h-4" />
-                                    Dodaj kolejną transzę
-                                </button>
-                            </div>
+                            <div><label className="text-[10px] font-bold text-gray-400 uppercase">Transza 1 (30%)</label><textarea rows={2} className="w-full text-xs p-2 border border-gray-200" value={customTexts.tranche1} onChange={e => updateText('tranche1', e.target.value)} /></div>
+                            <div><label className="text-[10px] font-bold text-gray-400 uppercase">Transza 2 (50%)</label><textarea rows={2} className="w-full text-xs p-2 border border-gray-200" value={customTexts.tranche2} onChange={e => updateText('tranche2', e.target.value)} /></div>
+                            <div><label className="text-[10px] font-bold text-gray-400 uppercase">Transza 3 (20%)</label><textarea rows={2} className="w-full text-xs p-2 border border-gray-200" value={customTexts.tranche3} onChange={e => updateText('tranche3', e.target.value)} /></div>
                             <div><label className="text-[10px] font-bold text-gray-400 uppercase">CTA (Ostatnia strona)</label><textarea rows={3} className="w-full text-xs p-2 border border-gray-200" value={customTexts.cta} onChange={e => updateText('cta', e.target.value)} /></div>
                         </div>
                     </AccordionItem>
