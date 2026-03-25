@@ -1483,8 +1483,8 @@ export const OfferGenerator: React.FC = () => {
                             {isGalleryCollageActive ? (
                                 <div className="border border-gray-100 bg-white overflow-hidden">
                                     <div className="px-4 py-3 bg-[#f7faf3] text-[#6E8809] font-bold uppercase tracking-widest text-xs">Galeria projektu</div>
-                                    <div className="h-[620px] bg-gray-50">
-                                        <img src={collageImage} className="w-full h-full object-cover" alt={`Kolaż projektu ${displayHouseName}`} />
+                                    <div className="bg-white p-0">
+                                        <img src={collageImage} className="w-full h-auto block object-contain" alt={`Kolaż projektu ${displayHouseName}`} />
                                     </div>
                                 </div>
                             ) : (
