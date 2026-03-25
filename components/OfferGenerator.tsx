@@ -1841,6 +1841,22 @@ export const OfferGenerator: React.FC = () => {
                          </div>
                     </A4Page>
 
+                    {/* PAGE 9: NASZE REALIZACJE */}
+                    <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
+                         <div className="flex justify-between items-center mb-10">
+                             <h2 className="text-3xl font-black text-gray-900">Nasze Realizacje</h2>
+                             <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
+                         </div>
+
+                         <div className="flex-1 flex items-center justify-center">
+                             <img
+                                 src="/kolaz-realizacja.webp"
+                                 alt="Nasze realizacje"
+                                 className="w-full h-auto max-h-full object-contain rounded-2xl"
+                             />
+                         </div>
+                    </A4Page>
+
 
             </>
         );
