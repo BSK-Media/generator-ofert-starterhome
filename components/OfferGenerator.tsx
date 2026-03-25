@@ -574,7 +574,7 @@ export const OfferGenerator: React.FC = () => {
         decorLeaf: 'https://starterhome.pl/wp-content/uploads/2025/12/cropped-Favicon.png',
         // 4 Tech Images
         techRoof: '/assets/G_F_4.png',
-        techWallExt: 'https://starterhome.pl/wp-content/uploads/2025/12/G_F_2.png',
+        techWallExt: resolvePublicAsset('przekroj-sciany-zewnetrznej2503.webp'),
         techWallInt: 'https://starterhome.pl/wp-content/uploads/2025/12/G_2.png',
         techFloor: '/przekroj-stropu2503.webp' // Strop
     });
@@ -1407,7 +1407,7 @@ export const OfferGenerator: React.FC = () => {
         );
     };
 
-    const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false, insertAdditionalSummary: boolean = false, additionalSummaryIsDeveloperState: boolean = false) => {
+    const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
         const previewOffer = calculateOfferForState(previewIsDeveloperState);
         const previewVat = previewOffer.totalNetPrice * 0.08;
         const previewGross = previewOffer.totalNetPrice + previewVat;
@@ -1518,8 +1518,8 @@ export const OfferGenerator: React.FC = () => {
 
                             {/* PRZEKRÓJ ŚCIANY ZEWNĘTRZNEJ - pełna szerokość */}
                             <div className="flex flex-col border border-gray-100 bg-white">
-                                <div className="w-full overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-                                    <img src={images.techWallExt} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
+                                <div className="w-full overflow-hidden bg-white flex items-center justify-center p-4 border-b border-gray-50 min-h-[250px]">
+                                    <img src={images.techWallExt} className="w-full h-auto max-h-[220px] object-contain" alt="Ściana Zewnętrzna" />
                                 </div>
                                 <div className="p-4">
                                     <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
@@ -1788,7 +1788,7 @@ export const OfferGenerator: React.FC = () => {
 
                     {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
                     {renderSummaryPage(previewIsDeveloperState, showStateSuffix)}
-                    {insertAdditionalSummary && renderSummaryPage(additionalSummaryIsDeveloperState, true)}
+                    {buildMode === 'both' && !previewIsDeveloperState && renderSummaryPage(true, true)}
 
                     {/* PAGE 8: HARMONOGRAM & CTA (NEW PAGE) */}
                     <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
@@ -2212,7 +2212,7 @@ export const OfferGenerator: React.FC = () => {
                 <div ref={pdfRootRef} id="pdf-root" className="scale-100 origin-top mx-auto print:scale-100 max-w-[210mm]">
                     
                     {buildMode === 'both' ? (
-                        renderPreviewPages(false, true, true, true)
+                        renderPreviewPages(false, true)
                     ) : (
                         renderPreviewPages(isDeveloperState, false)
                     )}
