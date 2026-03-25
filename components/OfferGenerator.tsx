@@ -530,7 +530,7 @@ export const OfferGenerator: React.FC = () => {
     const isIndividualProject = selectedHouse.id === 'individual_house';
     const [buildMode, setBuildMode] = useState<'surowy' | 'deweloperski' | 'both'>('surowy');
     const individualConfigTemplateHouse = useMemo(() => HOUSES.find(h => h.id === 'nest_house') || HOUSES[0], []);
-    const shouldUseIndividualDualConfig = selectedHouse.id === 'individual_house' && buildMode === 'both';
+    const shouldUseIndividualConfigTemplate = selectedHouse.id === 'individual_house';
     const [isDeveloperState, setIsDeveloperState] = useState(false); 
     // TRYB EDYCJI (dla wszystkich domów)
     const [isEditMode, setIsEditMode] = useState(false);
@@ -621,13 +621,7 @@ export const OfferGenerator: React.FC = () => {
     const [offerConfigDual, setOfferConfigDual] = useState<Record<BuildStateKey, Record<string, any>>>({ surowy: {}, deweloperski: {} });
 
     useEffect(() => {
-        const sourceHouse = shouldUseIndividualDualConfig ? individualConfigTemplateHouse : selectedHouse;
-        // Dla projektu indywidualnego konfiguracja opcji jest potrzebna tylko w trybie "surowy lub deweloperski"
-        if (selectedHouse.id === 'individual_house' && !shouldUseIndividualDualConfig) {
-            setOfferConfig({});
-            setOfferConfigDual({ surowy: {}, deweloperski: {} });
-            return;
-        }
+        const sourceHouse = shouldUseIndividualConfigTemplate ? individualConfigTemplateHouse : selectedHouse;
         const items = getOfferItemsForHouse(sourceHouse);
         const newConfig: Record<string, any> = {};
         items.forEach((item) => {
@@ -635,14 +629,14 @@ export const OfferGenerator: React.FC = () => {
         });
         setOfferConfig(newConfig);
         setOfferConfigDual({ surowy: { ...newConfig }, deweloperski: { ...newConfig } });
-    }, [selectedHouse, shouldUseIndividualDualConfig, individualConfigTemplateHouse]);
+    }, [selectedHouse, shouldUseIndividualConfigTemplate, individualConfigTemplateHouse]);
 
     // Inicjalizacja edytowalnych danych per dom (pierwsze wejście)
     useEffect(() => {
         setItemsByHouse((prev) => {
             const currentItems = prev[selectedHouse.id];
             if (currentItems && currentItems.length > 0) return prev;
-            const sourceHouse = shouldUseIndividualDualConfig ? individualConfigTemplateHouse : selectedHouse;
+            const sourceHouse = shouldUseIndividualConfigTemplate ? individualConfigTemplateHouse : selectedHouse;
             const cloned = JSON.parse(JSON.stringify(getOfferItemsForHouse(sourceHouse))) as OfferItem[];
             return { ...prev, [selectedHouse.id]: cloned };
         });
@@ -650,7 +644,7 @@ export const OfferGenerator: React.FC = () => {
             if (prev[selectedHouse.id]) return prev;
             return { ...prev, [selectedHouse.id]: { surowy: selectedHouse.basePrice, deweloperski: selectedHouse.developerPrice } };
         });
-    }, [selectedHouse, shouldUseIndividualDualConfig, individualConfigTemplateHouse]);
+    }, [selectedHouse, shouldUseIndividualConfigTemplate, individualConfigTemplateHouse]);
 
 
     const handleConfigChange = (code: string, value: any) => {
@@ -800,30 +794,7 @@ export const OfferGenerator: React.FC = () => {
         return (
             <div className="border border-gray-200 p-3 space-y-4 bg-white">
                 <div className="text-[11px] font-bold uppercase tracking-widest text-[#6E8809]">{stateLabel}</div>
-                {selectedHouse.id === 'individual_house' && !shouldUseIndividualDualConfig ? (
-                    <div className="space-y-3">
-                        {stateSections.map((sec) => (
-                            <div key={sec.id} className="border border-gray-200 p-3 space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value }, customStateKey)} placeholder="Tytuł sekcji" />
-                                    <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600" onClick={() => removeCustomSection(sec.id, customStateKey)} title="Usuń">
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                                <textarea rows={3} className="w-full p-2 border border-gray-200 text-xs" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value }, customStateKey)} placeholder="Opis / szczegóły" />
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                        <div className="text-[11px] text-gray-500 mb-1">Cena netto (PLN)</div>
-                                        <input type="number" className="w-full p-2 border border-gray-200 text-sm" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) }, customStateKey)} />
-                                    </div>
-                                    <div className="text-[11px] text-gray-400 flex items-end">Ta kwota zostanie doliczona do podsumowania dla tego stanu.</div>
-                                </div>
-                            </div>
-                        ))}
-                        <button type="button" onClick={() => addCustomSection(customStateKey)} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj sekcję</button>
-                    </div>
-                ) : (
-                    <div className="space-y-5">
+                <div className="space-y-5">
                         {availableItems.map((item) => (
                             <div key={`${stateKey}-${item.code}`} className="border-b border-gray-100 pb-5 last:border-0 last:pb-0">
                                 {isEditMode ? (
@@ -927,7 +898,6 @@ export const OfferGenerator: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                )}
             </div>
         );
     };
@@ -1202,9 +1172,9 @@ export const OfferGenerator: React.FC = () => {
     };
 
     const availableItems = useMemo(() => {
-        const sourceHouse = shouldUseIndividualDualConfig ? individualConfigTemplateHouse : selectedHouse;
+        const sourceHouse = shouldUseIndividualConfigTemplate ? individualConfigTemplateHouse : selectedHouse;
         return itemsByHouse[selectedHouse.id] ?? getOfferItemsForHouse(sourceHouse);
-    }, [selectedHouse, itemsByHouse, shouldUseIndividualDualConfig, individualConfigTemplateHouse]);
+    }, [selectedHouse, itemsByHouse, shouldUseIndividualConfigTemplate, individualConfigTemplateHouse]);
 
     const calculateOfferForState = (developerState: boolean) => {
         const bp = basePricesByHouse[selectedHouse.id];
@@ -1222,25 +1192,6 @@ export const OfferGenerator: React.FC = () => {
         })).filter(e => e.label || e.price !== 0);
 
         const extrasTotal = extras.reduce((acc, e) => acc + e.price, 0);
-
-        if (selectedHouse.id === 'individual_house' && !shouldUseIndividualDualConfig) {
-            const sumSections = sectionsSource.reduce((acc, s) => acc + (Number(s.price) || 0), 0);
-            const list = sectionsSource
-                .filter(s => (s.title?.trim() || s.text?.trim() || (Number(s.price) || 0) !== 0))
-                .map(s => ({
-                    name: s.title || 'Sekcja',
-                    variant: s.text ? s.text.slice(0, 80) + (s.text.length > 80 ? '…' : '') : undefined,
-                    price: Number(s.price) || 0
-                }));
-
-            extras.forEach(e => list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price }));
-
-            return {
-                basePrice: calculatedBasePrice,
-                totalNetPrice: calculatedBasePrice + sumSections + extrasTotal,
-                selectedItemsList: list,
-            };
-        }
 
         let sum = calculatedBasePrice;
         const list: { name: string; variant?: string; price: number }[] = [];
@@ -1956,29 +1907,6 @@ export const OfferGenerator: React.FC = () => {
                                         {renderConfigEditor('surowy')}
                                         {renderConfigEditor('deweloperski')}
                                     </div>
-                                </div>
-                            ) : selectedHouse.id === 'individual_house' && !shouldUseIndividualDualConfig ? (
-                                <div className="space-y-3">
-                                    <div className="text-xs text-gray-500">Wybierz <b>Edytuj</b>, aby zmienić również ceny bazowe w sekcji 1.</div>
-                                    {customSections.map((sec) => (
-                                        <div key={sec.id} className="border border-gray-200 p-3 space-y-2">
-                                            <div className="flex items-center gap-2">
-                                                <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value })} placeholder="Tytuł sekcji" />
-                                                <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600" onClick={() => removeCustomSection(sec.id)} title="Usuń">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                            <textarea rows={3} className="w-full p-2 border border-gray-200 text-xs" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value })} placeholder="Opis / szczegóły" />
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <div className="text-[11px] text-gray-500 mb-1">Cena netto (PLN)</div>
-                                                    <input type="number" className="w-full p-2 border border-gray-200 text-sm" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) })} />
-                                                </div>
-                                                <div className="text-[11px] text-gray-400 flex items-end">Ta kwota zostanie doliczona do podsumowania.</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <button type="button" onClick={() => addCustomSection()} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj sekcję</button>
                                 </div>
                             ) : (
                                 renderConfigEditor(isDeveloperState ? 'deweloperski' : 'surowy')
