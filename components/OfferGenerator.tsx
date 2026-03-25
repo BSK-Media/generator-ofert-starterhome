@@ -1859,6 +1859,26 @@ export const OfferGenerator: React.FC = () => {
                              </div>
                          </div>
                     </A4Page>
+
+                    {/* PAGE 9: NASZE REALIZACJE */}
+                    <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
+                        <div className="flex justify-between items-center mb-8">
+                            <h2 className="text-3xl font-black text-gray-900">Nasze Realizacje</h2>
+                            <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 flex-1">
+                            {[1,2,3,4,5,6,7,8].map((num) => (
+                                <div key={num} className="bg-white border border-gray-100 overflow-hidden rounded-sm">
+                                    <img
+                                        src={resolvePublicAsset(`realizacja${num}.webp`)}
+                                        alt={`Realizacja ${num}`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </A4Page>
                     </>
                     )}
 
