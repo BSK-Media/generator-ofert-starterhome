@@ -528,6 +528,8 @@ export const OfferGenerator: React.FC = () => {
     const [individualProjectName, setIndividualProjectName] = useState('Projekt Indywidualny');
     const displayHouseName = selectedHouse.id === 'individual_house' ? (individualProjectName.trim() || 'Projekt Indywidualny') : selectedHouse.name;
     const isIndividualProject = selectedHouse.id === 'individual_house';
+    const individualConfigTemplateHouse = useMemo(() => HOUSES.find(h => h.id === 'nest_house') || HOUSES[0], []);
+    const shouldUseIndividualDualConfig = selectedHouse.id === 'individual_house' && buildMode === 'both';
     const [buildMode, setBuildMode] = useState<'surowy' | 'deweloperski' | 'both'>('surowy');
     const [isDeveloperState, setIsDeveloperState] = useState(false); 
     // TRYB EDYCJI (dla wszystkich domów)
@@ -636,26 +638,28 @@ const toRoman = (num: number): string => {
     const [offerConfigDual, setOfferConfigDual] = useState<Record<BuildStateKey, Record<string, any>>>({ surowy: {}, deweloperski: {} });
 
     useEffect(() => {
-        // Dla projektu indywidualnego konfiguracja opcji nie jest potrzebna
-        if (selectedHouse.id === 'individual_house') {
+        const sourceHouse = shouldUseIndividualDualConfig ? individualConfigTemplateHouse : selectedHouse;
+        // Dla projektu indywidualnego konfiguracja opcji jest potrzebna tylko w trybie "surowy lub deweloperski"
+        if (selectedHouse.id === 'individual_house' && !shouldUseIndividualDualConfig) {
             setOfferConfig({});
             setOfferConfigDual({ surowy: {}, deweloperski: {} });
             return;
         }
-        const items = getOfferItemsForHouse(selectedHouse);
+        const items = getOfferItemsForHouse(sourceHouse);
         const newConfig: Record<string, any> = {};
         items.forEach((item) => {
             newConfig[item.code] = item.defaultValue;
         });
         setOfferConfig(newConfig);
         setOfferConfigDual({ surowy: { ...newConfig }, deweloperski: { ...newConfig } });
-    }, [selectedHouse]);
+    }, [selectedHouse, shouldUseIndividualDualConfig, individualConfigTemplateHouse]);
 
     // Inicjalizacja edytowalnych danych per dom (pierwsze wejście)
     useEffect(() => {
         setItemsByHouse((prev) => {
             if (prev[selectedHouse.id]) return prev;
-            const cloned = JSON.parse(JSON.stringify(getOfferItemsForHouse(selectedHouse))) as OfferItem[];
+            const sourceHouse = shouldUseIndividualDualConfig ? individualConfigTemplateHouse : selectedHouse;
+            const cloned = JSON.parse(JSON.stringify(getOfferItemsForHouse(sourceHouse))) as OfferItem[];
             return { ...prev, [selectedHouse.id]: cloned };
         });
         setBasePricesByHouse((prev) => {
@@ -812,7 +816,7 @@ const toRoman = (num: number): string => {
         return (
             <div className="border border-gray-200 p-3 space-y-4 bg-white">
                 <div className="text-[11px] font-bold uppercase tracking-widest text-[#6E8809]">{stateLabel}</div>
-                {selectedHouse.id === 'individual_house' ? (
+                {selectedHouse.id === 'individual_house' && !shouldUseIndividualDualConfig ? (
                     <div className="space-y-3">
                         {stateSections.map((sec) => (
                             <div key={sec.id} className="border border-gray-200 p-3 space-y-2">
@@ -1209,8 +1213,9 @@ const toRoman = (num: number): string => {
     };
 
     const availableItems = useMemo(() => {
-        return itemsByHouse[selectedHouse.id] ?? getOfferItemsForHouse(selectedHouse);
-    }, [selectedHouse, itemsByHouse]);
+        const sourceHouse = shouldUseIndividualDualConfig ? individualConfigTemplateHouse : selectedHouse;
+        return itemsByHouse[selectedHouse.id] ?? getOfferItemsForHouse(sourceHouse);
+    }, [selectedHouse, itemsByHouse, shouldUseIndividualDualConfig, individualConfigTemplateHouse]);
 
     const calculateOfferForState = (developerState: boolean) => {
         const bp = basePricesByHouse[selectedHouse.id];
@@ -1229,7 +1234,7 @@ const toRoman = (num: number): string => {
 
         const extrasTotal = extras.reduce((acc, e) => acc + e.price, 0);
 
-        if (selectedHouse.id === 'individual_house') {
+        if (selectedHouse.id === 'individual_house' && !shouldUseIndividualDualConfig) {
             const sumSections = sectionsSource.reduce((acc, s) => acc + (Number(s.price) || 0), 0);
             const list = sectionsSource
                 .filter(s => (s.title?.trim() || s.text?.trim() || (Number(s.price) || 0) !== 0))
@@ -2001,7 +2006,7 @@ const toRoman = (num: number): string => {
                                         {renderConfigEditor('deweloperski')}
                                     </div>
                                 </div>
-                            ) : selectedHouse.id === 'individual_house' ? (
+                            ) : selectedHouse.id === 'individual_house' && !shouldUseIndividualDualConfig ? (
                                 <div className="space-y-3">
                                     <div className="text-xs text-gray-500">Wybierz <b>Edytuj</b>, aby zmienić również ceny bazowe w sekcji 1.</div>
                                     {customSections.map((sec) => (
