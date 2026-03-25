@@ -1312,13 +1312,11 @@ export const OfferGenerator: React.FC = () => {
     const addNeed = () => setNeeds([...needs, { id: Date.now().toString(), icon: 'Check', text: 'Nowa potrzeba' }]);
 
 
-
-    const renderFinancialSummaryPage = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
+    const renderSummaryPage = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
         const previewOffer = calculateOfferForState(previewIsDeveloperState);
         const previewVat = previewOffer.totalNetPrice * 0.08;
         const previewGross = previewOffer.totalNetPrice + previewVat;
         return (
-                    {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
                     <A4Page className="flex flex-col relative a4-page overflow-hidden">
                         <LeafDecor src={images.decorLeaf} />
                         <div className="flex-1 flex flex-col p-12 pb-8 h-full">
@@ -1327,14 +1325,12 @@ export const OfferGenerator: React.FC = () => {
                                 <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
                              </div>
 
-                             {/* DYNAMIC SPACER TABLE - EXPANDED */}
                              <div className="bg-gray-50 border-t-4 border-[#6E8809] flex-1 flex flex-col mb-4 overflow-hidden">
                                 <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center shrink-0">
                                     <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Wybrany Model</span>
                                     <span className="font-black text-xl text-gray-900">{displayHouseName}{showStateSuffix ? ` — ${previewIsDeveloperState ? 'DEWELOPERSKI' : 'SUROWY ZAMKNIĘTY'}` : ''}</span>
                                 </div>
                                 
-                                {/* SCROLLABLE CONTENT AREA */}
                                 <div className="flex-1 overflow-visible p-8">
                                      <table className="w-full text-left border-collapse">
                                         <thead>
@@ -1391,7 +1387,6 @@ export const OfferGenerator: React.FC = () => {
 
                                 </div>
 
-                                {/* TOTALS (Fixed at bottom of grey area) */}
                                 <div className="p-6 bg-white border-t border-gray-200 mt-auto shrink-0">
                                      <div className="flex justify-between items-center mb-2">
                                         <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto</span>
@@ -1409,8 +1404,6 @@ export const OfferGenerator: React.FC = () => {
                              </div>
                         </div>
                     </A4Page>
-
-
         );
     };
 
@@ -1793,7 +1786,8 @@ export const OfferGenerator: React.FC = () => {
                         <OfferFooter />
                     </A4Page>
 
-                    {renderFinancialSummaryPage(previewIsDeveloperState, showStateSuffix)}
+                    {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
+                    {renderSummaryPage(previewIsDeveloperState, showStateSuffix)}
 
                     {/* PAGE 8: HARMONOGRAM & CTA (NEW PAGE) */}
                     <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
@@ -2219,7 +2213,7 @@ export const OfferGenerator: React.FC = () => {
                     {buildMode === 'both' ? (
                         <>
                             {renderPreviewPages(false, true)}
-                            {renderFinancialSummaryPage(true, true)}
+                            {renderSummaryPage(true, true)}
                         </>
                     ) : (
                         renderPreviewPages(isDeveloperState, false)
