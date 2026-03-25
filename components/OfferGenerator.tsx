@@ -554,6 +554,11 @@ export const OfferGenerator: React.FC = () => {
         surowy: [createCustomSection()],
         deweloperski: [createCustomSection()],
     });
+    const [customSectionsEnabled, setCustomSectionsEnabled] = useState(false);
+    const [customSectionsEnabledDual, setCustomSectionsEnabledDual] = useState<Record<BuildStateKey, boolean>>({
+        surowy: false,
+        deweloperski: false,
+    });
 
 
     // MEDIA
@@ -757,6 +762,13 @@ export const OfferGenerator: React.FC = () => {
         }
         setCustomSections(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
     };
+    const setCustomSectionsEnabledForState = (enabled: boolean, stateKey?: BuildStateKey) => {
+        if (stateKey) {
+            setCustomSectionsEnabledDual(prev => ({ ...prev, [stateKey]: enabled }));
+            return;
+        }
+        setCustomSectionsEnabled(enabled);
+    };
 
     const updateCustomExtra = (index: number, patch: Partial<CustomExtraItem>, stateKey?: BuildStateKey) => {
         if (stateKey) {
@@ -790,6 +802,7 @@ export const OfferGenerator: React.FC = () => {
         const stateLabel = stateKey === 'surowy' ? 'Surowy zamknięty' : 'Deweloperski';
         const stateConfig = getConfigForState(stateKey);
         const customStateKey = buildMode === 'both' ? stateKey : undefined;
+        const customEnabled = isCustomSectionsEnabledForState(stateKey);
         const applyConfigChange = (code: string, value: any) => {
             if (buildMode === 'both') {
                 handleConfigChangeForState(stateKey, code, value);
@@ -798,7 +811,6 @@ export const OfferGenerator: React.FC = () => {
             }
         };
         const stateSections = getCustomSectionsForState(stateKey);
-        const isCustomEnabled = isCustomSectionsEnabledForState(stateKey);
         return (
             <div className="border border-gray-200 p-3 space-y-4 bg-white">
                 <div className="text-[11px] font-bold uppercase tracking-widest text-[#6E8809]">{stateLabel}</div>
@@ -882,40 +894,43 @@ export const OfferGenerator: React.FC = () => {
                         ))}
 
                         <div className="border-t border-gray-200 pt-5">
-                            <div className="mb-3 flex items-start justify-between gap-3">
-                                <div>
-                                    <div className="text-sm font-bold text-gray-800">Custom</div>
-                                    <div className="text-xs text-gray-500">Dodaj własną pozycję z tytułem, opisem i ceną. Zostanie doliczona do tego stanu i pokaże się w PDF.</div>
+                            <div className="mb-3">
+                                <div className="flex items-center justify-between gap-3 mb-2">
+                                    <div>
+                                        <div className="text-sm font-bold text-gray-800">Custom</div>
+                                        <div className="text-xs text-gray-500">Dodaj własną pozycję z tytułem, opisem i ceną. Zostanie doliczona do tego stanu i pokaże się w PDF.</div>
+                                    </div>
+                                    <label className="inline-flex items-center gap-2 text-xs font-bold text-gray-700 whitespace-nowrap">
+                                        <input
+                                            type="checkbox"
+                                            checked={customEnabled}
+                                            onChange={(e) => setCustomSectionsEnabledForState(e.target.checked, customStateKey)}
+                                            className="rounded border-gray-300 text-[#6E8809] focus:ring-[#6E8809]"
+                                        />
+                                        <span>Włącz w PDF</span>
+                                    </label>
                                 </div>
-                                <label className="flex items-center gap-2 text-xs font-medium text-gray-700 whitespace-nowrap cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={isCustomEnabled}
-                                        onChange={(e) => toggleCustomSectionsEnabled(e.target.checked, customStateKey)}
-                                    />
-                                    <span>Włącz w PDF</span>
-                                </label>
                             </div>
-                            {isCustomEnabled && (
-                                <div className="space-y-3">
-                                    {stateSections.map((sec) => (
-                                        <div key={sec.id} className="border border-gray-200 p-3 space-y-2 bg-gray-50/50">
-                                            <div className="flex items-center gap-2">
-                                                <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold bg-white" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value }, customStateKey)} placeholder="Tytuł" />
-                                                <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600 bg-white" onClick={() => removeCustomSection(sec.id, customStateKey)} title="Usuń">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                            <textarea rows={2} className="w-full p-2 border border-gray-200 text-xs bg-white" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value }, customStateKey)} placeholder="Opis" />
-                                            <div>
-                                                <div className="text-[11px] text-gray-500 mb-1">Cena netto (PLN)</div>
-                                                <input type="number" className="w-full p-2 border border-gray-200 text-sm bg-white" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) }, customStateKey)} placeholder="0" />
-                                            </div>
+                            <div className="space-y-3">
+                                <div className={customEnabled ? "" : "opacity-60"}>
+                                {stateSections.map((sec) => (
+                                    <div key={sec.id} className="border border-gray-200 p-3 space-y-2 bg-gray-50/50">
+                                        <div className="flex items-center gap-2">
+                                            <input type="text" className="flex-1 p-2 border border-gray-200 text-sm font-bold bg-white" value={sec.title} onChange={(e) => updateCustomSection(sec.id, { title: e.target.value }, customStateKey)} placeholder="Tytuł" />
+                                            <button type="button" className="px-2 py-2 text-xs border border-gray-200 text-gray-500 hover:text-red-600 bg-white" onClick={() => removeCustomSection(sec.id, customStateKey)} title="Usuń">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
-                                    ))}
-                                    <button type="button" onClick={() => addCustomSection(customStateKey)} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj pozycję custom</button>
+                                        <textarea rows={2} className="w-full p-2 border border-gray-200 text-xs bg-white" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value }, customStateKey)} placeholder="Opis" />
+                                        <div>
+                                            <div className="text-[11px] text-gray-500 mb-1">Cena netto (PLN)</div>
+                                            <input type="number" className="w-full p-2 border border-gray-200 text-sm bg-white" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) }, customStateKey)} placeholder="0" />
+                                        </div>
+                                    </div>
+                                ))}
+                                <button type="button" onClick={() => addCustomSection(customStateKey)} className="w-full p-3 border border-dashed border-gray-300 text-xs font-bold uppercase text-gray-600 hover:border-[#6E8809] hover:text-[#6E8809]">Dodaj pozycję custom</button>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
             </div>
@@ -1210,8 +1225,8 @@ export const OfferGenerator: React.FC = () => {
         const calculatedBasePrice = developerState ? deweloperski : surowy;
         const stateKey: BuildStateKey = developerState ? 'deweloperski' : 'surowy';
         const configSource = buildMode === 'both' ? (offerConfigDual[stateKey] || {}) : offerConfig;
+        const sectionsSource = buildMode === 'both' ? (customSectionsDual[stateKey] || []) : customSections;
         const sectionsEnabled = buildMode === 'both' ? !!customSectionsEnabledDual[stateKey] : customSectionsEnabled;
-        const sectionsSource = sectionsEnabled ? (buildMode === 'both' ? (customSectionsDual[stateKey] || []) : customSections) : [];
         const extrasSource = buildMode === 'both' ? (customExtrasDual[stateKey] || []) : customExtras;
 
         const extras = (extrasSource || []).map(e => ({
@@ -1242,7 +1257,7 @@ export const OfferGenerator: React.FC = () => {
             }
         });
 
-        const customConfigSections = (sectionsSource || [])
+        const customConfigSections = !sectionsEnabled ? [] : (sectionsSource || [])
             .map(s => ({
                 title: (s.title || '').trim(),
                 text: (s.text || '').trim(),
