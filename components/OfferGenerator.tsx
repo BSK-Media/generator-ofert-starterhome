@@ -1308,25 +1308,51 @@ const toRoman = (num: number): string => {
 
     // Helpers for UI
     const toggleAccordion = (section: string) => setOpenSection(openSection === section ? '' : section);
-    const [financeTranches, setFinanceTranches] = useState<FinanceTranche[]>([
+    const createDefaultFinanceTranches = (): FinanceTranche[] => ([
         createFinanceTranche('I Transza (30%)', '30% 7 dni po podpisaniu umowy'),
         createFinanceTranche('II Transza (50%)', '50% 7 dni po zrobieniu płyty fundamentowej oraz postawieniu konstrukcji budynku'),
         createFinanceTranche('III Transza (20%)', '20% 7 dni po wykonaniu instalacji elektrycznych i hydraulicznych'),
     ]);
 
+    const getFinanceContextKey = (houseId: string, mode: BuildMode) => `${houseId}__${mode}`;
+
+    const [financeTranchesByContext, setFinanceTranchesByContext] = useState<Record<string, FinanceTranche[]>>({});
+
+    const financeContextKey = getFinanceContextKey(selectedHouse.id, buildMode);
+    const financeTranches = financeTranchesByContext[financeContextKey] ?? createDefaultFinanceTranches();
+
+    useEffect(() => {
+        setFinanceTranchesByContext(prev => {
+            if (prev[financeContextKey]) return prev;
+            return { ...prev, [financeContextKey]: createDefaultFinanceTranches() };
+        });
+    }, [financeContextKey]);
+
     const updateFinanceTranche = (index: number, patch: Partial<FinanceTranche>) => {
-        setFinanceTranches(prev => prev.map((item, i) => i === index ? { ...item, ...patch } : item));
+        setFinanceTranchesByContext(prev => ({
+            ...prev,
+            [financeContextKey]: (prev[financeContextKey] ?? createDefaultFinanceTranches()).map((item, i) => i === index ? { ...item, ...patch } : item),
+        }));
     };
 
     const addFinanceTranche = () => {
-        setFinanceTranches(prev => ([
-            ...prev,
-            createFinanceTranche(`${toRoman(prev.length + 1)} Transza`, ''),
-        ]));
+        setFinanceTranchesByContext(prev => {
+            const current = prev[financeContextKey] ?? createDefaultFinanceTranches();
+            return {
+                ...prev,
+                [financeContextKey]: [
+                    ...current,
+                    createFinanceTranche(`${toRoman(current.length + 1)} Transza`, ''),
+                ],
+            };
+        });
     };
 
     const removeFinanceTranche = (index: number) => {
-        setFinanceTranches(prev => prev.filter((_, i) => i !== index));
+        setFinanceTranchesByContext(prev => ({
+            ...prev,
+            [financeContextKey]: (prev[financeContextKey] ?? createDefaultFinanceTranches()).filter((_, i) => i !== index),
+        }));
     };
 
     const updateText = (key: keyof typeof customTexts, value: string) => setCustomTexts(prev => ({ ...prev, [key]: value }));
