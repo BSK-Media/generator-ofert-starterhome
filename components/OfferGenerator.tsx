@@ -1335,8 +1335,8 @@ export const OfferGenerator: React.FC = () => {
                                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#6E8809]"><img src={images.advisor} className="w-full h-full object-cover" alt="Doradca" /></div>
                                 <div className="text-left"><div className="font-black text-3xl text-gray-900 mb-1">Krystian Pogorzelski</div><div className="text-[#6E8809] font-bold text-base uppercase tracking-widest">Obsługa Klienta</div></div>
                             </div>
-                            <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px]">
-                                <img src={images.main} className="w-full h-full object-cover" alt="Zdjęcie główne" />
+                            <div className="flex-1 relative overflow-hidden mt-auto -mx-20 -mb-20 h-[400px] bg-white">
+                                <img src={images.main} className="w-full h-full object-contain object-center" alt="Zdjęcie główne" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                                 <div className="absolute bottom-10 right-10 text-white text-right"><p className="text-sm font-light uppercase tracking-widest opacity-80">Model</p><p className="text-3xl font-bold">{displayHouseName}</p></div>
                             </div>
