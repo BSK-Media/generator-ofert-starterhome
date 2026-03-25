@@ -1312,6 +1312,108 @@ export const OfferGenerator: React.FC = () => {
     const addNeed = () => setNeeds([...needs, { id: Date.now().toString(), icon: 'Check', text: 'Nowa potrzeba' }]);
 
 
+
+    const renderFinancialSummaryPage = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
+        const previewOffer = calculateOfferForState(previewIsDeveloperState);
+        const previewVat = previewOffer.totalNetPrice * 0.08;
+        const previewGross = previewOffer.totalNetPrice + previewVat;
+        return (
+                    {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
+                    <A4Page className="flex flex-col relative a4-page overflow-hidden">
+                        <LeafDecor src={images.decorLeaf} />
+                        <div className="flex-1 flex flex-col p-12 pb-8 h-full">
+                             <div className="flex justify-between items-start mb-8">
+                                <h2 className="text-3xl font-black text-gray-900">Podsumowanie Oferty</h2>
+                                <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
+                             </div>
+
+                             {/* DYNAMIC SPACER TABLE - EXPANDED */}
+                             <div className="bg-gray-50 border-t-4 border-[#6E8809] flex-1 flex flex-col mb-4 overflow-hidden">
+                                <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center shrink-0">
+                                    <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Wybrany Model</span>
+                                    <span className="font-black text-xl text-gray-900">{displayHouseName}{showStateSuffix ? ` — ${previewIsDeveloperState ? 'DEWELOPERSKI' : 'SUROWY ZAMKNIĘTY'}` : ''}</span>
+                                </div>
+                                
+                                {/* SCROLLABLE CONTENT AREA */}
+                                <div className="flex-1 overflow-visible p-8">
+                                     <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="text-gray-400 text-[10px] uppercase tracking-widest border-b border-gray-200">
+                                                <th className="pb-4 font-medium w-1/2">Pozycja</th>
+                                                <th className="pb-4 font-medium w-1/4">Szczegóły</th>
+                                                <th className="pb-4 font-medium w-1/4 text-right">Cena Netto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style={{ fontSize: `${12 * fontScale}px` }}>
+                                            <tr className="border-b border-gray-200 leading-loose">
+                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({previewIsDeveloperState ? 'Deweloperski' : 'Surowy zamknięty'})</td>
+                                                <td className="py-2 text-gray-500">-</td>
+                                                <td className="py-2 text-right font-bold text-gray-900">{previewOffer.basePrice.toLocaleString()} zł</td>
+                                            </tr>
+                                            {previewOffer.selectedItemsList.map((item, idx) => (
+                                                <tr key={idx} className="border-b border-gray-200 leading-loose">
+                                                    <td className="py-2 font-medium text-gray-700">{item.name}</td>
+                                                    <td className="py-2 text-gray-500 italic">{item.variant || '-'}</td>
+                                                    <td className="py-2 text-right font-bold text-gray-900">+ {item.price.toLocaleString()} zł</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                     </table>
+
+                                     <div className="mt-6">
+                                         <div className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">
+                                             {previewIsDeveloperState ? 'Stan deweloperski zawiera:' : 'Stan surowy zamknięty zawiera:'}
+                                         </div>
+                                         <ul className="list-disc pl-5 space-y-1 text-gray-600" style={{ fontSize: `${11 * fontScale}px` }}>
+                                             {previewIsDeveloperState ? (
+                                                 <>
+                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
+                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
+                                                     <li>Okna trzyszybowe</li>
+                                                     <li>Gotowa elewacja</li>
+                                                     <li>Instalacje sanitarne i elektryczne (15 pkt)</li>
+                                                     <li>Ściany działowe</li>
+                                                     <li>Płyty g-k na ścianach i sufitach</li>
+                                                     <li>Drzwi wejściowe w kolorze dachu</li>
+                                                 </>
+                                             ) : (
+                                                 <>
+                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
+                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
+                                                     <li>Okna trzyszybowe</li>
+                                                     <li>Gotowa elewacja</li>
+                                                     <li>Ściany działowe</li>
+                                                     <li>Drzwi wejściowe w kolorze dachu</li>
+                                                 </>
+                                             )}
+                                         </ul>
+                                     </div>
+
+                                </div>
+
+                                {/* TOTALS (Fixed at bottom of grey area) */}
+                                <div className="p-6 bg-white border-t border-gray-200 mt-auto shrink-0">
+                                     <div className="flex justify-between items-center mb-2">
+                                        <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto</span>
+                                        <span className="text-xl font-bold text-gray-900">{previewOffer.totalNetPrice.toLocaleString()} zł</span>
+                                     </div>
+                                     <div className="flex justify-between items-center mb-6">
+                                        <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
+                                        <span className="text-sm text-gray-500">{previewVat.toLocaleString()} zł</span>
+                                     </div>
+                                     <div className="flex justify-between items-center p-4 bg-[#6E8809] text-white rounded-lg">
+                                        <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto</span>
+                                        <span className="text-3xl font-black">{previewGross.toLocaleString()} zł</span>
+                                     </div>
+                                </div>
+                             </div>
+                        </div>
+                    </A4Page>
+
+
+        );
+    };
+
     const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
         const previewOffer = calculateOfferForState(previewIsDeveloperState);
         const previewVat = previewOffer.totalNetPrice * 0.08;
@@ -1691,97 +1793,7 @@ export const OfferGenerator: React.FC = () => {
                         <OfferFooter />
                     </A4Page>
 
-                    {/* PAGE 7: PODSUMOWANIE FINANSOWE (JUST THE TABLE) */}
-                    <A4Page className="flex flex-col relative a4-page overflow-hidden">
-                        <LeafDecor src={images.decorLeaf} />
-                        <div className="flex-1 flex flex-col p-12 pb-8 h-full">
-                             <div className="flex justify-between items-start mb-8">
-                                <h2 className="text-3xl font-black text-gray-900">Podsumowanie Oferty</h2>
-                                <img src={images.logo} alt="Starter Home" className="h-8 w-auto object-contain" />
-                             </div>
-
-                             {/* DYNAMIC SPACER TABLE - EXPANDED */}
-                             <div className="bg-gray-50 border-t-4 border-[#6E8809] flex-1 flex flex-col mb-4 overflow-hidden">
-                                <div className="p-6 bg-gray-100 border-b border-gray-200 flex justify-between items-center shrink-0">
-                                    <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">Wybrany Model</span>
-                                    <span className="font-black text-xl text-gray-900">{displayHouseName}{showStateSuffix ? ` — ${previewIsDeveloperState ? 'DEWELOPERSKI' : 'SUROWY ZAMKNIĘTY'}` : ''}</span>
-                                </div>
-                                
-                                {/* SCROLLABLE CONTENT AREA */}
-                                <div className="flex-1 overflow-visible p-8">
-                                     <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="text-gray-400 text-[10px] uppercase tracking-widest border-b border-gray-200">
-                                                <th className="pb-4 font-medium w-1/2">Pozycja</th>
-                                                <th className="pb-4 font-medium w-1/4">Szczegóły</th>
-                                                <th className="pb-4 font-medium w-1/4 text-right">Cena Netto</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody style={{ fontSize: `${12 * fontScale}px` }}>
-                                            <tr className="border-b border-gray-200 leading-loose">
-                                                <td className="py-2 font-bold text-gray-800">Stan Bazowy ({previewIsDeveloperState ? 'Deweloperski' : 'Surowy zamknięty'})</td>
-                                                <td className="py-2 text-gray-500">-</td>
-                                                <td className="py-2 text-right font-bold text-gray-900">{previewOffer.basePrice.toLocaleString()} zł</td>
-                                            </tr>
-                                            {previewOffer.selectedItemsList.map((item, idx) => (
-                                                <tr key={idx} className="border-b border-gray-200 leading-loose">
-                                                    <td className="py-2 font-medium text-gray-700">{item.name}</td>
-                                                    <td className="py-2 text-gray-500 italic">{item.variant || '-'}</td>
-                                                    <td className="py-2 text-right font-bold text-gray-900">+ {item.price.toLocaleString()} zł</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                     </table>
-
-                                     <div className="mt-6">
-                                         <div className="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">
-                                             {previewIsDeveloperState ? 'Stan deweloperski zawiera:' : 'Stan surowy zamknięty zawiera:'}
-                                         </div>
-                                         <ul className="list-disc pl-5 space-y-1 text-gray-600" style={{ fontSize: `${11 * fontScale}px` }}>
-                                             {previewIsDeveloperState ? (
-                                                 <>
-                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
-                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
-                                                     <li>Okna trzyszybowe</li>
-                                                     <li>Gotowa elewacja</li>
-                                                     <li>Instalacje sanitarne i elektryczne (15 pkt)</li>
-                                                     <li>Ściany działowe</li>
-                                                     <li>Płyty g-k na ścianach i sufitach</li>
-                                                     <li>Drzwi wejściowe w kolorze dachu</li>
-                                                 </>
-                                             ) : (
-                                                 <>
-                                                     <li>Konstrukcja z certyfikowanego drewna C24</li>
-                                                     <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
-                                                     <li>Okna trzyszybowe</li>
-                                                     <li>Gotowa elewacja</li>
-                                                     <li>Ściany działowe</li>
-                                                     <li>Drzwi wejściowe w kolorze dachu</li>
-                                                 </>
-                                             )}
-                                         </ul>
-                                     </div>
-
-                                </div>
-
-                                {/* TOTALS (Fixed at bottom of grey area) */}
-                                <div className="p-6 bg-white border-t border-gray-200 mt-auto shrink-0">
-                                     <div className="flex justify-between items-center mb-2">
-                                        <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto</span>
-                                        <span className="text-xl font-bold text-gray-900">{previewOffer.totalNetPrice.toLocaleString()} zł</span>
-                                     </div>
-                                     <div className="flex justify-between items-center mb-6">
-                                        <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
-                                        <span className="text-sm text-gray-500">{previewVat.toLocaleString()} zł</span>
-                                     </div>
-                                     <div className="flex justify-between items-center p-4 bg-[#6E8809] text-white rounded-lg">
-                                        <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto</span>
-                                        <span className="text-3xl font-black">{previewGross.toLocaleString()} zł</span>
-                                     </div>
-                                </div>
-                             </div>
-                        </div>
-                    </A4Page>
+                    {renderFinancialSummaryPage(previewIsDeveloperState, showStateSuffix)}
 
                     {/* PAGE 8: HARMONOGRAM & CTA (NEW PAGE) */}
                     <A4Page className="flex flex-col relative a4-page overflow-hidden p-12">
@@ -2207,7 +2219,7 @@ export const OfferGenerator: React.FC = () => {
                     {buildMode === 'both' ? (
                         <>
                             {renderPreviewPages(false, true)}
-                            {renderPreviewPages(true, true)}
+                            {renderFinancialSummaryPage(true, true)}
                         </>
                     ) : (
                         renderPreviewPages(isDeveloperState, false)
