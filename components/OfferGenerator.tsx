@@ -1401,66 +1401,66 @@ export const OfferGenerator: React.FC = () => {
                          <OfferFooter />
                     </A4Page>
 
-                    {/* PAGE 4: TECHNOLOGIA / PRZEKROJE (REDESIGNED 2x2) */}
+                    {/* PAGE 4: TECHNOLOGIA / PRZEKROJE */}
                     <A4Page className="flex flex-col p-12 a4-page">
                          <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Technologia i Przekroje</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
-                         
-                         
-<div className="flex-1 flex flex-col gap-6">
 
-    {/* 1. PRZEKRÓJ ŚCIANY ZEWNĘTRZNEJ - szeroki */}
-    <div className="flex flex-col border border-gray-100 bg-white">
-        <div className="w-full overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-            <img src={resolvePublicAsset('przekroj-sciany-zewnetrznej2503.webp')} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
-        </div>
-        <div className="p-4">
-            <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
-                {customTexts.techWallExtTitle}
-            </h3>
-            <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
-                {customTexts.techWallExtDesc}
-            </p>
-        </div>
-    </div>
+                        <div className="flex-1 flex flex-col gap-6">
 
-    {/* 2 i 3 - Dach i Strop w 2 kolumnach */}
-    <div className="grid grid-cols-2 gap-6">
+                            {/* PRZEKRÓJ ŚCIANY ZEWNĘTRZNEJ - pełna szerokość */}
+                            <div className="flex flex-col border border-gray-100 bg-white">
+                                <div className="w-full overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
+                                    <img src={resolvePublicAsset('przekroj-sciany-zewnetrznej2503.webp')} className="w-full h-auto object-contain" alt="Ściana Zewnętrzna" />
+                                </div>
+                                <div className="p-4">
+                                    <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                                        {customTexts.techWallExtTitle}
+                                    </h3>
+                                    <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                                        {customTexts.techWallExtDesc}
+                                    </p>
+                                </div>
+                            </div>
 
-        {/* Dach (przeniesiony niżej) */}
-        <div className="flex flex-col border border-gray-100 bg-white">
-            <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-                <img src={images.techRoof} className="max-h-full max-w-full object-contain" alt="Dach" />
-            </div>
-            <div className="p-3 flex-1">
-                <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
-                    {customTexts.techRoofTitle}
-                </h3>
-                <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
-                    {customTexts.techRoofDesc}
-                </p>
-            </div>
-        </div>
+                            {/* PRZEKRÓJ STROPU - pełna szerokość */}
+                            <div className="flex flex-col border border-gray-100 bg-white">
+                                <div className="w-full overflow-hidden bg-white flex items-center justify-center p-6 border-b border-gray-50 min-h-[320px]">
+                                    <img src={images.techFloor} className="w-full h-auto max-h-[280px] object-contain" alt="Strop" />
+                                </div>
+                                <div className="p-4">
+                                    <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                                        {customTexts.techFloorTitle}
+                                    </h3>
+                                    <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                                        {customTexts.techFloorDesc}
+                                    </p>
+                                </div>
+                            </div>
 
-        {/* Strop (bez zmian) */}
-        <div className="flex flex-col border border-gray-100 bg-white">
-            <div className="w-full aspect-square overflow-hidden bg-white flex items-center justify-center p-3 border-b border-gray-50">
-                <img src={images.techFloor} className="max-h-full max-w-full object-contain" alt="Strop" />
-            </div>
-            <div className="p-3 flex-1">
-                <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
-                    {customTexts.techFloorTitle}
-                </h3>
-                <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
-                    {customTexts.techFloorDesc}
-                </p>
-            </div>
-        </div>
+                        </div>
+                        <OfferFooter />
+                    </A4Page>
 
-    </div>
+                    {/* PAGE 5: TECHNOLOGIA / PRZEKRÓJ DACHU */}
+                    <A4Page className="flex flex-col p-12 a4-page">
+                         <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Technologia i Przekroje</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
 
-</div>
-<OfferFooter />
-
+                        <div className="flex-1 flex flex-col">
+                            <div className="flex flex-col border border-gray-100 bg-white flex-1">
+                                <div className="w-full overflow-hidden bg-white flex items-center justify-center p-6 border-b border-gray-50 min-h-[520px]">
+                                    <img src={images.techRoof} className="w-full h-auto max-h-[480px] object-contain" alt="Dach" />
+                                </div>
+                                <div className="p-4">
+                                    <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                                        {customTexts.techRoofTitle}
+                                    </h3>
+                                    <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                                        {customTexts.techRoofDesc}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <OfferFooter />
                     </A4Page>
 
                     {/* PAGE 5: MULTIMEDIA / GALERIA */}
