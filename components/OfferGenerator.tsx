@@ -1367,7 +1367,7 @@ export const OfferGenerator: React.FC = () => {
                                                      <li>Dach z pełnym deskowaniem + blacha na rąbek</li>
                                                      <li>Okna trzyszybowe</li>
                                                      <li>Gotowa elewacja</li>
-                                                     <li>Instalacje sanitarne i elektryczne (15 pkt)</li>
+                                                     <li>Instalacje sanitarne i elektryczne (20-50 pkt)</li>
                                                      <li>Ściany działowe</li>
                                                      <li>Płyty g-k na ścianach i sufitach</li>
                                                      <li>Drzwi wejściowe w kolorze dachu</li>
