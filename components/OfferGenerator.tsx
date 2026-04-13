@@ -575,7 +575,7 @@ export const OfferGenerator: React.FC = () => {
         // 4 Tech Images
         techRoof: '/przekroj-dachu.webp',
         techWallExt: resolvePublicAsset('przekroj-sciany-zewnetrznej2503.webp'),
-        techWallInt: 'https://starterhome.pl/wp-content/uploads/2025/12/G_2.png',
+        techWallInt: '/przekroj-sciany-wewnetrznej.webp',
         techFloor: '/przekroj-stropu2503.webp' // Strop
     });
 
@@ -1527,6 +1527,21 @@ export const OfferGenerator: React.FC = () => {
                                     </h3>
                                     <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
                                         {customTexts.techWallExtDesc}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* PRZEKRÓJ ŚCIANY WEWNĘTRZNEJ - pełna szerokość */}
+                            <div className="flex flex-col border border-gray-100 bg-white">
+                                <div className="w-full overflow-hidden bg-white flex items-center justify-center p-4 border-b border-gray-50 min-h-[250px]">
+                                    <img src={images.techWallInt} className="w-full h-auto max-h-[220px] object-contain" alt="Ściana Wewnętrzna" />
+                                </div>
+                                <div className="p-4">
+                                    <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
+                                        {customTexts.techWallIntTitle}
+                                    </h3>
+                                    <p className="text-gray-600 leading-relaxed" style={{ fontSize: `${10 * fontScale}px` }}>
+                                        {customTexts.techWallIntDesc}
                                     </p>
                                 </div>
                             </div>
