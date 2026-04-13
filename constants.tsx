@@ -87,8 +87,8 @@ const PRICING_DB: Record<string, any> = {
     terrace: 990
   },
   'peak_house': {
-    ssz: 259800,
-    dev: 359700,
+    ssz: 274700,
+    dev: 374500,
     foundation: 50250,
     heating: { elec: 27700, pump_full: 58800, pump_solo: 23800, ac_heat: 7000 },
     ac: 7000,
