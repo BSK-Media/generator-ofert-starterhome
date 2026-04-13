@@ -573,7 +573,7 @@ export const OfferGenerator: React.FC = () => {
         logo: 'https://i.ibb.co/PZJv90w6/logo.png',
         decorLeaf: 'https://starterhome.pl/wp-content/uploads/2025/12/cropped-Favicon.png',
         // 4 Tech Images
-        techRoof: '/assets/G_F_4.png',
+        techRoof: '/przekroj-dachu.webp',
         techWallExt: resolvePublicAsset('przekroj-sciany-zewnetrznej2503.webp'),
         techWallInt: 'https://starterhome.pl/wp-content/uploads/2025/12/G_2.png',
         techFloor: '/przekroj-stropu2503.webp' // Strop
