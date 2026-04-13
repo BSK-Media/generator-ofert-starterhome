@@ -1014,16 +1014,16 @@ export const OfferGenerator: React.FC = () => {
 
         // Tech Sections
         techRoofTitle: "Przekrój Dachu",
-        techRoofDesc: "Ochrona Górna U = 0.15 W/m²K. Pokrycie: Blacha na rąbek. Podkonstrukcja: Mata drenażowa / Papa / OSB 22mm. Uszczelnienie: Membrana. Konstrukcja: Krokiew + wełna 200mm. Docieplenie: Wełna 50mm. Szczelność: Folia + GK.",
+        techRoofDesc: "Ochrona Górna U = 0.15 W/m²K. Pokrycie: Blacha na rąbek. Podkonstrukcja: Mata drenażowa / Papa / MFP 22mm. Uszczelnienie: Membrana. Konstrukcja: Krokiew + wełna 200mm. Docieplenie: Wełna 50mm. Szczelność: Folia + GK.",
         
         techWallExtTitle: "Przekrój Ściany Zewnętrznej",
-        techWallExtDesc: "Energooszczędność U = 0.14 W/m²K. Elewacja: Siatka + klej (10mm). Izolacja zew: Wełna elewacyjna (100mm). Poszycie: Płyta OSB (10mm). Izolacja gł: Wełna (150mm). Konstrukcja: C24. Szczelność: Folia. Wykończenie: Płyta GK 2x12.5mm.",
+        techWallExtDesc: "Energooszczędność U = 0.14 W/m²K. Elewacja: Siatka + klej (10mm). Izolacja zew: Wełna elewacyjna (100mm). Poszycie: Płyta MFP (10mm). Izolacja gł: Wełna (150mm). Konstrukcja: C24. Szczelność: Folia. Wykończenie: Płyta GK 2x12.5mm.",
 
         techWallIntTitle: "Przekrój Ściany Wewnętrznej",
         techWallIntDesc: "Przegroda Akustyczna i Działowa. Wiatroizolacja, Słupek 4,5x14,5 cm + wełna mineralna 15 cm, Paroizolacja, Szczelina montażowa 7 cm, Płyta G-K 2x1.25 cm.",
 
         techFloorTitle: "Przekrój Stropu",
-        techFloorDesc: "Konstrukcja Międzykondygnacyjna U = 0.20 W/m²K. Wykończenie góra: Panele 8mm. Poszycie nośne: Płyta OSB 22mm. Konstrukcja drewniana C24. Izolacja akustyczna: Wełna. Wykończenie dół: Ruszt + GK."
+        techFloorDesc: "Konstrukcja Międzykondygnacyjna U = 0.20 W/m²K. Wykończenie góra: Panele 8mm. Poszycie nośne: Płyta MFP 22mm. Konstrukcja drewniana C24. Izolacja akustyczna: Wełna. Wykończenie dół: Ruszt + GK."
     });
     const [financeTranches, setFinanceTranches] = useState<FinanceTranche[]>([
         createFinanceTranche('Opłata rezerwacyjna 10%', 'W terminie 7 dni od daty podpisania umowy.'),
