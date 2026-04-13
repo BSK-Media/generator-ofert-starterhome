@@ -1546,10 +1546,19 @@ export const OfferGenerator: React.FC = () => {
                                 </div>
                             </div>
 
+                        </div>
+                        <OfferFooter />
+                    </A4Page>
+
+                    {/* PAGE 5: TECHNOLOGIA / PRZEKRÓJ STROPU I DACHU */}
+                    <A4Page className="flex flex-col p-12 a4-page">
+                         <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Technologia i Przekroje</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
+
+                        <div className="flex-1 flex flex-col gap-6">
                             {/* PRZEKRÓJ STROPU - pełna szerokość */}
                             <div className="flex flex-col border border-gray-100 bg-white">
-                                <div className="w-full overflow-hidden bg-white flex items-center justify-center p-6 border-b border-gray-50 min-h-[320px]">
-                                    <img src={images.techFloor} className="w-full h-auto max-h-[280px] object-contain" alt="Strop" />
+                                <div className="w-full overflow-hidden bg-white flex items-center justify-center p-6 border-b border-gray-50 min-h-[300px]">
+                                    <img src={images.techFloor} className="w-full h-auto max-h-[250px] object-contain" alt="Strop" />
                                 </div>
                                 <div className="p-4">
                                     <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
@@ -1561,18 +1570,9 @@ export const OfferGenerator: React.FC = () => {
                                 </div>
                             </div>
 
-                        </div>
-                        <OfferFooter />
-                    </A4Page>
-
-                    {/* PAGE 5: TECHNOLOGIA / PRZEKRÓJ DACHU */}
-                    <A4Page className="flex flex-col p-12 a4-page">
-                         <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-bold text-gray-900">Technologia i Przekroje</h2><img src={images.logo} alt="Starter Home" className="h-6 w-auto object-contain" /></div>
-
-                        <div className="flex-1 flex flex-col">
                             <div className="flex flex-col border border-gray-100 bg-white flex-1">
-                                <div className="w-full overflow-hidden bg-white flex items-center justify-center p-6 border-b border-gray-50 min-h-[520px]">
-                                    <img src={images.techRoof} className="w-full h-auto max-h-[480px] object-contain" alt="Dach" />
+                                <div className="w-full overflow-hidden bg-white flex items-center justify-center p-6 border-b border-gray-50 min-h-[380px]">
+                                    <img src={images.techRoof} className="w-full h-auto max-h-[340px] object-contain" alt="Dach" />
                                 </div>
                                 <div className="p-4">
                                     <h3 className="font-bold text-[#6E8809] uppercase tracking-wide mb-1" style={{ fontSize: `${12 * fontScale}px` }}>
