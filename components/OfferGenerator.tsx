@@ -1721,6 +1721,15 @@ export const OfferGenerator: React.FC = () => {
                     key={src}
                     src={src}
                     className="max-w-full max-h-[1200px] object-contain mix-blend-multiply"
+                    style={
+                        selectedHouse.id === 'nova_house' && i === 1
+                            ? {
+                                width: '92%',
+                                maxHeight: '450px',
+                                marginTop: '-64px',
+                            }
+                            : undefined
+                    }
                     alt={`Rzut ${i + 1}`}
                 />
             ))
