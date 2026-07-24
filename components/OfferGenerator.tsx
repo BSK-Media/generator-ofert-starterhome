@@ -126,11 +126,24 @@ const getHouseCollageSrc = (houseId: string) => {
     return mapped ? resolvePublicAsset(mapped) : '';
 };
 
+const getHouseDefaultMedia = (house: House) => {
+    const gallery = house.images && house.images.length >= 4
+        ? house.images.map(resolvePublicAsset)
+        : [];
+
+    return {
+        visualization: gallery[3] || resolvePublicAsset(house.image),
+        gallery1: gallery[1] || house.image,
+        gallery2: gallery[2] || house.image,
+    };
+};
+
 
 const NEED_TEXT_PRESETS = [
     'Dom o powierzchni do 70m2 zabudowy',
     '2 sypialnie',
     '3 sypialnie',
+    '4 sypialnie',
     'Stan surowy zamknięty',
     'Stan deweloperski',
     'Projekt indywidualny',
@@ -562,11 +575,12 @@ export const OfferGenerator: React.FC = () => {
 
 
     // MEDIA
+    const defaultHouseMedia = getHouseDefaultMedia(selectedHouse);
     const [images, setImages] = useState({
         main: selectedHouse.image,
-        visualization: resolvePublicAsset(selectedHouse.visualizationImage ?? selectedHouse.image),
-        gallery1: selectedHouse.image,
-        gallery2: selectedHouse.image,
+        visualization: defaultHouseMedia.visualization,
+        gallery1: defaultHouseMedia.gallery1,
+        gallery2: defaultHouseMedia.gallery2,
         interior: 'https://starterhome.pl/wp-content/uploads/2025/10/ujecie-1-scaled.png',
         floorPlan: getFloorPlanSrc(selectedHouse.id, 1) || FALLBACK_FLOORPLAN,
         advisor: 'https://i.ibb.co/j9NzkpfG/Krystian.jpg',
@@ -614,12 +628,13 @@ export const OfferGenerator: React.FC = () => {
 
 
     useEffect(() => {
+        const defaultMedia = getHouseDefaultMedia(selectedHouse);
         setImages(prev => ({
             ...prev,
             main: selectedHouse.image,
-            visualization: resolvePublicAsset(selectedHouse.visualizationImage ?? selectedHouse.image),
-            gallery1: selectedHouse.image,
-            gallery2: selectedHouse.image,
+            visualization: defaultMedia.visualization,
+            gallery1: defaultMedia.gallery1,
+            gallery2: defaultMedia.gallery2,
             // Default floor plan comes from /public using the naming convention.
             floorPlan: getFloorPlanSrc(selectedHouse.id, 1) || FALLBACK_FLOORPLAN,
         }));
