@@ -64,6 +64,17 @@ const PRICING_DB: Record<string, any> = {
     blinds: 10500,
     terrace: 990
   },
+  'balance_house_xl': {
+    ssz: 280281,
+    dev: 410888,
+    foundation: 90041,
+    heating: { elec: 39050, pump_full: 67200, pump_solo: 30800, ac_heat: 7000 },
+    ac: 7000,
+    septic: 14500,
+    wwtp: 17400,
+    blinds: 10500,
+    terrace: 990
+  },
   'comfort_house': {
     ssz: 273400,
     dev: 377700,
@@ -73,6 +84,50 @@ const PRICING_DB: Record<string, any> = {
     septic: 14500,
     wwtp: 17400,
     blinds: 11900,
+    terrace: 990
+  },
+  'comfort_house_xl': {
+    ssz: 318500,
+    dev: 440577,
+    foundation: 90723,
+    heating: { elec: 42300, pump_full: 68800, pump_solo: 33800, ac_heat: 8000 },
+    ac: 7000,
+    septic: 14500,
+    wwtp: 17400,
+    blinds: 11900,
+    terrace: 990
+  },
+  'family_house': {
+    ssz: 342700,
+    dev: 502800,
+    foundation: 117600,
+    heating: { elec: 55100, pump_full: 77600, pump_solo: 37800, ac_heat: 8000 },
+    ac: 8000,
+    septic: 14500,
+    wwtp: 17400,
+    blinds: 12500,
+    terrace: 990
+  },
+  'grand_house': {
+    ssz: 383000,
+    dev: 545000,
+    foundation: 128000,
+    heating: { elec: 55100, pump_full: 77600, pump_solo: 37800, ac_heat: 8000 },
+    ac: 8000,
+    septic: 14500,
+    wwtp: 17400,
+    blinds: 12500,
+    terrace: 990
+  },
+  'nova_house': {
+    ssz: 356700,
+    dev: 486300,
+    foundation: 65250,
+    heating: { elec: 55100, pump_full: 77600, pump_solo: 37800, ac_heat: 8000 },
+    ac: 8000,
+    septic: 14500,
+    wwtp: 17400,
+    blinds: 12500,
     terrace: 990
   },
   'vista_house': {
@@ -133,9 +188,29 @@ export const getOfferItemsForHouse = (house: House): OfferItem[] => {
       baseLabel: '10kW + Magazyn 15.36kWh',
       backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
     },
+    balance_house_xl: {
+      baseLabel: '10kW + Magazyn 15.36kWh',
+      backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
+    },
     comfort_house: {
       baseLabel: '5.5kW + Magazyn 10.24kWh',
       backupLabel: '5.5kW + Magazyn 10.24kWh + Zasilanie Awaryjne'
+    },
+    comfort_house_xl: {
+      baseLabel: '5.5kW + Magazyn 10.24kWh',
+      backupLabel: '5.5kW + Magazyn 10.24kWh + Zasilanie Awaryjne'
+    },
+    family_house: {
+      baseLabel: '10kW + Magazyn 15.36kWh',
+      backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
+    },
+    grand_house: {
+      baseLabel: '10kW + Magazyn 15.36kWh',
+      backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
+    },
+    nova_house: {
+      baseLabel: '10kW + Magazyn 15.36kWh',
+      backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
     },
     vista_house: {
       baseLabel: '10kW + Magazyn 15.36kWh',
@@ -299,6 +374,24 @@ export const HOUSES: House[] = [
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Balance.pdf'
   },
   { 
+    id: 'balance_house_xl', 
+    name: 'Balance HOUSE XL', 
+    status: 'COMPLETED', 
+    basePrice: PRICING_DB.balance_house_xl.ssz, 
+    developerPrice: PRICING_DB.balance_house_xl.dev,
+    area: 'Do ustalenia',
+    details: { builtArea: '118 m²', usableArea: '100 m²', bedrooms: 3 },
+    description: 'Dom o 100 m² powierzchni użytkowej oferuje komfortową przestrzeń dla rodziny. Składa się z trzech sypialni, salonu z aneksem kuchennym oraz łazienki.',
+    image: 'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-balance-house-xl.webp',
+    images: [
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-balance-house-xl.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-balance-house-xl-1.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-balance-house-xl-2.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-balance-house-xl-3.webp'
+    ],
+    floorPlanPdf: 'https://starterhome.pl/wp-content/uploads/2026/07/Rzuty-Balance-House-XL.pdf'
+  },
+  { 
     id: 'comfort_house', 
     name: 'Comfort HOUSE', 
     status: 'COMPLETED', 
@@ -310,6 +403,78 @@ export const HOUSES: House[] = [
     image: '/assets/houses/comfort.webp',
     images: ['kolaz-comfort-1.webp'],
     floorPlanPdf: 'https://todybnsadf.cfolks.pl/Comfort.pdf'
+  },
+  { 
+    id: 'comfort_house_xl', 
+    name: 'Comfort HOUSE XL', 
+    status: 'COMPLETED', 
+    basePrice: PRICING_DB.comfort_house_xl.ssz, 
+    developerPrice: PRICING_DB.comfort_house_xl.dev,
+    area: 'Do ustalenia',
+    details: { builtArea: '120 m²', usableArea: '101 m²', bedrooms: 3 },
+    description: 'Comfort House XL to parterowy dom o powierzchni użytkowej 101 m², stworzony z myślą o wygodzie rodziny. Posiada trzy sypialnie oraz otwartą część dzienną.',
+    image: 'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-comfort-house-xl.webp',
+    images: [
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-comfort-house-xl.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-comfort-house-xl-1.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-comfort-house-xl-2.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-comfort-house-xl-3.webp'
+    ],
+    floorPlanPdf: 'https://starterhome.pl/wp-content/uploads/2026/07/Rzuty-Comfort-House-XL.pdf'
+  },
+  { 
+    id: 'family_house', 
+    name: 'Family HOUSE', 
+    status: 'COMPLETED', 
+    basePrice: PRICING_DB.family_house.ssz, 
+    developerPrice: PRICING_DB.family_house.dev,
+    area: 'Do ustalenia',
+    details: { builtArea: '157 m²', usableArea: '123 m²', bedrooms: 3 },
+    description: 'Family House to przestronny dom o powierzchni użytkowej 123 m², zaprojektowany z myślą o wygodzie całej rodziny.',
+    image: 'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-family-house-xl-1.webp',
+    images: [
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-family-house-xl-1.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-family-house-xl.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-family-house-xl-2.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-family-house-xl-3.webp'
+    ],
+    floorPlanPdf: 'https://starterhome.pl/wp-content/uploads/2026/07/Rzuty-Family-House.pdf'
+  },
+  { 
+    id: 'grand_house', 
+    name: 'Grand HOUSE', 
+    status: 'COMPLETED', 
+    basePrice: PRICING_DB.grand_house.ssz, 
+    developerPrice: PRICING_DB.grand_house.dev,
+    area: 'Do ustalenia',
+    details: { builtArea: '171 m²', usableArea: '139 m²', bedrooms: 3 },
+    description: 'Grand House to przestronny dom o powierzchni użytkowej 139 m², zaprojektowany z myślą o komforcie całej rodziny.',
+    image: 'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-grand-house.webp',
+    images: [
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-grand-house.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-grand-house-1.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-grand-house-2.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-grand-house-3.webp'
+    ],
+    floorPlanPdf: 'https://starterhome.pl/wp-content/uploads/2026/07/Rzuty-Grand-House-140.pdf'
+  },
+  { 
+    id: 'nova_house', 
+    name: 'Nova HOUSE', 
+    status: 'COMPLETED', 
+    basePrice: PRICING_DB.nova_house.ssz, 
+    developerPrice: PRICING_DB.nova_house.dev,
+    area: 'Do ustalenia',
+    details: { builtArea: '87 m²', usableArea: '162 m²', bedrooms: 4 },
+    description: 'Nova House to przestronny dom o powierzchni użytkowej 162 m², zaprojektowany z myślą o komforcie większej rodziny. Posiada cztery sypialnie.',
+    image: 'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-nova-house-3.webp',
+    images: [
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-nova-house-3.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-nova-house.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-nova-house-1.webp',
+      'https://starterhome.pl/wp-content/uploads/2026/07/starterhome-nova-house-2.webp'
+    ],
+    floorPlanPdf: 'https://starterhome.pl/wp-content/uploads/2026/07/Rzuty-Nova-House.pdf'
   },
   { 
     id: 'vista_house', 
