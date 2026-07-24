@@ -109,6 +109,27 @@ const getFloorPlanSrc = (houseId: string, index: number) => {
     return resolvePublicAsset(`/rzut-${slug}-${index}.webp`);
 };
 
+const HOUSE_FLOOR_PLAN_MAP: Record<string, string[]> = {
+    balance_house_xl: ['/rzut balance house xl.webp'],
+    comfort_house_xl: ['/rzut comfort house xl.webp'],
+    family_house: ['/rzut family house.webp'],
+    grand_house: ['/rzut grand house.webp'],
+    nova_house: ['/rzut nova house 1.webp', '/rzut nova house 2.webp'],
+};
+
+const getFloorPlanCandidates = (houseId: string) => {
+    const mapped = HOUSE_FLOOR_PLAN_MAP[houseId];
+    if (mapped) return mapped.map(resolvePublicAsset);
+
+    return Array.from(
+        { length: MAX_FLOORPLANS_PER_HOUSE },
+        (_, index) => getFloorPlanSrc(houseId, index + 1)
+    ).filter(Boolean);
+};
+
+const getDefaultFloorPlanSrc = (houseId: string) =>
+    getFloorPlanCandidates(houseId)[0] || FALLBACK_FLOORPLAN;
+
 const HOUSE_COLLAGE_MAP: Record<string, string> = {
     zenith_house: '/kolaz-zenith-1.webp',
     nest_house: '/kolaz-nest-1.png',
@@ -582,7 +603,7 @@ export const OfferGenerator: React.FC = () => {
         gallery1: defaultHouseMedia.gallery1,
         gallery2: defaultHouseMedia.gallery2,
         interior: 'https://starterhome.pl/wp-content/uploads/2025/10/ujecie-1-scaled.png',
-        floorPlan: getFloorPlanSrc(selectedHouse.id, 1) || FALLBACK_FLOORPLAN,
+        floorPlan: getDefaultFloorPlanSrc(selectedHouse.id),
         advisor: 'https://i.ibb.co/j9NzkpfG/Krystian.jpg',
         logo: 'https://i.ibb.co/PZJv90w6/logo.png',
         decorLeaf: 'https://starterhome.pl/wp-content/uploads/2025/12/cropped-Favicon.png',
@@ -612,7 +633,7 @@ export const OfferGenerator: React.FC = () => {
         // For the individual project, reuse Nest floor plan (rzut-nest-1.webp) as requested.
         const candidates = isIndividual
             ? [getFloorPlanSrc("nest_house", 1)].filter(Boolean)
-            : Array.from({ length: MAX_FLOORPLANS_PER_HOUSE }, (_, i) => getFloorPlanSrc(selectedHouse.id, i + 1)).filter(Boolean);
+            : getFloorPlanCandidates(selectedHouse.id);
         setFloorPlanCandidates(candidates);
         setAvailableFloorPlans([]);
         setActiveFloorPlanIndex(0);
@@ -636,7 +657,7 @@ export const OfferGenerator: React.FC = () => {
             gallery1: defaultMedia.gallery1,
             gallery2: defaultMedia.gallery2,
             // Default floor plan comes from /public using the naming convention.
-            floorPlan: getFloorPlanSrc(selectedHouse.id, 1) || FALLBACK_FLOORPLAN,
+            floorPlan: getDefaultFloorPlanSrc(selectedHouse.id),
         }));
         setIsCustomFloorPlanUploaded(false);
         setIsCompressed(false);
