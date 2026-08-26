@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { House, OfferItem } from './types';
 import { 
@@ -18,8 +17,8 @@ import {
 } from 'lucide-react';
 
 // --- DATA FROM SCREENSHOTS ---
-// Prices in Netto PLN
-const PRICING_DB: Record<string, any> = {
+// Prices source data in netto PLN. Kwoty są przeliczane na brutto poniżej.
+const PRICING_DB_NET: Record<string, any> = {
   'zenith_house': {
     ssz: 184900,
     dev: 249800,
@@ -57,7 +56,7 @@ const PRICING_DB: Record<string, any> = {
     ssz: 224900,
     dev: 329700,
     foundation: 72250,
-    heating: { elec: 39050, pump_full: 67200, pump_solo: 30800, ac_heat: 7000 }, // ac_heat 5kw implicit
+    heating: { elec: 32000, pump_full: 62200, pump_solo: 28000, ac_heat: 7000 }, // ac_heat 5kw implicit
     ac: 7000, // 5kW
     septic: 14500,
     wwtp: 17400,
@@ -68,7 +67,7 @@ const PRICING_DB: Record<string, any> = {
     ssz: 280281,
     dev: 410888,
     foundation: 90041,
-    heating: { elec: 39050, pump_full: 67200, pump_solo: 30800, ac_heat: 7000 },
+    heating: { elec: 39050, pump_full: 67200, pump_solo: 35000, ac_heat: 7000 },
     ac: 7000,
     septic: 14500,
     wwtp: 17400,
@@ -79,7 +78,7 @@ const PRICING_DB: Record<string, any> = {
     ssz: 273400,
     dev: 377700,
     foundation: 77250,
-    heating: { elec: 42300, pump_full: 68800, pump_solo: 33800, ac_heat: 8000 },
+    heating: { elec: 33000, pump_full: 64000, pump_solo: 30100, ac_heat: 8000 },
     ac: 7000, // 5kW
     septic: 14500,
     wwtp: 17400,
@@ -90,7 +89,7 @@ const PRICING_DB: Record<string, any> = {
     ssz: 318500,
     dev: 440577,
     foundation: 90723,
-    heating: { elec: 42300, pump_full: 68800, pump_solo: 33800, ac_heat: 8000 },
+    heating: { elec: 42300, pump_full: 68800, pump_solo: 35000, ac_heat: 8000 },
     ac: 7000,
     septic: 14500,
     wwtp: 17400,
@@ -101,7 +100,7 @@ const PRICING_DB: Record<string, any> = {
     ssz: 342700,
     dev: 502800,
     foundation: 117600,
-    heating: { elec: 55100, pump_full: 77600, pump_solo: 37800, ac_heat: 8000 },
+    heating: { elec: 49000, pump_full: 82700, pump_solo: 42000, ac_heat: 8000 },
     ac: 8000,
     septic: 14500,
     wwtp: 17400,
@@ -112,7 +111,7 @@ const PRICING_DB: Record<string, any> = {
     ssz: 383000,
     dev: 545000,
     foundation: 128000,
-    heating: { elec: 55100, pump_full: 77600, pump_solo: 37800, ac_heat: 8000 },
+    heating: { elec: 52700, pump_full: 85700, pump_solo: 49000, ac_heat: 8000 },
     ac: 8000,
     septic: 14500,
     wwtp: 17400,
@@ -123,7 +122,7 @@ const PRICING_DB: Record<string, any> = {
     ssz: 356700,
     dev: 486300,
     foundation: 65250,
-    heating: { elec: 55100, pump_full: 77600, pump_solo: 37800, ac_heat: 8000 },
+    heating: { elec: 49700, pump_full: 82700, pump_solo: 43750, ac_heat: 8000 },
     ac: 8000,
     septic: 14500,
     wwtp: 17400,
@@ -134,7 +133,7 @@ const PRICING_DB: Record<string, any> = {
     ssz: 295700,
     dev: 420900,
     foundation: 94500,
-    heating: { elec: 55100, pump_full: 77600, pump_solo: 37800, ac_heat: 8000 },
+    heating: { elec: 45000, pump_full: 72700, pump_solo: 37800, ac_heat: 8000 },
     ac: 8000, // 5kW
     septic: 14500,
     wwtp: 17400,
@@ -142,10 +141,10 @@ const PRICING_DB: Record<string, any> = {
     terrace: 990
   },
   'peak_house': {
-    ssz: 274700,
-    dev: 374500,
+    ssz: 289700,
+    dev: 397200,
     foundation: 50250,
-    heating: { elec: 27700, pump_full: 58800, pump_solo: 23800, ac_heat: 7000 },
+    heating: { elec: 38700, pump_full: 75900, pump_solo: 38500, ac_heat: 7000 },
     ac: 7000,
     septic: 14500,
     wwtp: 17400,
@@ -165,71 +164,53 @@ const PRICING_DB: Record<string, any> = {
   }
 };
 
+const VAT_RATE = 0.08;
+const toGrossPrice = (netPrice: number) => Math.round(netPrice * (1 + VAT_RATE));
+
+// Wartości podane bez dopisku „netto” w nowym cenniku są już kwotami brutto.
+const GROSS_PRICE_OVERRIDES: Record<string, Record<string, number>> = {
+  balance_house: { 'heating.elec': 32000, 'heating.pump_solo': 28000 },
+  balance_house_xl: { 'heating.pump_solo': 35000 },
+  comfort_house: { 'heating.pump_solo': 30100 },
+  comfort_house_xl: { 'heating.pump_solo': 35000 },
+  vista_house: { 'heating.pump_solo': 37800 },
+  family_house: { 'heating.pump_solo': 42000 },
+  grand_house: { 'heating.pump_solo': 49000 },
+  nova_house: { 'heating.pump_solo': 43750 },
+  peak_house: { 'heating.pump_solo': 38500 }
+};
+
+const toGrossPricing = (houseId: string, prices: any) => ({
+  ...prices,
+  ssz: toGrossPrice(prices.ssz),
+  dev: toGrossPrice(prices.dev),
+  foundation: toGrossPrice(prices.foundation),
+  heating: Object.fromEntries(
+    Object.entries(prices.heating).map(([key, price]) => [
+      key,
+      GROSS_PRICE_OVERRIDES[houseId]?.[`heating.${key}`] ?? toGrossPrice(price as number)
+    ])
+  ),
+  ac: toGrossPrice(prices.ac),
+  septic: toGrossPrice(prices.septic),
+  wwtp: toGrossPrice(prices.wwtp),
+  blinds: toGrossPrice(prices.blinds),
+  terrace: toGrossPrice(prices.terrace)
+});
+
+const PRICING_DB: Record<string, any> = Object.fromEntries(
+  Object.entries(PRICING_DB_NET).map(([houseId, prices]) => [houseId, toGrossPricing(houseId, prices)])
+);
+
 export const getOfferItemsForHouse = (house: House): OfferItem[] => {
   const prices = PRICING_DB[house.id];
   if (!prices) return [];
 
-  // --- FOTOWOLTAIKA (HYBRYDOWA) ---
-  // Ceny netto wg dołączonych screenów:
-  // - PV + magazyn: +20 000 zł
-  // - PV + magazyn + zasilanie awaryjne: +21 500 zł
-  // (w screenach wariant z awaryjnym jest o +1500 zł droższy).
-  const PV_PRICES = { base: 20000, backup: 21500 };
-  const PV_VARIANTS_BY_HOUSE: Record<string, { baseLabel: string; backupLabel: string }> = {
-    nest_house: {
-      baseLabel: '4kW + Magazyn 10.24kWh',
-      backupLabel: '4kW + Magazyn 10.24kWh + Zasilanie Awaryjne'
-    },
-    haven_house: {
-      baseLabel: '4kW + Magazyn 10.24kWh',
-      backupLabel: '4kW + Magazyn 10.24kWh + Zasilanie Awaryjne'
-    },
-    balance_house: {
-      baseLabel: '10kW + Magazyn 15.36kWh',
-      backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
-    },
-    balance_house_xl: {
-      baseLabel: '10kW + Magazyn 15.36kWh',
-      backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
-    },
-    comfort_house: {
-      baseLabel: '5.5kW + Magazyn 10.24kWh',
-      backupLabel: '5.5kW + Magazyn 10.24kWh + Zasilanie Awaryjne'
-    },
-    comfort_house_xl: {
-      baseLabel: '5.5kW + Magazyn 10.24kWh',
-      backupLabel: '5.5kW + Magazyn 10.24kWh + Zasilanie Awaryjne'
-    },
-    family_house: {
-      baseLabel: '10kW + Magazyn 15.36kWh',
-      backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
-    },
-    grand_house: {
-      baseLabel: '10kW + Magazyn 15.36kWh',
-      backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
-    },
-    nova_house: {
-      baseLabel: '10kW + Magazyn 15.36kWh',
-      backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
-    },
-    vista_house: {
-      baseLabel: '10kW + Magazyn 15.36kWh',
-      backupLabel: '10kW + Magazyn 15.36kWh + Zasilanie Awaryjne'
-    },
-    peak_house: {
-      baseLabel: '8kW + Magazyn 10.24kWh',
-      backupLabel: '8kW + Magazyn 10.24kWh + Zasilanie Awaryjne'
-    },
-    skyline_house: {
-      baseLabel: '3.5kW + Magazyn 5.3kWh',
-      backupLabel: '3.5kW + Magazyn 5.3kWh + Zasilanie Awaryjne'
-    },
-    zenith_house: {
-      baseLabel: '3.5kW + Magazyn 5.3kWh',
-      backupLabel: '3.5kW + Magazyn 5.3kWh + Zasilanie Awaryjne'
-    }
-  };
-  const pvVariant = PV_VARIANTS_BY_HOUSE[house.id];
+  const PV_OPTIONS = [
+    { id: 'pv_4_4', name: '4,4 kWp + Magazyn energii 10,24 kWh', price: toGrossPrice(35000) },
+    { id: 'pv_5_5', name: '5,5 kWp + Magazyn energii 10,24 kWh', price: toGrossPrice(38000) },
+    { id: 'pv_7_7', name: '7,7 kWp + Magazyn energii 10,24 kWh', price: toGrossPrice(43000) }
+  ];
 
   return [
     {
@@ -250,7 +231,7 @@ export const getOfferItemsForHouse = (house: House): OfferItem[] => {
       type: 'radio',
       defaultValue: 'none',
       options: [
-        { id: 'service', name: 'Zlecam Wam (komplet dokumentacji)', price: 9500 },
+        { id: 'service', name: 'Zlecam Wam (komplet dokumentacji)', price: toGrossPrice(9500) },
         { id: 'self', name: 'Robię we własnym zakresie', price: 0 },
       ]
     },
@@ -290,13 +271,10 @@ export const getOfferItemsForHouse = (house: House): OfferItem[] => {
     {
       code: 'PV',
       name: 'Fotowoltaika (Hybrydowa)',
-      description: 'W instalacjach stosujemy: Panele Ja Solar Bifacial 500W (czarna rama), falownik hybrydowy Deye, magazyn energii Deye lub Kon-Tec. Wizualizacja oraz wycena jest orientacyjna (brak dokładnego projektu dachu).',
+      description: 'W instalacjach stosujemy panele JH Solar o mocy 550W, falownik hybrydowy Deye oraz magazyn energii Dyness 10,24kWh. Wizualizacja oraz wycena są orientacyjne (brak dokładnego projektu dachu).',
       type: 'radio',
       defaultValue: 'none',
-      options: pvVariant ? [
-        { id: 'pv_base', name: pvVariant.baseLabel, price: PV_PRICES.base },
-        { id: 'pv_backup', name: pvVariant.backupLabel, price: PV_PRICES.backup }
-      ] : []
+      options: PV_OPTIONS
     },
     {
       code: 'BLINDS',
