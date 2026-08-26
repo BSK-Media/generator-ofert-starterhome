@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
@@ -960,7 +959,7 @@ export const OfferGenerator: React.FC = () => {
                                         </div>
                                         <textarea rows={2} className="w-full p-2 border border-gray-200 text-xs bg-white" value={sec.text} onChange={(e) => updateCustomSection(sec.id, { text: e.target.value }, customStateKey)} placeholder="Opis" />
                                         <div>
-                                            <div className="text-[11px] text-gray-500 mb-1">Cena netto (PLN)</div>
+                                            <div className="text-[11px] text-gray-500 mb-1">Cena brutto (PLN)</div>
                                             <input type="number" className="w-full p-2 border border-gray-200 text-sm bg-white" value={sec.price} onChange={(e) => updateCustomSection(sec.id, { price: Number(e.target.value) }, customStateKey)} placeholder="0" />
                                         </div>
                                     </div>
@@ -996,7 +995,7 @@ export const OfferGenerator: React.FC = () => {
                             value={extra.label}
                             onChange={(e) => updateCustomExtra(index, { label: e.target.value }, customStateKey)}
                         />
-                        <label className="text-[10px] font-bold text-gray-400 uppercase">Cena netto (zł)</label>
+                        <label className="text-[10px] font-bold text-gray-400 uppercase">Cena brutto (zł)</label>
                         <input
                             type="number"
                             placeholder="0"
@@ -1316,7 +1315,7 @@ export const OfferGenerator: React.FC = () => {
             list.push({ name: e.label || 'Pozycja niestandardowa', variant: '-', price: e.price });
         });
 
-        return { basePrice: calculatedBasePrice, totalNetPrice: sum, selectedItemsList: list };
+        return { basePrice: calculatedBasePrice, totalGrossPrice: sum, selectedItemsList: list };
     };
 
     const currentOffer = useMemo(() => calculateOfferForState(isDeveloperState), [selectedHouse, isDeveloperState, basePricesByHouse, offerConfig, offerConfigDual, availableItems, customSections, customSectionsDual, customSectionsEnabled, customSectionsEnabledDual, customExtras, customExtrasDual, buildMode]);
@@ -1324,12 +1323,10 @@ export const OfferGenerator: React.FC = () => {
     const dualDeweloperskiOffer = useMemo(() => calculateOfferForState(true), [selectedHouse, basePricesByHouse, offerConfig, offerConfigDual, availableItems, customSections, customSectionsDual, customSectionsEnabled, customSectionsEnabledDual, customExtras, customExtrasDual, buildMode]);
 
     const basePrice = currentOffer.basePrice;
-    const totalNetPrice = currentOffer.totalNetPrice;
     const selectedItemsList = currentOffer.selectedItemsList;
-    const totalVat = totalNetPrice * 0.08;
-    const totalGross = totalNetPrice + totalVat;
-    const dualSurowyGross = dualSurowyOffer.totalNetPrice * 0.08 + dualSurowyOffer.totalNetPrice;
-    const dualDeweloperskiGross = dualDeweloperskiOffer.totalNetPrice * 0.08 + dualDeweloperskiOffer.totalNetPrice;
+    const totalGross = currentOffer.totalGrossPrice;
+    const dualSurowyGross = dualSurowyOffer.totalGrossPrice;
+    const dualDeweloperskiGross = dualDeweloperskiOffer.totalGrossPrice;
 
     // Helpers for UI
     const toggleAccordion = (section: string) => setOpenSection(openSection === section ? '' : section);
@@ -1350,8 +1347,9 @@ export const OfferGenerator: React.FC = () => {
 
     const renderSummaryPage = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
         const previewOffer = calculateOfferForState(previewIsDeveloperState);
-        const previewVat = previewOffer.totalNetPrice * 0.08;
-        const previewGross = previewOffer.totalNetPrice + previewVat;
+        const previewGross = previewOffer.totalGrossPrice;
+        const previewNet = Math.round(previewGross / 1.08);
+        const previewVat = previewGross - previewNet;
         return (
                     <A4Page className="flex flex-col relative a4-page overflow-hidden">
                         <LeafDecor src={images.decorLeaf} />
@@ -1373,7 +1371,7 @@ export const OfferGenerator: React.FC = () => {
                                             <tr className="text-gray-400 text-[10px] uppercase tracking-widest border-b border-gray-200">
                                                 <th className="pb-4 font-medium w-1/2">Pozycja</th>
                                                 <th className="pb-4 font-medium w-1/4">Szczegóły</th>
-                                                <th className="pb-4 font-medium w-1/4 text-right">Cena Netto</th>
+                                                <th className="pb-4 font-medium w-1/4 text-right">Cena Brutto</th>
                                             </tr>
                                         </thead>
                                         <tbody style={{ fontSize: `${12 * fontScale}px` }}>
@@ -1426,7 +1424,7 @@ export const OfferGenerator: React.FC = () => {
                                 <div className="p-6 bg-white border-t border-gray-200 mt-auto shrink-0">
                                      <div className="flex justify-between items-center mb-2">
                                         <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto</span>
-                                        <span className="text-xl font-bold text-gray-900">{previewOffer.totalNetPrice.toLocaleString()} zł</span>
+                                        <span className="text-xl font-bold text-gray-900">{previewNet.toLocaleString()} zł</span>
                                      </div>
                                      <div className="flex justify-between items-center mb-6">
                                         <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
@@ -1444,9 +1442,6 @@ export const OfferGenerator: React.FC = () => {
     };
 
     const renderPreviewPages = (previewIsDeveloperState: boolean, showStateSuffix: boolean = false) => {
-        const previewOffer = calculateOfferForState(previewIsDeveloperState);
-        const previewVat = previewOffer.totalNetPrice * 0.08;
-        const previewGross = previewOffer.totalNetPrice + previewVat;
         return (
             <>
                     {/* PAGE 1: OKŁADKA */}
@@ -2159,7 +2154,7 @@ export const OfferGenerator: React.FC = () => {
                                                 value={extra.label}
                                                 onChange={(e) => updateCustomExtra(index, { label: e.target.value })}
                                             />
-                                            <label className="text-[10px] font-bold text-gray-400 uppercase">Cena netto (zł)</label>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase">Cena brutto (zł)</label>
                                             <input
                                                 type="number"
                                                 placeholder="0"
