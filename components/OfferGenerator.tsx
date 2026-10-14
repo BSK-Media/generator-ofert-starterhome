@@ -1355,6 +1355,8 @@ export const OfferGenerator: React.FC = () => {
         const previewVat = previewGross - previewNet;
         const discountRaw = parseInt((discountPrices[previewIsDeveloperState ? 'deweloperski' : 'surowy'] || '').replace(/\D/g, ''), 10);
         const discountedPrice = discountEnabled && discountRaw > 0 ? discountRaw : null;
+        const discountedNet = discountedPrice !== null ? Math.round(discountedPrice / 1.08) : 0;
+        const discountedVat = discountedPrice !== null ? discountedPrice - discountedNet : 0;
         return (
                     <A4Page className="flex flex-col relative a4-page overflow-hidden">
                         <LeafDecor src={images.decorLeaf} />
@@ -1428,22 +1430,32 @@ export const OfferGenerator: React.FC = () => {
 
                                 <div className="p-6 bg-white border-t border-gray-200 mt-auto shrink-0">
                                      <div className="flex justify-between items-center mb-2">
-                                        <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto</span>
+                                        <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto{discountedPrice !== null ? ' przed rabatem' : ''}</span>
                                         <span className="text-xl font-bold text-gray-900">{previewNet.toLocaleString()} zł</span>
                                      </div>
-                                     <div className="flex justify-between items-center mb-6">
+                                     <div className={`flex justify-between items-center ${discountedPrice !== null ? 'mb-3' : 'mb-6'}`}>
                                         <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
                                         <span className="text-sm text-gray-500">{previewVat.toLocaleString()} zł</span>
                                      </div>
                                      <div className="flex justify-between items-center p-4 bg-[#6E8809] text-white rounded-lg">
-                                        <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto</span>
+                                        <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto{discountedPrice !== null ? <span className="ml-2 text-xs font-medium normal-case tracking-normal opacity-80">przed rabatem</span> : null}</span>
                                         <span className="text-3xl font-black">{previewGross.toLocaleString()} zł</span>
                                      </div>
                                      {discountedPrice !== null && (
-                                        <div className="flex justify-between items-center p-4 mt-3 bg-red-600 text-white rounded-lg">
-                                            <span className="font-bold uppercase tracking-widest text-lg">{discountLabel || 'Cena z rabatem'}</span>
-                                            <span className="text-3xl font-black">{discountedPrice.toLocaleString()} zł</span>
-                                        </div>
+                                        <>
+                                            <div className="flex justify-between items-center mt-4 mb-2">
+                                                <span className="text-gray-500 uppercase tracking-widest text-sm">Suma Netto po rabacie</span>
+                                                <span className="text-xl font-bold text-gray-900">{discountedNet.toLocaleString()} zł</span>
+                                            </div>
+                                            <div className="flex justify-between items-center mb-3">
+                                                <span className="text-gray-400 uppercase tracking-widest text-xs">+ VAT 8%</span>
+                                                <span className="text-sm text-gray-500">{discountedVat.toLocaleString()} zł</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-4 bg-red-600 text-white rounded-lg">
+                                                <span className="font-bold uppercase tracking-widest text-lg">{discountLabel || 'Cena z rabatem'}<span className="ml-2 text-xs font-medium normal-case tracking-normal opacity-80">brutto</span></span>
+                                                <span className="text-3xl font-black">{discountedPrice.toLocaleString()} zł</span>
+                                            </div>
+                                        </>
                                      )}
                                 </div>
                              </div>
