@@ -551,6 +551,9 @@ export const OfferGenerator: React.FC = () => {
 
     // -- SCALING STATE --
     const [fontScale, setFontScale] = useState(1.0);
+    const [discountEnabled, setDiscountEnabled] = useState(false);
+    const [discountLabel, setDiscountLabel] = useState('Cena z rabatem');
+    const [discountPrices, setDiscountPrices] = useState<Record<'surowy' | 'deweloperski', string>>({ surowy: '', deweloperski: '' });
     const [processClientType, setProcessClientType] = useState<'cash' | 'credit'>('cash');
 
 
@@ -1350,6 +1353,8 @@ export const OfferGenerator: React.FC = () => {
         const previewGross = previewOffer.totalGrossPrice;
         const previewNet = Math.round(previewGross / 1.08);
         const previewVat = previewGross - previewNet;
+        const discountRaw = parseInt((discountPrices[previewIsDeveloperState ? 'deweloperski' : 'surowy'] || '').replace(/\D/g, ''), 10);
+        const discountedPrice = discountEnabled && discountRaw > 0 ? discountRaw : null;
         return (
                     <A4Page className="flex flex-col relative a4-page overflow-hidden">
                         <LeafDecor src={images.decorLeaf} />
@@ -1434,6 +1439,12 @@ export const OfferGenerator: React.FC = () => {
                                         <span className="font-bold uppercase tracking-widest text-lg">Razem Brutto</span>
                                         <span className="text-3xl font-black">{previewGross.toLocaleString()} zł</span>
                                      </div>
+                                     {discountedPrice !== null && (
+                                        <div className="flex justify-between items-center p-4 mt-3 bg-red-600 text-white rounded-lg">
+                                            <span className="font-bold uppercase tracking-widest text-lg">{discountLabel || 'Cena z rabatem'}</span>
+                                            <span className="text-3xl font-black">{discountedPrice.toLocaleString()} zł</span>
+                                        </div>
+                                     )}
                                 </div>
                              </div>
                         </div>
@@ -2235,6 +2246,25 @@ export const OfferGenerator: React.FC = () => {
                         <span className="text-base font-bold text-gray-900">A</span>
                     </div>
                     <div className="text-center text-[10px] font-bold text-gray-300 mt-1">{(fontScale * 100).toFixed(0)}%</div>
+                </div>
+
+                <div className="p-4 border-t border-gray-200 bg-white">
+                    <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase cursor-pointer">
+                        <input type="checkbox" checked={discountEnabled} onChange={e => setDiscountEnabled(e.target.checked)} className="accent-red-600" />
+                        Rabat — ręczna cena w podsumowaniu
+                    </label>
+                    {discountEnabled && (
+                        <div className="mt-3 space-y-2">
+                            <input type="text" className="w-full text-xs p-2 border border-gray-200" placeholder="Napis (np. Cena z rabatem)" value={discountLabel} onChange={e => setDiscountLabel(e.target.value)} />
+                            {(buildMode === 'both' ? ['surowy', 'deweloperski'] as const : [isDeveloperState ? 'deweloperski' : 'surowy'] as const).map(key => (
+                                <div key={key} className="flex items-center gap-2">
+                                    {buildMode === 'both' && <span className="text-[10px] font-bold text-gray-400 uppercase w-20">{key === 'surowy' ? 'Surowy' : 'Deweloper.'}</span>}
+                                    <input type="text" inputMode="numeric" className="flex-1 text-xs p-2 border border-red-200" placeholder="Kwota brutto, np. 620000" value={discountPrices[key]} onChange={e => setDiscountPrices(prev => ({ ...prev, [key]: e.target.value }))} />
+                                    <span className="text-xs text-gray-500">zł</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="p-4 border-t border-gray-200 bg-white space-y-3">
